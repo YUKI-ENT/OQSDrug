@@ -21,8 +21,8 @@
 
 ### 実行環境
 - .NET 4.8が必要です。起動できない場合、以下のリンクから **.NET Framework 4.8 ランタイム** をダウンロードしてください：  
-[公式ダウンロードページ](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net48)
-  
+[公式ダウンロードページ](https://dotnet.microsoft.com/ja-jp/download/dotnet-framework/net48)
+ 
 - **Accessデータベースエンジン**  
   実行PCにAccessデータベースエンジンが必要です。
   - **Access 32bit版** のインストール。
