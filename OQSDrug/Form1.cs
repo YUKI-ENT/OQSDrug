@@ -132,7 +132,7 @@ namespace OQSDrug
             AddLog($"{filePath}を読み込みます");
             string connectionString = $"Provider={DBProvider};Data Source={filePath};";
 
-            string sql = "SELECT * FROM reqResults ORDER BY reqResults.ID DESC";
+            string sql = "SELECT category, PtID, PtName, result, reqDate, reqFile, resDate, resFile FROM reqResults ORDER BY reqResults.ID DESC";
 
             try
             {
@@ -218,6 +218,7 @@ namespace OQSDrug
         private async Task reloadData()
         {
             await ReadReqResultAsync(Properties.Settings.Default.OQSDrugData);
+            ConfigureDataGridView(dataGridView1);
         }
 
         public async void MakeReq(int category, DataTable dynaTable) //Category: 11:薬剤pdf, 12:薬剤xml、13:薬剤診療pdf、14：薬剤診療xml、101：健診pdf、102：健診xml
@@ -1634,6 +1635,38 @@ namespace OQSDrug
             // 現在の位置とサイズを保存
             Properties.Settings.Default.ViewerBounds = form.Bounds;
             Properties.Settings.Default.Save();
+        }
+
+        private void ConfigureDataGridView(DataGridView dataGridView)
+        {
+            // レコードセレクタを非表示にする
+            dataGridView.RowHeadersVisible = false;
+
+            // カラム幅を自動調整する
+            dataGridView.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
+
+            // 行の高さを変更できないようにする
+            dataGridView.AllowUserToResizeRows = false;
+            // レコードセレクタを非表示にする
+            dataGridView.RowHeadersVisible = false;
+
+            // カラム幅を自動調整する
+            dataGridView.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
+
+            // ソート機能を無効にする
+            dataGridView.AllowUserToOrderColumns = false;
+            // 各列のソートモードを無効にする
+            foreach (DataGridViewColumn column in dataGridView.Columns)
+            {
+                column.SortMode = DataGridViewColumnSortMode.NotSortable;
+            }
+
+            
+            // 縦方向の罫線を非表示にする
+            dataGridView.CellBorderStyle = DataGridViewCellBorderStyle.Raised;
+
+
+
         }
 
     }

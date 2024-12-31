@@ -276,7 +276,7 @@ namespace OQSDrug
             dataGridView.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
 
             // 行の高さを変更できないようにする
-            dataGridViewDH.AllowUserToResizeRows = false;
+            dataGridView.AllowUserToResizeRows = false;
 
         }
 

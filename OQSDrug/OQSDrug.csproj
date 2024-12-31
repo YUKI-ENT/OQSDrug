@@ -163,6 +163,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="drugicon.ico" />
+    <Content Include="OQSDrug_data.mdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="Resources\Info.png" />
     <None Include="Resources\drugicon.png" />
     <None Include="Resources\Exit.png" />
