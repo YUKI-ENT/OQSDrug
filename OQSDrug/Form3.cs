@@ -29,20 +29,11 @@ namespace OQSDrug
         public async Task LoadDataIntoComboBoxes()
         {
             // クエリ文字列
-            string query = @"SELECT 
-                                dh.PtIDmain, 
-                                dh.PtName, 
-                                dh.ID 
-                            FROM 
-                                drug_history AS dh
-                            WHERE 
-                                dh.ID = (
-                                    SELECT MAX(sub_dh.ID) 
-                                    FROM drug_history AS sub_dh 
-                                    WHERE sub_dh.PtIDmain = dh.PtIDmain
-                                )
-                            ORDER BY dh.ID DESC;
-                            ";
+            string query = @"SELECT PtIDmain, PtName, Max(id) AS Maxid
+                            FROM drug_history
+                            GROUP BY PtIDmain, PtName
+                            ORDER BY Max(id) DESC;";
+
             string connectionOQSData = $"Provider={provider};Data Source={Properties.Settings.Default.OQSDrugData};";
             // データテーブルを作成
             DataTable dataTable = new DataTable();
@@ -80,9 +71,13 @@ namespace OQSDrug
                     comboBoxPtID.DataSource = null;
 
                     // ComboBoxにデータをバインド
+                    comboBoxPtID.SelectedIndexChanged -= comboBoxPtID_SelectedIndexChanged; // イベントを一時解除 selectedvalueのnull対策
+
                     comboBoxPtID.DataSource = dataTable;
                     comboBoxPtID.ValueMember = "PtID";
                     comboBoxPtID.DisplayMember = "DisplayName";
+
+                    comboBoxPtID.SelectedIndexChanged += comboBoxPtID_SelectedIndexChanged; // イベントを再登録
 
                     // RSB 連動
                     if (_parentForm.autoRSB)
@@ -172,16 +167,16 @@ namespace OQSDrug
                     {
 
                         command.Parameters.AddWithValue("?", PtID);
-                     
-                        using (OleDbDataAdapter adapter = new OleDbDataAdapter(command))
+
+                        using (var reader = await command.ExecuteReaderAsync())
                         using (var dataTable = new DataTable())
                         {
-                            await Task.Run(() => adapter.Fill(dataTable));
+                            dataTable.Load(reader);
 
                             // 手動で加工する
                             var processedTable = new DataTable();
                             Color[] RowColorSetting = new Color[100];
-                            int colorIndex = 0, i=0;
+                            int colorIndex = 0, i = 0;
 
                             // 列構造をコピー
                             foreach (DataColumn col in dataTable.Columns)
@@ -209,21 +204,11 @@ namespace OQSDrug
                                 RowColorSetting[i] = RowColors[colorIndex];
                                 i++;
 
-                                // MeTrMonth列を加工して下り順に入力 (例: 202409などの列があればソート)
-                                var pivotColumns = dataTable.Columns.Cast<DataColumn>()
-                                    .Where(c => c.ColumnName != "PtIDmain" && c.ColumnName != "PtName" && c.ColumnName != "Hospital" &&
-                                                c.ColumnName != "DrugN" && c.ColumnName != "Qua1" && c.ColumnName != "Unit")
-                                    .OrderByDescending(c => c.ColumnName);
-
-                                foreach (var col in pivotColumns)
-                                {
-                                    newRow[col.ColumnName] = row[col.ColumnName];
-                                }
-
+                                
                                 // その他の列をそのままコピー
                                 foreach (DataColumn col in dataTable.Columns)
                                 {
-                                    if (!pivotColumns.Contains(col) && col.ColumnName != "Hospital")
+                                    if (col.ColumnName != "Hospital")
                                     {
                                         newRow[col.ColumnName] = row[col.ColumnName];
                                     }
@@ -248,16 +233,26 @@ namespace OQSDrug
 
         private async void comboBoxPtID_SelectedIndexChanged(object sender, EventArgs e)
         {
-
-            // PtIDmainの値を取得
-            string strPtID = comboBoxPtID.SelectedValue.ToString();
-            //MessageBox.Show(strPtID);
-            // 数字としてパース可能かチェック
-            if (long.TryParse(strPtID, out long PtID))
+            try
             {
+                // nullチェック
+                if (comboBoxPtID.SelectedValue != null)
+                {
+                    // PtIDmainの値を取得
+                    string strPtID = comboBoxPtID.SelectedValue.ToString();
+                    //MessageBox.Show(strPtID);
+                    // 数字としてパース可能かチェック
+                    if (long.TryParse(strPtID, out long PtID))
+                    {
 
-                // 必要に応じて処理を実行
-                await ShowDrugData(PtID);
+                        // 必要に応じて処理を実行
+                        await ShowDrugData(PtID);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"患者ID選択時にエラーが発生しました:{ex.Message}");
             }
 
         }

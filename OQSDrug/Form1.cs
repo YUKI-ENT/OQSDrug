@@ -14,6 +14,7 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using static System.Net.WebRequestMethods;
 using File = System.IO.File;
+using System.Collections;
 
 
 namespace OQSDrug
@@ -81,7 +82,7 @@ namespace OQSDrug
                     MakeReq(Properties.Settings.Default.KensinFileCategory + 100, dynaTable);
                 }
 
-                await reloadData();
+                await reloadDataAsync();
 
                 //Resフォルダの処理
 
@@ -103,7 +104,7 @@ namespace OQSDrug
                         AddLog("時間内に処理が終了しませんでしたので、タイマー処理を中止します");
                     }
 
-                    await reloadData();
+                    await reloadDataAsync();
                     if (!timer.Enabled)
                     {
                         break;
@@ -127,10 +128,10 @@ namespace OQSDrug
         }
 
         // データベースの内容を読み込み、DataGridViewに表示
-        private async Task ReadReqResultAsync(string filePath)
+        private async Task reloadDataAsync()
         {
-            AddLog($"{filePath}を読み込みます");
-            string connectionString = $"Provider={DBProvider};Data Source={filePath};";
+            AddLog("DataGridViewを更新します");
+            string connectionString = $"Provider={DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
 
             string sql = "SELECT category, PtID, PtName, result, reqDate, reqFile, resDate, resFile, ID FROM reqResults ORDER BY reqResults.ID DESC";
 
@@ -142,14 +143,25 @@ namespace OQSDrug
                     await connection.OpenAsync();
 
                     // データを取得してDataTableに格納
-                    using (OleDbDataAdapter adapter = new OleDbDataAdapter(sql, connection))
+                    using (var command = new OleDbCommand(sql, connection))
                     {
-                        DataTable dataTable = new DataTable();
-                        await Task.Run(() => adapter.Fill(dataTable)); // Fill操作を別スレッドで実行
+                        using (var reader = await command.ExecuteReaderAsync())
+                        using (var dataTable = new DataTable())
+                        {
+                            dataTable.Load(reader);
 
-                        // DataGridViewに表示
-                        dataGridView1.Invoke(new Action(() => dataGridView1.DataSource = dataTable));
-                        AddLog("reqResultsテーブルを読み込みました");
+                            // DataGridViewに表示
+                            dataGridView1.Invoke(new Action(() =>
+                            {
+                                //UI スレッド
+                                dataGridView1.DataSource = dataTable;
+
+                                ConfigureDataGridView(dataGridView1);
+
+
+                            }));
+                            AddLog("reqResultsテーブルを読み込みました");
+                        }
                     }
                 }
             }
@@ -163,6 +175,13 @@ namespace OQSDrug
 
         private async void toolStripButtonSettings_Click(object sender, EventArgs e)
         {
+            //動作中の場合は停止する
+            if (isTimerRunning)
+            {
+                MessageBox.Show("一旦タイマー動作を停止します");
+                StartStop.Checked = false;
+            }
+
             //Form2を開く
             Form2 form2 = new Form2();
             form2.ShowDialog(this);
@@ -184,7 +203,7 @@ namespace OQSDrug
                 }
 
                 this.StartStop.Enabled = true;
-                await reloadData();
+                await reloadDataAsync();
             }
 
             LoadViewerSettings();
@@ -213,12 +232,6 @@ namespace OQSDrug
                 timer.Stop();
                 AddLog("タイマー処理を終了します");
             }
-        }
-
-        private async Task reloadData()
-        {
-            await ReadReqResultAsync(Properties.Settings.Default.OQSDrugData);
-            ConfigureDataGridView(dataGridView1);
         }
 
         public async void MakeReq(int category, DataTable dynaTable) //Category: 11:薬剤pdf, 12:薬剤xml、13:薬剤診療pdf、14：薬剤診療xml、101：健診pdf、102：健診xml
@@ -670,7 +683,7 @@ namespace OQSDrug
                     MessageBox.Show("OQSDrugDataのアップデートでエラーが発生しました。OQSDrugData.mdbにアクセスできるかを調べて再起動してください");
                 }
                 this.StartStop.Enabled = true;
-                await reloadData();
+                await reloadDataAsync();
             }
 
             autoRSB = Properties.Settings.Default.autoRSB;
@@ -1639,6 +1652,12 @@ namespace OQSDrug
 
         private void ConfigureDataGridView(DataGridView dataGridView)
         {
+            if (dataGridView.InvokeRequired)
+            {
+                dataGridView.Invoke((MethodInvoker)(() => ConfigureDataGridView(dataGridView)));
+                return;
+            }
+
             // レコードセレクタを非表示にする
             dataGridView.RowHeadersVisible = false;
 
@@ -1698,7 +1717,7 @@ namespace OQSDrug
                         // 親データ削除
                         await DeleteReqResultsRecord(idValue);
 
-                        await reloadData();
+                        await reloadDataAsync();
                     }
                 }
             }
