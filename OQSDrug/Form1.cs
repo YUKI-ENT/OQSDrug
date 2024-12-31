@@ -132,7 +132,7 @@ namespace OQSDrug
             AddLog($"{filePath}を読み込みます");
             string connectionString = $"Provider={DBProvider};Data Source={filePath};";
 
-            string sql = "SELECT category, PtID, PtName, result, reqDate, reqFile, resDate, resFile FROM reqResults ORDER BY reqResults.ID DESC";
+            string sql = "SELECT category, PtID, PtName, result, reqDate, reqFile, resDate, resFile, ID FROM reqResults ORDER BY reqResults.ID DESC";
 
             try
             {
@@ -1669,6 +1669,64 @@ namespace OQSDrug
 
         }
 
+
+        private void dataGridView1_CellMouseUp(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            // 右クリックかどうかを確認
+            if (e.Button == MouseButtons.Right)
+            {
+                // クリックされた行を選択状態にする
+                dataGridView1.Rows[e.RowIndex].Selected = true;
+
+                // コンテキストメニューを表示（必要なら設定）
+                ContextMenu contextMenu = new ContextMenu();
+                contextMenu.MenuItems.Add(new MenuItem("行を削除", async (s, args) => await DeleteRow(e.RowIndex)));
+                contextMenu.Show(dataGridView1, dataGridView1.PointToClient(Cursor.Position));
+            }
+        }
+
+        private async Task DeleteRow(int rowIndex)
+        {
+            if (rowIndex >= 0 && rowIndex < dataGridView1.Rows.Count)
+            {
+                if(MessageBox.Show("この取得履歴を削除しますか？\n 削除すると再取得間隔がリセットされますが、取得済データは消えません","削除の確認",MessageBoxButtons.OKCancel) == DialogResult.OK)
+                {
+                    // IDフィールドの値を取得 
+                    object idValue = dataGridView1.Rows[rowIndex].Cells["ID"].Value;
+                    if (idValue != null)
+                    {
+                        // 親データ削除
+                        await DeleteReqResultsRecord(idValue);
+
+                        await reloadData();
+                    }
+                }
+            }
+        }
+
+        private async Task DeleteReqResultsRecord(object idValue)
+        {
+            try
+            {
+                string connectionOQSData = $"Provider={DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
+                using (var connection = new OleDbConnection(connectionOQSData))
+                {
+                    await connection.OpenAsync();
+                    string query = "DELETE FROM reqResults WHERE ID = ?";
+                    using (var command = new OleDbCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("?", idValue);
+                        int deleteRows = await command.ExecuteNonQueryAsync();
+                        AddLog($"reqResltsから{deleteRows}件のレコードを削除しました");
+                    }
+                    
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog($"DeleteReqResultsRecordでエラー：{ex.Message}");                
+            }
+        }
     }
 }
 

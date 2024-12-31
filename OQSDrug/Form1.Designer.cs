@@ -32,7 +32,12 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.toolStripVersion = new System.Windows.Forms.ToolStrip();
+            this.toolStripButtonViewer = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonExit = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButtonVersion = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButtonSettings = new System.Windows.Forms.ToolStripButton();
             this.toolStripComboBoxDBProviders = new System.Windows.Forms.ToolStripComboBox();
             this.listViewLog = new System.Windows.Forms.ListView();
             this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
@@ -45,12 +50,7 @@
             this.buttonKSPDF = new System.Windows.Forms.Button();
             this.buttonKSXML = new System.Windows.Forms.Button();
             this.checkBoxAutoview = new System.Windows.Forms.CheckBox();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.StartStop = new System.Windows.Forms.CheckBox();
-            this.toolStripButtonViewer = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButtonExit = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButtonVersion = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButtonSettings = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.toolStripVersion.SuspendLayout();
             this.SuspendLayout();
@@ -66,6 +66,7 @@
             this.dataGridView1.RowTemplate.Height = 21;
             this.dataGridView1.Size = new System.Drawing.Size(950, 430);
             this.dataGridView1.TabIndex = 2;
+            this.dataGridView1.CellMouseUp += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_CellMouseUp);
             // 
             // toolStripVersion
             // 
@@ -87,11 +88,60 @@
             this.toolStripVersion.TabIndex = 3;
             this.toolStripVersion.Text = "toolStrip1";
             // 
+            // toolStripButtonViewer
+            // 
+            this.toolStripButtonViewer.Font = new System.Drawing.Font("游ゴシック", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.toolStripButtonViewer.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonViewer.Image")));
+            this.toolStripButtonViewer.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonViewer.Name = "toolStripButtonViewer";
+            this.toolStripButtonViewer.Size = new System.Drawing.Size(89, 24);
+            this.toolStripButtonViewer.Text = "薬歴表示";
+            this.toolStripButtonViewer.Click += new System.EventHandler(this.buttonViewer_Click);
+            // 
+            // toolStripButtonExit
+            // 
+            this.toolStripButtonExit.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonExit.Font = new System.Drawing.Font("游ゴシック", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.toolStripButtonExit.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonExit.Image")));
+            this.toolStripButtonExit.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonExit.Name = "toolStripButtonExit";
+            this.toolStripButtonExit.Size = new System.Drawing.Size(59, 24);
+            this.toolStripButtonExit.Text = "終了";
+            this.toolStripButtonExit.Click += new System.EventHandler(this.buttonExit_Click);
+            // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(6, 27);
+            // 
+            // toolStripButtonVersion
+            // 
+            this.toolStripButtonVersion.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonVersion.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonVersion.Image = global::OQSDrug.Properties.Resources.Info;
+            this.toolStripButtonVersion.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonVersion.Name = "toolStripButtonVersion";
+            this.toolStripButtonVersion.Size = new System.Drawing.Size(23, 24);
+            this.toolStripButtonVersion.Text = "Version";
+            this.toolStripButtonVersion.Click += new System.EventHandler(this.toolStripButtonVersion_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 27);
+            // 
+            // toolStripButtonSettings
+            // 
+            this.toolStripButtonSettings.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonSettings.Font = new System.Drawing.Font("游ゴシック", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.toolStripButtonSettings.Image = global::OQSDrug.Properties.Resources.Application;
+            this.toolStripButtonSettings.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonSettings.Name = "toolStripButtonSettings";
+            this.toolStripButtonSettings.Size = new System.Drawing.Size(59, 24);
+            this.toolStripButtonSettings.Text = "設定";
+            this.toolStripButtonSettings.Click += new System.EventHandler(this.toolStripButtonSettings_Click);
             // 
             // toolStripComboBoxDBProviders
             // 
@@ -211,12 +261,6 @@
             this.checkBoxAutoview.UseVisualStyleBackColor = true;
             this.checkBoxAutoview.CheckedChanged += new System.EventHandler(this.checkBoxAutoview_CheckedChanged);
             // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 27);
-            // 
             // StartStop
             // 
             this.StartStop.Appearance = System.Windows.Forms.Appearance.Button;
@@ -233,49 +277,6 @@
             this.StartStop.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.StartStop.UseVisualStyleBackColor = true;
             this.StartStop.CheckedChanged += new System.EventHandler(this.StartStop_CheckedChanged);
-            // 
-            // toolStripButtonViewer
-            // 
-            this.toolStripButtonViewer.Font = new System.Drawing.Font("游ゴシック", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.toolStripButtonViewer.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonViewer.Image")));
-            this.toolStripButtonViewer.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonViewer.Name = "toolStripButtonViewer";
-            this.toolStripButtonViewer.Size = new System.Drawing.Size(89, 24);
-            this.toolStripButtonViewer.Text = "薬歴表示";
-            this.toolStripButtonViewer.Click += new System.EventHandler(this.buttonViewer_Click);
-            // 
-            // toolStripButtonExit
-            // 
-            this.toolStripButtonExit.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripButtonExit.Font = new System.Drawing.Font("游ゴシック", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.toolStripButtonExit.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonExit.Image")));
-            this.toolStripButtonExit.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonExit.Name = "toolStripButtonExit";
-            this.toolStripButtonExit.Size = new System.Drawing.Size(59, 24);
-            this.toolStripButtonExit.Text = "終了";
-            this.toolStripButtonExit.Click += new System.EventHandler(this.buttonExit_Click);
-            // 
-            // toolStripButtonVersion
-            // 
-            this.toolStripButtonVersion.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripButtonVersion.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButtonVersion.Image = global::OQSDrug.Properties.Resources.Info;
-            this.toolStripButtonVersion.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonVersion.Name = "toolStripButtonVersion";
-            this.toolStripButtonVersion.Size = new System.Drawing.Size(23, 24);
-            this.toolStripButtonVersion.Text = "Version";
-            this.toolStripButtonVersion.Click += new System.EventHandler(this.toolStripButtonVersion_Click);
-            // 
-            // toolStripButtonSettings
-            // 
-            this.toolStripButtonSettings.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripButtonSettings.Font = new System.Drawing.Font("游ゴシック", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.toolStripButtonSettings.Image = global::OQSDrug.Properties.Resources.Application;
-            this.toolStripButtonSettings.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonSettings.Name = "toolStripButtonSettings";
-            this.toolStripButtonSettings.Size = new System.Drawing.Size(59, 24);
-            this.toolStripButtonSettings.Text = "設定";
-            this.toolStripButtonSettings.Click += new System.EventHandler(this.toolStripButtonSettings_Click);
             // 
             // Form1
             // 
