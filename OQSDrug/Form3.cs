@@ -218,9 +218,18 @@ namespace OQSDrug
                             }
 
                             // DataGridViewにバインド
-                            InitializeDataGridView(dataGridViewDH);
-                            dataGridViewDH.DataSource = processedTable;
-                            ConfigureDataGridView(dataGridViewDH, RowColorSetting);
+                            // 非同期関数内でのUIスレッド操作
+                            dataGridViewDH.Invoke(new Action(() =>
+                            {
+                                // DataGridViewを初期化
+                                InitializeDataGridView(dataGridViewDH);
+
+                                // DataGridViewにデータをバインド
+                                dataGridViewDH.DataSource = processedTable;
+
+                                // DataGridViewの外観や動作を設定
+                                ConfigureDataGridView(dataGridViewDH, RowColorSetting);
+                            }));
                         }
                     }
                 }
