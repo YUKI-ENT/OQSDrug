@@ -51,6 +51,8 @@
             this.buttonKSXML = new System.Windows.Forms.Button();
             this.checkBoxAutoview = new System.Windows.Forms.CheckBox();
             this.StartStop = new System.Windows.Forms.CheckBox();
+            this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
+            this.toolStripButtonToTaskTray = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.toolStripVersion.SuspendLayout();
             this.SuspendLayout();
@@ -74,6 +76,7 @@
             this.toolStripVersion.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripButtonViewer,
             this.toolStripButtonExit,
+            this.toolStripButtonToTaskTray,
             this.toolStripSeparator1,
             this.toolStripButtonVersion,
             this.toolStripSeparator2,
@@ -96,6 +99,7 @@
             this.toolStripButtonViewer.Name = "toolStripButtonViewer";
             this.toolStripButtonViewer.Size = new System.Drawing.Size(89, 24);
             this.toolStripButtonViewer.Text = "薬歴表示";
+            this.toolStripButtonViewer.ToolTipText = "xml薬歴を表示します";
             this.toolStripButtonViewer.Click += new System.EventHandler(this.buttonViewer_Click);
             // 
             // toolStripButtonExit
@@ -258,6 +262,7 @@
             this.checkBoxAutoview.Size = new System.Drawing.Size(124, 24);
             this.checkBoxAutoview.TabIndex = 27;
             this.checkBoxAutoview.Text = "薬歴自動起動";
+            this.toolTip1.SetToolTip(this.checkBoxAutoview, "RSBaseと連動して薬歴が存在すれば自動で表示します");
             this.checkBoxAutoview.UseVisualStyleBackColor = true;
             this.checkBoxAutoview.CheckedChanged += new System.EventHandler(this.checkBoxAutoview_CheckedChanged);
             // 
@@ -275,8 +280,26 @@
             this.StartStop.Text = "開始";
             this.StartStop.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.StartStop.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.toolTip1.SetToolTip(this.StartStop, "情報取得処理を開始/終了します");
             this.StartStop.UseVisualStyleBackColor = true;
             this.StartStop.CheckedChanged += new System.EventHandler(this.StartStop_CheckedChanged);
+            // 
+            // notifyIcon1
+            // 
+            this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
+            this.notifyIcon1.Text = "OQSDrug";
+            this.notifyIcon1.Visible = true;
+            this.notifyIcon1.DoubleClick += new System.EventHandler(this.notifyIcon1_DoubleClick);
+            // 
+            // toolStripButtonToTaskTray
+            // 
+            this.toolStripButtonToTaskTray.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonToTaskTray.Image = global::OQSDrug.Properties.Resources.Down;
+            this.toolStripButtonToTaskTray.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonToTaskTray.Name = "toolStripButtonToTaskTray";
+            this.toolStripButtonToTaskTray.Size = new System.Drawing.Size(179, 24);
+            this.toolStripButtonToTaskTray.Text = "タスクトレイに最小化";
+            this.toolStripButtonToTaskTray.Click += new System.EventHandler(this.toolStripButtonToTaskTray_Click);
             // 
             // Form1
             // 
@@ -300,6 +323,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "薬歴取得メイン";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.toolStripVersion.ResumeLayout(false);
@@ -331,6 +355,8 @@
         private System.Windows.Forms.ToolStripButton toolStripButtonExit;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripButton toolStripButtonVersion;
+        private System.Windows.Forms.NotifyIcon notifyIcon1;
+        private System.Windows.Forms.ToolStripButton toolStripButtonToTaskTray;
     }
 }
 

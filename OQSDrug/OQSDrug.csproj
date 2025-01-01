@@ -175,6 +175,11 @@
     <Content Include="OQSDrug_data.mdb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\Down.png" />
+    <None Include="Resources\drug4.ico" />
+    <None Include="Resources\drug3.ico" />
+    <None Include="Resources\drug2.ico" />
+    <None Include="Resources\drug1.ico" />
     <None Include="Resources\Info.png" />
     <None Include="Resources\drugicon.png" />
     <None Include="Resources\Exit.png" />

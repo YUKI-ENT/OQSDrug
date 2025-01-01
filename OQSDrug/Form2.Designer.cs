@@ -262,9 +262,9 @@
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(33, 200);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(65, 12);
+            this.label4.Size = new System.Drawing.Size(85, 12);
             this.label4.TabIndex = 8;
-            this.label4.Text = "タイマー間隔";
+            this.label4.Text = "タイマー間隔(秒)";
             // 
             // comboBoxTimerSecond
             // 

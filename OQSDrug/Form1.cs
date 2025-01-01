@@ -15,6 +15,7 @@ using System.Data.SqlClient;
 using static System.Net.WebRequestMethods;
 using File = System.IO.File;
 using System.Collections;
+using System.Runtime.CompilerServices;
 
 
 namespace OQSDrug
@@ -35,6 +36,11 @@ namespace OQSDrug
         private Label[] statusTexts;
 
         private Form3 form3Instance = null;
+
+        // アイコンの配列を用意 (例: 3つのアイコン)
+        private Timer animationTimer;
+        private int currentFrame;
+        private Icon[] icons;
 
         public Form1()
         {
@@ -691,6 +697,8 @@ namespace OQSDrug
 
             LoadViewerSettings();
 
+            InitNotifyIcon();
+
 
         }
 
@@ -800,6 +808,14 @@ namespace OQSDrug
                     timer.Stop();
                     timer.Dispose();
                 }
+
+                // NotifyIconの解放
+                if (notifyIcon1 != null)
+                {
+                    notifyIcon1.BalloonTipClicked -= NotifyIcon_BalloonTipClicked; // イベント解除
+                    notifyIcon1.Dispose();
+                }
+
                 Application.Exit();
             }
         }
@@ -1292,6 +1308,10 @@ namespace OQSDrug
                             }
                         }
                     }
+                    if (recordCount > 0)
+                    {
+                        ShowNotification($"{ptIDMain}", $"{ptName}さんの薬歴{recordCount}件取得");
+                    }
                     return $"成功：xml薬歴から{recordCount}件のレコードを読み込みました";
                 }
             }
@@ -1745,6 +1765,152 @@ namespace OQSDrug
             {
                 AddLog($"DeleteReqResultsRecordでエラー：{ex.Message}");                
             }
+        }
+
+        private void InitNotifyIcon()
+        {
+            
+            // コンテキストメニューを設定
+            var contextMenu = new ContextMenuStrip();
+            var startStopMenuItem = new ToolStripMenuItem();
+
+            // 状態に応じたメニュー項目を更新
+            UpdateStartStopMenuItem(startStopMenuItem);
+
+            // メニューに動的な項目を追加
+            startStopMenuItem.Click += (s, e) =>
+            {
+                // チェックボックスの状態を切り替え
+                StartStop.Checked = !StartStop.Checked;
+
+                // メニューを更新
+                UpdateStartStopMenuItem(startStopMenuItem);
+
+                StartStop_CheckedChanged(s, EventArgs.Empty); // 開始処理
+                
+            };
+
+            contextMenu.Items.Add("メイン表示", null, ShowForm); 
+            contextMenu.Items.Add(startStopMenuItem); // 動的な項目を追加
+            contextMenu.Items.Add("薬歴表示", null, buttonViewer_Click);
+            contextMenu.Items.Add(new ToolStripSeparator());
+            contextMenu.Items.Add("終了", null, ExitApplication);
+
+            notifyIcon1.ContextMenuStrip = contextMenu;
+
+            // バルーン通知の表示イベント
+            notifyIcon1.BalloonTipClicked += NotifyIcon_BalloonTipClicked;
+
+            // チェックボックスの状態変更時にもメニューを更新
+            StartStop.CheckedChanged += (s, e) => UpdateStartStopMenuItem(startStopMenuItem);
+
+            // アイコンの配列を用意
+            icons = new Icon[]
+            {
+                Properties.Resources.drug1,
+                Properties.Resources.drug2,
+                Properties.Resources.drug3,
+                Properties.Resources.drug4
+            };
+
+            // タイマーを初期化
+            animationTimer = new Timer
+            {
+                Interval = 200 // 200msごとに切り替え
+            };
+            animationTimer.Tick += AnimationTimer_Tick;
+        }
+
+        private void UpdateStartStopMenuItem(ToolStripMenuItem menuItem)
+        {
+            if (StartStop.Checked)
+            {
+                menuItem.Text = "停止";
+                animationTimer?.Start();
+            }
+            else
+            {
+                menuItem.Text = "開始";
+                animationTimer?.Stop();
+                notifyIcon1.Icon = Properties.Resources.drug1;
+            }
+        }
+
+        // イベントが発生した場合にバルーン通知を表示
+        public void ShowNotification(string title, string message)
+        {
+            try
+            {
+                if (this.InvokeRequired) // this はフォーム
+                {
+                    this.Invoke(new Action(() => ShowNotification(title, message)));
+                }
+                else
+                {
+                    notifyIcon1.BalloonTipTitle = title;
+                    notifyIcon1.BalloonTipText = message;
+                    notifyIcon1.BalloonTipIcon = ToolTipIcon.Info;
+                    notifyIcon1.ShowBalloonTip(5000); // 5秒間表示
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog($"エラー：ShowNotification：{ex.Message}");
+            }
+        }
+
+        // バルーン通知をクリックしたときの処理
+        private void NotifyIcon_BalloonTipClicked(object sender, EventArgs e)
+        {
+            buttonViewer_Click(sender, EventArgs.Empty);
+        }
+
+        // フォームを表示する
+        private void ShowForm(object sender, EventArgs e)
+        {
+            this.WindowState = FormWindowState.Normal;
+            this.ShowInTaskbar = true;
+            this.Show();
+        }
+
+        // アプリケーションを終了する
+        private void ExitApplication(object sender, EventArgs e)
+        {
+            notifyIcon1.Dispose();
+
+            buttonExit_Click(toolStripButtonExit, EventArgs.Empty);
+        }
+
+        
+        private void notifyIcon1_DoubleClick(object sender, EventArgs e)
+        {
+            ShowForm(notifyIcon1,EventArgs.Empty);
+        }
+
+        private void AnimationTimer_Tick(object sender, EventArgs e)
+        {
+            // アイコンを切り替える
+            notifyIcon1.Icon = icons[currentFrame];
+            currentFrame = (currentFrame + 1) % icons.Length; // フレームを更新
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // クリーンアップ
+            timer?.Stop();
+            timer?.Dispose();
+
+            notifyIcon1?.Dispose();
+            animationTimer?.Stop();
+            animationTimer?.Dispose();
+            //base.OnFormClosing(e);
+        }
+
+        private void toolStripButtonToTaskTray_Click(object sender, EventArgs e)
+        {
+            // フォームを非表示にし、タスクバーから削除
+            this.Hide();
+            this.ShowInTaskbar = false;
         }
     }
 }
