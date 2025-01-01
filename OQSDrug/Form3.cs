@@ -67,34 +67,38 @@ namespace OQSDrug
                         }
                     }
 
-                    // ComboBoxのデータソースを一旦クリア
-                    comboBoxPtID.DataSource = null;
-
-                    // ComboBoxにデータをバインド
-                    comboBoxPtID.SelectedIndexChanged -= comboBoxPtID_SelectedIndexChanged; // イベントを一時解除 selectedvalueのnull対策
-
-                    comboBoxPtID.DataSource = dataTable;
-                    comboBoxPtID.ValueMember = "PtID";
-                    comboBoxPtID.DisplayMember = "DisplayName";
-
-                    comboBoxPtID.SelectedIndexChanged += comboBoxPtID_SelectedIndexChanged; // イベントを再登録
-
-                    // RSB 連動
-                    if (_parentForm.autoRSB)
+                    comboBoxPtID.Invoke(new Action(() =>
                     {
-                        // PtID が _parentForm.tempId に一致する行を検索
-                        DataRow[] rows = dataTable.Select($"PtID = {_parentForm.tempId}");
-                        // 一致するデータが見つかれば、選択する
-                        if (rows.Length > 0)
+                        // ComboBoxのデータソースを一旦クリア
+                        comboBoxPtID.DataSource = null;
+
+                        // ComboBoxにデータをバインド
+                        comboBoxPtID.SelectedIndexChanged -= comboBoxPtID_SelectedIndexChanged; // イベントを一時解除 selectedvalueのnull対策
+
+                        comboBoxPtID.DataSource = dataTable;
+                        comboBoxPtID.ValueMember = "PtID";
+                        comboBoxPtID.DisplayMember = "DisplayName";
+
+                        comboBoxPtID.SelectedIndexChanged += comboBoxPtID_SelectedIndexChanged; // イベントを再登録
+
+                        // RSB 連動
+                        if (_parentForm.autoRSB)
                         {
-                            // 最初の一致したレコードの PtID を SelectedValue に設定
-                            comboBoxPtID.SelectedValue = rows[0]["PtID"];
+                            // PtID が _parentForm.tempId に一致する行を検索
+                            DataRow[] rows = dataTable.Select($"PtID = {_parentForm.tempId}");
+
+                            // 一致するデータが見つかれば、選択する
+                            if (rows.Length > 0)
+                            {
+                                // 最初の一致したレコードの PtID を SelectedValue に設定
+                                comboBoxPtID.SelectedValue = rows[0]["PtID"];
+                            }
+                            else
+                            {
+                                comboBoxPtID.SelectedIndex = -1;
+                            }
                         }
-                        else
-                        {
-                            comboBoxPtID.SelectedIndex = -1;
-                        }
-                    }
+                    }));
 
                 }
                 catch (Exception ex)
