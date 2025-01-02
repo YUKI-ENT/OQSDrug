@@ -34,6 +34,7 @@
             this.toolStripVersion = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonViewer = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonExit = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonToTaskTray = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonVersion = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
@@ -42,6 +43,8 @@
             this.listViewLog = new System.Windows.Forms.ListView();
             this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.checkBoxAutoview = new System.Windows.Forms.CheckBox();
+            this.StartStop = new System.Windows.Forms.CheckBox();
             this.buttonYZ = new System.Windows.Forms.Button();
             this.buttonSR = new System.Windows.Forms.Button();
             this.buttonYZPDF = new System.Windows.Forms.Button();
@@ -49,10 +52,7 @@
             this.buttonKS = new System.Windows.Forms.Button();
             this.buttonKSPDF = new System.Windows.Forms.Button();
             this.buttonKSXML = new System.Windows.Forms.Button();
-            this.checkBoxAutoview = new System.Windows.Forms.CheckBox();
-            this.StartStop = new System.Windows.Forms.CheckBox();
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
-            this.toolStripButtonToTaskTray = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.toolStripVersion.SuspendLayout();
             this.SuspendLayout();
@@ -112,6 +112,16 @@
             this.toolStripButtonExit.Size = new System.Drawing.Size(59, 24);
             this.toolStripButtonExit.Text = "終了";
             this.toolStripButtonExit.Click += new System.EventHandler(this.buttonExit_Click);
+            // 
+            // toolStripButtonToTaskTray
+            // 
+            this.toolStripButtonToTaskTray.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonToTaskTray.Image = global::OQSDrug.Properties.Resources.Down;
+            this.toolStripButtonToTaskTray.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonToTaskTray.Name = "toolStripButtonToTaskTray";
+            this.toolStripButtonToTaskTray.Size = new System.Drawing.Size(179, 24);
+            this.toolStripButtonToTaskTray.Text = "タスクトレイに最小化";
+            this.toolStripButtonToTaskTray.Click += new System.EventHandler(this.toolStripButtonToTaskTray_Click);
             // 
             // toolStripSeparator1
             // 
@@ -183,6 +193,37 @@
             this.tableLayoutPanel.Size = new System.Drawing.Size(400, 130);
             this.tableLayoutPanel.TabIndex = 9;
             // 
+            // checkBoxAutoview
+            // 
+            this.checkBoxAutoview.AutoSize = true;
+            this.checkBoxAutoview.Font = new System.Drawing.Font("Meiryo UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.checkBoxAutoview.Location = new System.Drawing.Point(422, 42);
+            this.checkBoxAutoview.Name = "checkBoxAutoview";
+            this.checkBoxAutoview.Size = new System.Drawing.Size(124, 24);
+            this.checkBoxAutoview.TabIndex = 27;
+            this.checkBoxAutoview.Text = "薬歴自動起動";
+            this.toolTip1.SetToolTip(this.checkBoxAutoview, "RSBaseと連動して薬歴が存在すれば自動で表示します");
+            this.checkBoxAutoview.UseVisualStyleBackColor = true;
+            this.checkBoxAutoview.CheckedChanged += new System.EventHandler(this.checkBoxAutoview_CheckedChanged);
+            // 
+            // StartStop
+            // 
+            this.StartStop.Appearance = System.Windows.Forms.Appearance.Button;
+            this.StartStop.CheckAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.StartStop.Enabled = false;
+            this.StartStop.Font = new System.Drawing.Font("Meiryo UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.StartStop.Image = global::OQSDrug.Properties.Resources.Go;
+            this.StartStop.Location = new System.Drawing.Point(13, 30);
+            this.StartStop.Name = "StartStop";
+            this.StartStop.Size = new System.Drawing.Size(399, 45);
+            this.StartStop.TabIndex = 6;
+            this.StartStop.Text = "開始";
+            this.StartStop.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.StartStop.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.toolTip1.SetToolTip(this.StartStop, "情報取得処理を開始/終了します");
+            this.StartStop.UseVisualStyleBackColor = true;
+            this.StartStop.CheckedChanged += new System.EventHandler(this.StartStop_CheckedChanged);
+            // 
             // buttonYZ
             // 
             this.buttonYZ.Enabled = false;
@@ -253,53 +294,12 @@
             this.buttonKSXML.Text = "XML";
             this.buttonKSXML.UseVisualStyleBackColor = true;
             // 
-            // checkBoxAutoview
-            // 
-            this.checkBoxAutoview.AutoSize = true;
-            this.checkBoxAutoview.Font = new System.Drawing.Font("Meiryo UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.checkBoxAutoview.Location = new System.Drawing.Point(422, 42);
-            this.checkBoxAutoview.Name = "checkBoxAutoview";
-            this.checkBoxAutoview.Size = new System.Drawing.Size(124, 24);
-            this.checkBoxAutoview.TabIndex = 27;
-            this.checkBoxAutoview.Text = "薬歴自動起動";
-            this.toolTip1.SetToolTip(this.checkBoxAutoview, "RSBaseと連動して薬歴が存在すれば自動で表示します");
-            this.checkBoxAutoview.UseVisualStyleBackColor = true;
-            this.checkBoxAutoview.CheckedChanged += new System.EventHandler(this.checkBoxAutoview_CheckedChanged);
-            // 
-            // StartStop
-            // 
-            this.StartStop.Appearance = System.Windows.Forms.Appearance.Button;
-            this.StartStop.CheckAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.StartStop.Enabled = false;
-            this.StartStop.Font = new System.Drawing.Font("Meiryo UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.StartStop.Image = global::OQSDrug.Properties.Resources.Go;
-            this.StartStop.Location = new System.Drawing.Point(13, 30);
-            this.StartStop.Name = "StartStop";
-            this.StartStop.Size = new System.Drawing.Size(399, 45);
-            this.StartStop.TabIndex = 6;
-            this.StartStop.Text = "開始";
-            this.StartStop.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.StartStop.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
-            this.toolTip1.SetToolTip(this.StartStop, "情報取得処理を開始/終了します");
-            this.StartStop.UseVisualStyleBackColor = true;
-            this.StartStop.CheckedChanged += new System.EventHandler(this.StartStop_CheckedChanged);
-            // 
             // notifyIcon1
             // 
             this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
-            this.notifyIcon1.Text = "OQSDrug";
+            this.notifyIcon1.Text = "右クリックでメニュー、\r\nダブルクリックで表示非表示切替";
             this.notifyIcon1.Visible = true;
             this.notifyIcon1.DoubleClick += new System.EventHandler(this.notifyIcon1_DoubleClick);
-            // 
-            // toolStripButtonToTaskTray
-            // 
-            this.toolStripButtonToTaskTray.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripButtonToTaskTray.Image = global::OQSDrug.Properties.Resources.Down;
-            this.toolStripButtonToTaskTray.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonToTaskTray.Name = "toolStripButtonToTaskTray";
-            this.toolStripButtonToTaskTray.Size = new System.Drawing.Size(179, 24);
-            this.toolStripButtonToTaskTray.Text = "タスクトレイに最小化";
-            this.toolStripButtonToTaskTray.Click += new System.EventHandler(this.toolStripButtonToTaskTray_Click);
             // 
             // Form1
             // 

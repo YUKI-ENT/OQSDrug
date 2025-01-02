@@ -52,6 +52,7 @@
             // 
             // comboBoxPtID
             // 
+            this.comboBoxPtID.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxPtID.Font = new System.Drawing.Font("ＭＳ ゴシック", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.comboBoxPtID.FormattingEnabled = true;
             this.comboBoxPtID.Location = new System.Drawing.Point(12, 11);

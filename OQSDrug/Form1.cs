@@ -668,6 +668,24 @@ namespace OQSDrug
 
         private async void Form1_Load(object sender, EventArgs e)
         {
+            // 前バージョンからのUpgradeを実行していないときは、Upgradeを実施する
+            if (Properties.Settings.Default.IsUpgrade == false)
+            {
+                // Upgradeを実行する
+                Properties.Settings.Default.Upgrade();
+
+                // 「Upgradeを実行した」という情報を設定する
+                Properties.Settings.Default.IsUpgrade = true;
+
+                // 現行バージョンの設定を保存する
+                Properties.Settings.Default.Save();
+            }
+
+            if (Properties.Settings.Default.MinimumStart)
+            {
+                toolStripButtonToTaskTray_Click(sender, EventArgs.Empty);
+            }
+
             //MessageBox.Show( getOLEProviders());
             InitializeDBProvider();
 
@@ -698,6 +716,8 @@ namespace OQSDrug
             LoadViewerSettings();
 
             InitNotifyIcon();
+
+            
 
 
         }
@@ -807,6 +827,12 @@ namespace OQSDrug
                 {
                     timer.Stop();
                     timer.Dispose();
+                }
+
+                if(animationTimer.Enabled)
+                {
+                    animationTimer.Stop();
+                    animationTimer.Dispose();
                 }
 
                 // NotifyIconの解放
@@ -1769,7 +1795,6 @@ namespace OQSDrug
 
         private void InitNotifyIcon()
         {
-            
             // コンテキストメニューを設定
             var contextMenu = new ContextMenuStrip();
             var startStopMenuItem = new ToolStripMenuItem();
@@ -1790,11 +1815,11 @@ namespace OQSDrug
                 
             };
 
-            contextMenu.Items.Add("メイン表示", null, ShowForm); 
+            contextMenu.Items.Add("メイン表示", Properties.Resources.drugicon, ShowForm); 
             contextMenu.Items.Add(startStopMenuItem); // 動的な項目を追加
-            contextMenu.Items.Add("薬歴表示", null, buttonViewer_Click);
+            contextMenu.Items.Add("薬歴表示", Properties.Resources.Text_preview, buttonViewer_Click);
             contextMenu.Items.Add(new ToolStripSeparator());
-            contextMenu.Items.Add("終了", null, ExitApplication);
+            contextMenu.Items.Add("終了", Properties.Resources.Exit, ExitApplication);
 
             notifyIcon1.ContextMenuStrip = contextMenu;
 
@@ -1826,11 +1851,13 @@ namespace OQSDrug
             if (StartStop.Checked)
             {
                 menuItem.Text = "停止";
+                menuItem.Image = Properties.Resources.Stop;
                 animationTimer?.Start();
             }
             else
             {
                 menuItem.Text = "開始";
+                menuItem.Image = Properties.Resources.Go;
                 animationTimer?.Stop();
                 notifyIcon1.Icon = Properties.Resources.drug1;
             }
@@ -1871,20 +1898,27 @@ namespace OQSDrug
             this.WindowState = FormWindowState.Normal;
             this.ShowInTaskbar = true;
             this.Show();
+            this.Activate();                          // フォームをアクティブ化
         }
 
         // アプリケーションを終了する
         private void ExitApplication(object sender, EventArgs e)
         {
-            notifyIcon1.Dispose();
-
             buttonExit_Click(toolStripButtonExit, EventArgs.Empty);
         }
 
         
         private void notifyIcon1_DoubleClick(object sender, EventArgs e)
         {
-            ShowForm(notifyIcon1,EventArgs.Empty);
+            if (this.WindowState == FormWindowState.Minimized || !this.Visible)
+            {
+                ShowForm(notifyIcon1, EventArgs.Empty);
+            }
+            else
+            {
+                // 表示されている場合はタスクトレイに最小化
+                toolStripButtonToTaskTray_Click(sender, EventArgs.Empty);
+            }
         }
 
         private void AnimationTimer_Tick(object sender, EventArgs e)

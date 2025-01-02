@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form2));
             this.textBoxDatadyna = new System.Windows.Forms.TextBox();
             this.textBoxOQSFolder = new System.Windows.Forms.TextBox();
@@ -79,6 +80,8 @@
             this.buttonViewerPositionReset = new System.Windows.Forms.Button();
             this.buttonImport = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
+            this.checkBoxMinimumStart = new System.Windows.Forms.CheckBox();
+            this.toolTipSetting = new System.Windows.Forms.ToolTip(this.components);
             this.groupBoxDrug.SuspendLayout();
             this.groupBoxKensin.SuspendLayout();
             this.SuspendLayout();
@@ -96,6 +99,7 @@
             this.textBoxOQSFolder.Name = "textBoxOQSFolder";
             this.textBoxOQSFolder.Size = new System.Drawing.Size(377, 19);
             this.textBoxOQSFolder.TabIndex = 4;
+            this.toolTipSetting.SetToolTip(this.textBoxOQSFolder, "オン資PCのreq/res/face等のフォルダが有る場所を指定します");
             // 
             // textBoxRSBgazou
             // 
@@ -103,6 +107,7 @@
             this.textBoxRSBgazou.Name = "textBoxRSBgazou";
             this.textBoxRSBgazou.Size = new System.Drawing.Size(377, 19);
             this.textBoxRSBgazou.TabIndex = 6;
+            this.toolTipSetting.SetToolTip(this.textBoxRSBgazou, "RSBaseのgazouフォルダ、RSAうとの自動取り込みフォルダを指定します");
             // 
             // groupBoxDrug
             // 
@@ -273,6 +278,7 @@
             this.comboBoxTimerSecond.Name = "comboBoxTimerSecond";
             this.comboBoxTimerSecond.Size = new System.Drawing.Size(53, 20);
             this.comboBoxTimerSecond.TabIndex = 14;
+            this.toolTipSetting.SetToolTip(this.comboBoxTimerSecond, "情報閲覧を行う間隔を秒数で指定します。");
             // 
             // label5
             // 
@@ -289,6 +295,7 @@
             this.textBoxMCode.Name = "textBoxMCode";
             this.textBoxMCode.Size = new System.Drawing.Size(100, 19);
             this.textBoxMCode.TabIndex = 12;
+            this.toolTipSetting.SetToolTip(this.textBoxMCode, "10桁のものです");
             // 
             // buttonDatadyna
             // 
@@ -322,7 +329,7 @@
             // 
             // buttonSaveExit
             // 
-            this.buttonSaveExit.Location = new System.Drawing.Point(495, 509);
+            this.buttonSaveExit.Location = new System.Drawing.Point(503, 561);
             this.buttonSaveExit.Name = "buttonSaveExit";
             this.buttonSaveExit.Size = new System.Drawing.Size(75, 23);
             this.buttonSaveExit.TabIndex = 50;
@@ -332,7 +339,7 @@
             // 
             // buttonCancel
             // 
-            this.buttonCancel.Location = new System.Drawing.Point(414, 509);
+            this.buttonCancel.Location = new System.Drawing.Point(422, 561);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(75, 23);
             this.buttonCancel.TabIndex = 44;
@@ -390,6 +397,7 @@
             this.checkBoxRSBReload.Size = new System.Drawing.Size(100, 16);
             this.checkBoxRSBReload.TabIndex = 8;
             this.checkBoxRSBReload.Text = "RSBase reload";
+            this.toolTipSetting.SetToolTip(this.checkBoxRSBReload, "RSAutoを使用しないときは、Top画面のURLをしていするとリロード取り込みします。\r\nRSBaseが本PCにインストールされている必要があります。\r\n");
             this.checkBoxRSBReload.UseVisualStyleBackColor = true;
             // 
             // radioButtonK1
@@ -502,7 +510,7 @@
             // label15
             // 
             this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(12, 419);
+            this.label15.Location = new System.Drawing.Point(20, 471);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(64, 12);
             this.label15.TabIndex = 53;
@@ -510,7 +518,7 @@
             // 
             // textBoxTemprs
             // 
-            this.textBoxTemprs.Location = new System.Drawing.Point(174, 442);
+            this.textBoxTemprs.Location = new System.Drawing.Point(184, 497);
             this.textBoxTemprs.Name = "textBoxTemprs";
             this.textBoxTemprs.Size = new System.Drawing.Size(377, 19);
             this.textBoxTemprs.TabIndex = 54;
@@ -518,7 +526,7 @@
             // label14
             // 
             this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(35, 445);
+            this.label14.Location = new System.Drawing.Point(43, 497);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(94, 12);
             this.label14.TabIndex = 55;
@@ -527,7 +535,7 @@
             // checkBoxTopmost
             // 
             this.checkBoxTopmost.AutoSize = true;
-            this.checkBoxTopmost.Location = new System.Drawing.Point(35, 474);
+            this.checkBoxTopmost.Location = new System.Drawing.Point(43, 526);
             this.checkBoxTopmost.Name = "checkBoxTopmost";
             this.checkBoxTopmost.Size = new System.Drawing.Size(127, 16);
             this.checkBoxTopmost.TabIndex = 56;
@@ -536,7 +544,7 @@
             // 
             // buttonViewerPositionReset
             // 
-            this.buttonViewerPositionReset.Location = new System.Drawing.Point(176, 470);
+            this.buttonViewerPositionReset.Location = new System.Drawing.Point(184, 522);
             this.buttonViewerPositionReset.Name = "buttonViewerPositionReset";
             this.buttonViewerPositionReset.Size = new System.Drawing.Size(179, 23);
             this.buttonViewerPositionReset.TabIndex = 57;
@@ -546,7 +554,7 @@
             // 
             // buttonImport
             // 
-            this.buttonImport.Location = new System.Drawing.Point(252, 509);
+            this.buttonImport.Location = new System.Drawing.Point(260, 561);
             this.buttonImport.Name = "buttonImport";
             this.buttonImport.Size = new System.Drawing.Size(75, 23);
             this.buttonImport.TabIndex = 58;
@@ -556,7 +564,7 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(333, 509);
+            this.button2.Location = new System.Drawing.Point(341, 561);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 59;
@@ -564,11 +572,23 @@
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.buttonExport_Click);
             // 
+            // checkBoxMinimumStart
+            // 
+            this.checkBoxMinimumStart.AutoSize = true;
+            this.checkBoxMinimumStart.Location = new System.Drawing.Point(33, 408);
+            this.checkBoxMinimumStart.Name = "checkBoxMinimumStart";
+            this.checkBoxMinimumStart.Size = new System.Drawing.Size(96, 16);
+            this.checkBoxMinimumStart.TabIndex = 60;
+            this.checkBoxMinimumStart.Text = "最小化して開く";
+            this.toolTipSetting.SetToolTip(this.checkBoxMinimumStart, "タスクトレイに最小化して起動します");
+            this.checkBoxMinimumStart.UseVisualStyleBackColor = true;
+            // 
             // Form2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(594, 550);
+            this.ClientSize = new System.Drawing.Size(596, 596);
+            this.Controls.Add(this.checkBoxMinimumStart);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.buttonImport);
             this.Controls.Add(this.buttonViewerPositionReset);
@@ -665,5 +685,7 @@
         private System.Windows.Forms.Button buttonViewerPositionReset;
         private System.Windows.Forms.Button buttonImport;
         private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.CheckBox checkBoxMinimumStart;
+        private System.Windows.Forms.ToolTip toolTipSetting;
     }
 }

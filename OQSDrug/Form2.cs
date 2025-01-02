@@ -125,6 +125,8 @@ namespace OQSDrug
             textBoxTemprs.Text = Properties.Settings.Default.temprs;
 
             checkBoxTopmost.Checked = Properties.Settings.Default.ViewerTopmost;
+
+            checkBoxMinimumStart.Checked = Properties.Settings.Default.MinimumStart;
         }
 
         private void SaveSettings()
@@ -167,6 +169,8 @@ namespace OQSDrug
             Properties.Settings.Default.temprs = textBoxTemprs.Text;
 
             Properties.Settings.Default.ViewerTopmost = checkBoxTopmost.Checked ;
+
+            Properties.Settings.Default.MinimumStart = checkBoxMinimumStart.Checked;
 
             Properties.Settings.Default.Save();
 
