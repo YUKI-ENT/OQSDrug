@@ -6,7 +6,8 @@
 - PDF形式に比べ薬歴をまとめてわかりやすく表示。
 - PDF形式の情報も取得期間や間隔を調整可能。
 - **RSBase** の検査項目として自動ファイリング可能。
-  ![oqsdrug4](https://github.com/user-attachments/assets/f99bbf60-d7a0-46da-8db1-18ddb1232bbe)
+  ![oqsdrug4](https://github.com/user-attachments/assets/fc92e45c-42fa-453f-94ff-ef45789aca44)
+
 
 
 ---
@@ -22,7 +23,7 @@
   - **RSBase** の検査項目として自動ファイリング可能。
 
 ### 実行環境
-- .NET 4.8が必要です。最近のWindows10以上ではデフォルトでインストールされていますが、起動できない場合、以下のリンクから **.NET Framework 4.8 ランタイム** をダウンロードしてください：  
+- .NET 4.8Frameworkが必要です。最近のWindows10以上ではデフォルトでインストールされていますが、起動できない場合、以下のリンクから **.NET Framework 4.8 ランタイム** をダウンロードしてください：  
 [公式ダウンロードページ](https://dotnet.microsoft.com/ja-jp/download/dotnet-framework/net48)
  
 - **Accessデータベースエンジン**  
@@ -72,6 +73,13 @@
    - メインウィンドウで、自動起動のオプションを設定すると、カルテ遷移しそのカルテ番号で過去の薬歴があれば薬歴ビュワーウインドウをポップアップで表示します。
 ![oqsdrug3](https://github.com/user-attachments/assets/e9631708-a4b7-49e4-85d1-8bc7446bb032)
 
+4. **タスクトレイアイコン**
+
+    ![tray](https://github.com/user-attachments/assets/d1664e40-6947-488b-9616-092e50e73b9e)
+
+   - タスクトレイから開始・停止、ビュワーの表示などの操作が行えます
+   - 薬歴取得動作中はタスクトレイアイコンがアニメーションで回転します
+     
 ---
 
 ## 注意事項
