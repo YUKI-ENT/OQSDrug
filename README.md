@@ -9,7 +9,8 @@
 - **RSBase** の検査項目としてPDFを自動ファイリング可能。
   ![oqsdrug4](https://github.com/user-attachments/assets/fc92e45c-42fa-453f-94ff-ef45789aca44)
 
-
+- 薬歴はこんな感じです。選択してコピーし、電カル等へのペーストも可能です。
+![oqsdrug3](https://github.com/user-attachments/assets/e9631708-a4b7-49e4-85d1-8bc7446bb032)
 
 ---
 
