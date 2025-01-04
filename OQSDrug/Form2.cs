@@ -127,6 +127,16 @@ namespace OQSDrug
             checkBoxTopmost.Checked = Properties.Settings.Default.ViewerTopmost;
 
             checkBoxMinimumStart.Checked = Properties.Settings.Default.MinimumStart;
+
+            int savedIndex = Properties.Settings.Default.RSBID;
+            if (savedIndex >= 0 && savedIndex < comboBoxRSBID.Items.Count)
+            {
+                comboBoxRSBID.SelectedIndex = savedIndex;
+            }
+            else
+            {
+                comboBoxRSBID.SelectedIndex = 0;
+            }
         }
 
         private void SaveSettings()
@@ -172,9 +182,10 @@ namespace OQSDrug
 
             Properties.Settings.Default.MinimumStart = checkBoxMinimumStart.Checked;
 
+            Properties.Settings.Default.RSBID = comboBoxRSBID.SelectedIndex;
+
             Properties.Settings.Default.Save();
 
-            
         }
 
         private void buttonOQSDrugData_Click(object sender, EventArgs e)

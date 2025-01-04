@@ -16,6 +16,7 @@ using static System.Net.WebRequestMethods;
 using File = System.IO.File;
 using System.Collections;
 using System.Runtime.CompilerServices;
+using System.Xml.Linq;
 
 
 namespace OQSDrug
@@ -26,10 +27,15 @@ namespace OQSDrug
         public long tempId = 0;
         public bool autoRSB = false;
 
+        byte okSettings = 0;
+
         private Timer timer;
         private bool isTimerRunning = false; // タイマーの状態フラグ
 
         private FileSystemWatcher fileWatcher;
+        string idFile = ""; //RSB連携
+        int idStyle = 0;
+        bool idChageCalled = false;
 
         // 動的に追加するラベル
         private Label[] statusLabels;
@@ -195,24 +201,18 @@ namespace OQSDrug
             //Form2閉じたあと
             SetupYZKSindicator();
             SetupTableLayout();
-            bool okSettings = await UpdateStatus();
+            
+            okSettings = await UpdateStatus();
 
-            if (okSettings)
-            {
-                //テーブルフィールドのアップデート
-                bool fieldCheck = await AddFieldIfNotExists(Properties.Settings.Default.OQSDrugData, "drug_history", "Source", "INTEGER")
-                                && await AddFieldIfNotExists(Properties.Settings.Default.OQSDrugData, "drug_history", "Revised", "YESNO");
+            await setStatus();
 
-                if (!fieldCheck)
-                {
-                    MessageBox.Show("OQSDrugDataのアップデートでエラーが発生しました。OQSDrugData.mdbにアクセスできるかを調べて再起動してください");
-                }
-
-                this.StartStop.Enabled = true;
-                await reloadDataAsync();
-            }
+            //autoRSB = Properties.Settings.Default.autoRSB;
+            //checkBoxAutoview.Checked = autoRSB;
+            checkBoxAutoview_CheckedChanged(sender, EventArgs.Empty);
 
             LoadViewerSettings();
+
+            InitNotifyIcon();
 
         }
 
@@ -521,9 +521,9 @@ namespace OQSDrug
             });
         }
 
-        private async Task<bool> UpdateStatus()
+        private async Task<byte> UpdateStatus() //GasouF|OQSF|dyna|Data 
         {
-            bool AllOK = true;
+            byte resultCode = 0;
 
             //設定初期値の確認
             if (Properties.Settings.Default.TimerInterval <= 0)
@@ -566,11 +566,11 @@ namespace OQSDrug
                     {
                         statusTexts[index].Text = "OK";
                         statusTexts[index].ForeColor = Color.Green;
+                        // OKの場合、対応するビットを1にする
+                        resultCode |= (byte)(1 << index);
                     }
                     else
                     {
-                        AllOK = false;
-
                         statusTexts[index].Text = "NG";
                         statusTexts[index].ForeColor = Color.Red;
 
@@ -579,35 +579,7 @@ namespace OQSDrug
                 }));
             }
 
-            return AllOK;
-        }
-
-        private string getOLEProviders()
-        {
-            string returnString = "";
-            try
-            {
-                Console.WriteLine("登録されているOLE DBプロバイダの一覧:");
-
-                var enumerator = new OleDbEnumerator();
-
-                // OleDbEnumerator.GetElements() を呼び出し
-                var dataTable = enumerator.GetElements();
-
-
-                // DataTable の内容を列挙
-                foreach (System.Data.DataRow row in dataTable.Rows)
-                {
-                    returnString += $"プロバイダ名: {row["SOURCES_NAME"]}\n";
-
-                }
-                return returnString;
-            }
-            catch (Exception ex)
-            {
-                returnString += $"エラー: {ex.Message}";
-                return returnString;
-            }
+            return resultCode;
         }
 
         private void InitializeDBProvider()
@@ -619,10 +591,10 @@ namespace OQSDrug
                 // プロバイダの優先順序
                 string[] preferredProviders =
                 {
-                    "Microsoft.Jet.OLEDB.4.0",
-                    "Microsoft.ACE.OLEDB.12.0",
-                    "Microsoft.ACE.OLEDB.15.0",
-                    "Microsoft.ACE.OLEDB.16.0"
+                    "Microsoft.Jet.OLEDB.4.0"
+                    //"Microsoft.ACE.OLEDB.12.0",
+                    //"Microsoft.ACE.OLEDB.15.0",
+                    //"Microsoft.ACE.OLEDB.16.0"
                 };
                 toolStripComboBoxDBProviders.Items.Clear();
 
@@ -694,21 +666,9 @@ namespace OQSDrug
             listViewLog.Columns.Add("TimeStamp", 100); // 列1: タイムスタンプ
             listViewLog.Columns.Add("Log", 400);   // 列2: メッセージ
 
-            bool okSettings = await UpdateStatus();
+            okSettings = await UpdateStatus();
 
-            if (okSettings)
-            {
-                //テーブルフィールドのアップデート
-                //テーブルフィールドのアップデート
-                bool fieldCheck = await AddFieldIfNotExists(Properties.Settings.Default.OQSDrugData, "drug_history", "Source", "INTEGER")
-                                && await AddFieldIfNotExists(Properties.Settings.Default.OQSDrugData, "drug_history", "Revised", "YESNO");
-                if (!fieldCheck)
-                {
-                    MessageBox.Show("OQSDrugDataのアップデートでエラーが発生しました。OQSDrugData.mdbにアクセスできるかを調べて再起動してください");
-                }
-                this.StartStop.Enabled = true;
-                await reloadDataAsync();
-            }
+            await setStatus();
 
             autoRSB = Properties.Settings.Default.autoRSB;
             checkBoxAutoview.Checked = autoRSB;
@@ -719,7 +679,24 @@ namespace OQSDrug
 
             
 
+        }
 
+        private async Task setStatus()
+        {
+            if ((okSettings & (0b0001)) == 1) //OQSDrugData OK
+            {
+                //テーブルフィールドのアップデート
+                bool fieldCheck = await AddFieldIfNotExists(Properties.Settings.Default.OQSDrugData, "drug_history", "Source", "INTEGER")
+                                && await AddFieldIfNotExists(Properties.Settings.Default.OQSDrugData, "drug_history", "Revised", "YESNO");
+                if (!fieldCheck)
+                {
+                    MessageBox.Show("OQSDrugDataのアップデートでエラーが発生しました。OQSDrugData.mdbにアクセスできるかを調べて再起動してください");
+                }
+                await reloadDataAsync();
+            }
+
+            this.StartStop.Enabled = (okSettings == 0b1111);
+            
         }
 
         private void AddLog(string message)
@@ -1505,25 +1482,25 @@ namespace OQSDrug
             // Form3がすでに開いているか確認
             if (form3Instance == null || form3Instance.IsDisposed)
             {
-                Form3 form3 = new Form3(this);
+               form3Instance = new Form3(this);
 
                 // 前回の位置とサイズを復元
                 if (Properties.Settings.Default.ViewerBounds != Rectangle.Empty)
                 {
-                    form3.StartPosition = FormStartPosition.Manual;
-                    form3.Bounds = Properties.Settings.Default.ViewerBounds;
+                    form3Instance.StartPosition = FormStartPosition.Manual;
+                    form3Instance.Bounds = Properties.Settings.Default.ViewerBounds;
                 }
 
                 // TopMost状態を設定
-                form3.TopMost = Properties.Settings.Default.ViewerTopmost;
+                form3Instance.TopMost = Properties.Settings.Default.ViewerTopmost;
 
                 // Form3が閉じるときに位置、サイズ、TopMost状態を保存
-                form3.FormClosing += (s, args) =>
+                form3Instance.FormClosing += (s, args) =>
                 {
-                    SaveViewerSettings(form3);
+                    SaveViewerSettings(form3Instance);
                 };
 
-                form3.Show(this);
+                form3Instance.Show(this);
             }
             else
             {
@@ -1537,34 +1514,36 @@ namespace OQSDrug
             }
         }
 
-        private void checkBoxAutoview_CheckedChanged(object sender, EventArgs e)
+        private async void checkBoxAutoview_CheckedChanged(object sender, EventArgs e) //RSB連動遷移
         {
-
             autoRSB = checkBoxAutoview.Checked;
             Properties.Settings.Default.autoRSB = autoRSB;
             Properties.Settings.Default.Save();
 
             if (autoRSB)
             {
+                InitializeFileWatcher();
 
-                //temp_rs.txtが有効か確認
-                if (File.Exists(Properties.Settings.Default.temprs))
+                //初回読み込み
+                if (File.Exists(idFile))
                 {
-                    InitializeFileWatcher();
-
+                    await ReadIdAsync(idFile,idStyle);
                 }
-                else
-                {
-                    MessageBox.Show($"{Properties.Settings.Default.temprs}がみつかりません");
-                    checkBoxAutoview.Checked = false;
-                    autoRSB = false;
-                    Properties.Settings.Default.autoRSB = autoRSB;
-                    Properties.Settings.Default.Save();
-                }
+                //IDが有効か確認 (ID.datやtemp_rs.txtは消えていることがあるのでややこしい)
+                //if (File.Exists(Properties.Settings.Default.temprs))
+                //{
+                //}
+                //else
+                //{
+                //    MessageBox.Show($"{Properties.Settings.Default.temprs}がみつかりません");
+                //    checkBoxAutoview.Checked = false;
+                //    autoRSB = false;
+                //    Properties.Settings.Default.autoRSB = autoRSB;
+                //    Properties.Settings.Default.Save();
+                //}
             } else
             {
                 stopFileWatcher();
-
             }
         }
 
@@ -1580,39 +1559,118 @@ namespace OQSDrug
 
         private void InitializeFileWatcher()
         {
+            switch (Properties.Settings.Default.RSBID)
+            {
+                case 0:
+                    idFile = @"C:\RSB_TEMP\ID.dat";
+                    idStyle = 1;
+                    break;
+                case 1:
+                    idFile = @"C:\RSB_TEMP\temp_rs.txt";
+                    idStyle = 1;
+                    break;
+                case 2:
+                    idFile = @"C:\common\thept.txt";
+                    idStyle = 2;
+                    break;
+            }
+
             // FileSystemWatcherを作成し、監視対象のディレクトリとファイルを指定
-            fileWatcher = new FileSystemWatcher();
-            fileWatcher.Path = Path.GetDirectoryName(Properties.Settings.Default.temprs);  // ファイルがあるディレクトリ
-            fileWatcher.Filter = Path.GetFileName(Properties.Settings.Default.temprs);     // ファイル名でフィルタリング
-            fileWatcher.NotifyFilter = NotifyFilters.LastWrite; // 最終書き込み変更を監視
+            //fileWatcher = new FileSystemWatcher();
+            //fileWatcher.Path = Path.GetDirectoryName(idFile);  // ファイルがあるディレクトリ
+            //fileWatcher.Filter = Path.GetFileName(idFile);     // ファイル名でフィルタリング
+            //fileWatcher.NotifyFilter = NotifyFilters.LastWrite; // 最終書き込み変更を監視
 
-            // 監視イベントハンドラを設定
-            fileWatcher.Changed += FileWatcher_Changed;
+            string idPath = Path.GetDirectoryName(idFile);
+            if (!Directory.Exists(idPath))
+            {
+                MessageBox.Show($"{idPath}が存在しません。RSBaseがインストールされ、ID連携の設定を確認してください。","RSBaseID連携エラー");
+                return;
+            }
+            
+            try
+            {
+                fileWatcher = new FileSystemWatcher
+                {
+                    Path = idPath,   // ディレクトリを監視
+                    Filter = Path.GetFileName(idFile),     // ファイル名でフィルタリング
+                    NotifyFilter = NotifyFilters.LastWrite, // | NotifyFilters.CreationTime, // 必要な通知フィルタを設定
+                    EnableRaisingEvents = true             // 監視を有効化
+                };
 
-            // 監視を開始
-            fileWatcher.EnableRaisingEvents = true;
-            AddLog("RSB連携を開始しました");
+
+                // 監視イベントハンドラを設定
+                fileWatcher.Changed += FileWatcher_Changed;
+                //fileWatcher.Created += FileWatcher_Changed;
+
+                AddLog("RSB連携を開始しました");
+            }
+            catch (Exception ex)
+            {
+                AddLog($"FileWatcherの初期化に失敗しました{ex.ToString()}");
+            }
         }
 
         // ファイルが変更されたときに呼ばれるイベントハンドラ
         private async void FileWatcher_Changed(object sender, FileSystemEventArgs e)
         {
-            // ファイル内容の読み取り
+            if (!idChageCalled && e.FullPath == idFile)
+            {
+                idChageCalled = true; //二重起動を避ける
+                // ファイル内容の読み取り
+                await ReadIdAsync(e.FullPath, idStyle);
+
+                idChageCalled = false;
+            }
+        }
+
+        private async Task ReadIdAsync(string filePath, int style)
+        {
             try
             {
-                string fileContent = System.IO.File.ReadAllText(Properties.Settings.Default.temprs);
-                AddLog($"RSB連携ファイルの変更を検知：{fileContent}");
+                // ファイルの内容を非同期で読み取る
+                string fileContent = await Task.Run(() =>
+                {
+                    using (var reader = new System.IO.StreamReader(filePath))
+                    {
+                        return reader.ReadLine();
+                    }
+                });
+
+                //thept.txtは内容が違う
+                if (style == 2)
+                {
+                    fileContent = fileContent.Split(',')[1];
+                }
+                AddLog($"RSB連携ファイルの変更を検知。内容：{fileContent}");
 
                 // 数値に変換を試みる
                 if (long.TryParse(fileContent, out long idValue))
                 {
-                    // 数値に変換できた場合、特定の関数を実行
+                    // 数値に変換できた場合
                     tempId = idValue;
 
                     if (await existDrugHistory(tempId))
                     {
-                        AddLog($"{tempId}の薬歴を開きます");
-                        buttonViewer_Click(toolStripButtonViewer, EventArgs.Empty);
+                        // UIスレッドで操作
+                        Invoke((Action)(() =>
+                        {
+                            AddLog($"{tempId}の薬歴を開きます");
+                            buttonViewer_Click(toolStripButtonViewer, EventArgs.Empty);
+                        }));
+                    } else
+                    {
+                        //薬歴なしの場合はViewerを閉じる
+                        if (form3Instance != null && !form3Instance.IsDisposed)
+                        {
+                            // UI スレッドで操作する必要があるため Invoke を使用
+                            form3Instance.Invoke((Action)(() =>
+                            {
+                                form3Instance.Close(); // Form3 を閉じる
+                                form3Instance = null;
+                                AddLog($"{tempId}は薬歴がないので薬歴ビュワーを閉じます");
+                            }));
+                        }
                     }
                 }
                 else
@@ -1801,6 +1859,7 @@ namespace OQSDrug
 
             // 状態に応じたメニュー項目を更新
             UpdateStartStopMenuItem(startStopMenuItem);
+            startStopMenuItem.Enabled = (okSettings == 0b1111);
 
             // メニューに動的な項目を追加
             startStopMenuItem.Click += (s, e) =>

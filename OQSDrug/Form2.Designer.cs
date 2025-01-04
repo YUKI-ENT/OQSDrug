@@ -82,6 +82,7 @@
             this.button2 = new System.Windows.Forms.Button();
             this.checkBoxMinimumStart = new System.Windows.Forms.CheckBox();
             this.toolTipSetting = new System.Windows.Forms.ToolTip(this.components);
+            this.comboBoxRSBID = new System.Windows.Forms.ComboBox();
             this.groupBoxDrug.SuspendLayout();
             this.groupBoxKensin.SuspendLayout();
             this.SuspendLayout();
@@ -518,19 +519,21 @@
             // 
             // textBoxTemprs
             // 
-            this.textBoxTemprs.Location = new System.Drawing.Point(184, 497);
+            this.textBoxTemprs.Location = new System.Drawing.Point(341, 494);
             this.textBoxTemprs.Name = "textBoxTemprs";
-            this.textBoxTemprs.Size = new System.Drawing.Size(377, 19);
+            this.textBoxTemprs.Size = new System.Drawing.Size(220, 19);
             this.textBoxTemprs.TabIndex = 54;
+            this.textBoxTemprs.Visible = false;
             // 
             // label14
             // 
             this.label14.AutoSize = true;
             this.label14.Location = new System.Drawing.Point(43, 497);
             this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(94, 12);
+            this.label14.Size = new System.Drawing.Size(109, 12);
             this.label14.TabIndex = 55;
-            this.label14.Text = "temp_rs.txtの場所";
+            this.label14.Text = "RSBase ID連携方式";
+            this.toolTipSetting.SetToolTip(this.label14, "RSBaseのID連携を設定すると\r\nカルテ遷移に連動して自動で薬歴ビュワーを起動します");
             // 
             // checkBoxTopmost
             // 
@@ -583,11 +586,25 @@
             this.toolTipSetting.SetToolTip(this.checkBoxMinimumStart, "タスクトレイに最小化して起動します");
             this.checkBoxMinimumStart.UseVisualStyleBackColor = true;
             // 
+            // comboBoxRSBID
+            // 
+            this.comboBoxRSBID.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxRSBID.FormattingEnabled = true;
+            this.comboBoxRSBID.Items.AddRange(new object[] {
+            "ID.dat",
+            "temp_rs.txt",
+            "thept.txt"});
+            this.comboBoxRSBID.Location = new System.Drawing.Point(174, 494);
+            this.comboBoxRSBID.Name = "comboBoxRSBID";
+            this.comboBoxRSBID.Size = new System.Drawing.Size(161, 20);
+            this.comboBoxRSBID.TabIndex = 61;
+            // 
             // Form2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(596, 596);
+            this.Controls.Add(this.comboBoxRSBID);
             this.Controls.Add(this.checkBoxMinimumStart);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.buttonImport);
@@ -687,5 +704,6 @@
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.CheckBox checkBoxMinimumStart;
         private System.Windows.Forms.ToolTip toolTipSetting;
+        private System.Windows.Forms.ComboBox comboBoxRSBID;
     }
 }
