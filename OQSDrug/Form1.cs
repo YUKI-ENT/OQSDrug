@@ -36,6 +36,7 @@ namespace OQSDrug
         string idFile = ""; //RSB連携
         int idStyle = 0;
         bool idChageCalled = false;
+        int fileReadDelayms = 500;
 
         // 動的に追加するラベル
         private Label[] statusLabels;
@@ -1617,6 +1618,9 @@ namespace OQSDrug
             if (!idChageCalled && e.FullPath == idFile)
             {
                 idChageCalled = true; //二重起動を避ける
+
+                await Task.Delay(fileReadDelayms); // 読み込み遅延
+
                 // ファイル内容の読み取り
                 await ReadIdAsync(e.FullPath, idStyle);
 
@@ -1631,7 +1635,9 @@ namespace OQSDrug
                 // ファイルの内容を非同期で読み取る
                 string fileContent = await Task.Run(() =>
                 {
-                    using (var reader = new System.IO.StreamReader(filePath))
+                    // FileStreamを使用して共有アクセスを許可
+                    using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (var reader = new StreamReader(stream))
                     {
                         return reader.ReadLine();
                     }
