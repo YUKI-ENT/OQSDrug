@@ -26,11 +26,14 @@ namespace OQSDrug
         public string DBProvider = "";
         public long tempId = 0;
         public bool autoRSB = false;
+        public bool DataDbLock = false;
 
         byte okSettings = 0;
 
-        private Timer timer;
+        //private Timer timer;
         private bool isTimerRunning = false; // タイマーの状態フラグ
+
+        private System.Threading.Timer backgroundTimer; //非同期タイマー
 
         private FileSystemWatcher fileWatcher;
         string idFile = ""; //RSB連携
@@ -53,135 +56,223 @@ namespace OQSDrug
         {
             InitializeComponent();
             SetupTableLayout();
-            InitializeTimer();
+            //InitializeTimer();
         }
 
         // タイマーの初期化
-        private void InitializeTimer()
-        {
-            // タイマーを作成
-            timer = new Timer
-            {
-                Interval = Properties.Settings.Default.TimerInterval * 1000 // インターバルを設定
-            };
-            // タイマーのイベントハンドラを登録
-            timer.Tick += Timer_Tick;
-        }
+        //private void InitializeTimer()
+        //{
+        //    // タイマーを作成
+        //    timer = new Timer
+        //    {
+        //        Interval = Properties.Settings.Default.TimerInterval * 1000 // インターバルを設定
+        //    };
+        //    // タイマーのイベントハンドラを登録
+        //    timer.Tick += Timer_Tick;
+        //}
 
         // タイマーのイベントハンドラ
-        private async void Timer_Tick(object sender, EventArgs e)
+        //private async void Timer_Tick(object sender, EventArgs e)
+        //{
+        //    if (!isTimerRunning)
+        //    {
+        //        isTimerRunning = true;
+        //        DateTime startTime = DateTime.Now;
+        //        AddLog($"タイマーイベント開始: {startTime}");
+
+        //        //Datadynaのデータ取得
+        //        DataTable dynaTable = await LoadDataFromDatabaseAsync(Properties.Settings.Default.Datadyna);
+
+        //        //薬剤PDF
+        //        if (Properties.Settings.Default.DrugFileCategory > 0)
+        //        {
+        //            MakeReq(Properties.Settings.Default.DrugFileCategory + 10, dynaTable);
+        //        }
+
+        //        //薬剤xmlは常に実行
+        //        MakeReq(12, dynaTable);
+
+        //        //健診PDF
+        //        if (Properties.Settings.Default.KensinFileCategory > 0)
+        //        {
+        //            MakeReq(Properties.Settings.Default.KensinFileCategory + 100, dynaTable);
+        //        }
+
+        //        await reloadDataAsync();
+
+        //        //Resフォルダの処理
+
+        //        bool processCompleted = false;
+        //        bool isRemainRes = true;
+
+        //        // 5秒ごとにProcessResAsyncを呼び出し
+        //        while (!processCompleted || isRemainRes)
+        //        {
+        //            await Task.Delay(5000);
+
+        //            processCompleted = await ProcessResAsync();
+        //            isRemainRes = await RemainResTask();
+
+        //            if ((DateTime.Now - startTime).TotalSeconds > (Properties.Settings.Default.TimerInterval - 5))
+        //            {
+        //                processCompleted = true;
+        //                isRemainRes = false;
+        //                AddLog("時間内に処理が終了しませんでしたので、タイマー処理を中止します");
+        //            }
+
+        //            await reloadDataAsync();
+        //            if (!timer.Enabled)
+        //            {
+        //                break;
+        //            }
+        //        }
+        //        isTimerRunning = false;
+        //        AddLog($"タイマーイベント終了");
+        //    }
+        //}
+
+        private async Task RunTimerLogicAsync()
         {
-            if (!isTimerRunning)
+            DateTime startTime = DateTime.Now;
+            AddLog($"タイマーイベント開始: {startTime}");
+
+            // Datadynaのデータ取得
+            DataTable dynaTable = await LoadDataFromDatabaseAsync(Properties.Settings.Default.Datadyna);
+
+            // 薬剤PDF
+            if (Properties.Settings.Default.DrugFileCategory > 0)
             {
-                isTimerRunning = true;
-                DateTime startTime = DateTime.Now;
-                AddLog($"タイマーイベント開始: {startTime}");
+                MakeReq(Properties.Settings.Default.DrugFileCategory + 10, dynaTable);
+            }
 
-                //Datadynaのデータ取得
-                DataTable dynaTable = await LoadDataFromDatabaseAsync(Properties.Settings.Default.Datadyna);
+            // 薬剤xmlは常に実行
+            MakeReq(12, dynaTable);
 
-                //薬剤PDF
-                if (Properties.Settings.Default.DrugFileCategory > 0)
+            // 健診PDF
+            if (Properties.Settings.Default.KensinFileCategory > 0)
+            {
+                MakeReq(Properties.Settings.Default.KensinFileCategory + 100, dynaTable);
+            }
+
+            await reloadDataAsync();
+
+            // Resフォルダの処理
+            bool processCompleted = false;
+            bool isRemainRes = true;
+
+            // 5秒ごとにProcessResAsyncを呼び出し
+            while (!processCompleted || isRemainRes)
+            {
+                await Task.Delay(5000);
+
+                processCompleted = await ProcessResAsync();
+                isRemainRes = await RemainResTask();
+
+                if ((DateTime.Now - startTime).TotalSeconds > (Properties.Settings.Default.TimerInterval - 5))
                 {
-                    MakeReq(Properties.Settings.Default.DrugFileCategory + 10, dynaTable);
-                }
-
-                //薬剤xmlは常に実行
-                MakeReq(12, dynaTable);
-
-                //健診PDF
-                if (Properties.Settings.Default.KensinFileCategory > 0)
-                {
-                    MakeReq(Properties.Settings.Default.KensinFileCategory + 100, dynaTable);
+                    processCompleted = true;
+                    isRemainRes = false;
+                    AddLog("時間内に処理が終了しませんでしたので、タイマー処理を中止します");
                 }
 
                 await reloadDataAsync();
 
-                //Resフォルダの処理
-
-                bool processCompleted = false;
-                bool isRemainRes = true;
-
-                // 5秒ごとにProcessResAsyncを呼び出し
-                while (!processCompleted || isRemainRes)
+                if (!isTimerRunning || backgroundTimer == null)
                 {
-                    await Task.Delay(5000);
-
-                    processCompleted = await ProcessResAsync();
-                    isRemainRes = await RemainResTask();
-
-                    if ((DateTime.Now - startTime).TotalSeconds > (Properties.Settings.Default.TimerInterval - 5))
-                    {
-                        processCompleted = true;
-                        isRemainRes = false;
-                        AddLog("時間内に処理が終了しませんでしたので、タイマー処理を中止します");
-                    }
-
-                    await reloadDataAsync();
-                    if (!timer.Enabled)
-                    {
-                        break;
-                    }
+                    break;
                 }
-                isTimerRunning = false;
-                AddLog($"タイマーイベント終了");
             }
+
+            AddLog($"タイマーイベント終了");
         }
+
+        public void StartTimer()
+        {
+            backgroundTimer = new System.Threading.Timer(async _ =>
+            {
+                if (!isTimerRunning)
+                {
+                    isTimerRunning = true;
+                    await RunTimerLogicAsync();
+                    isTimerRunning = false;
+                }
+            }, null, 0, Properties.Settings.Default.TimerInterval * 1000);
+        }
+
+        public void StopTimer()
+        {
+            backgroundTimer?.Dispose();
+        }
+
 
         // フォームが閉じられるときにタイマーを停止
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
 
-            if (timer != null)
+            //if (timer != null)
+            //{
+            //    timer.Stop();
+            //    timer.Dispose();
+            //}
+            if (backgroundTimer != null)
             {
-                timer.Stop();
-                timer.Dispose();
+                backgroundTimer.Dispose();
             }
+
         }
 
         // データベースの内容を読み込み、DataGridViewに表示
         private async Task reloadDataAsync()
         {
-            AddLog("DataGridViewを更新します");
-            string connectionString = $"Provider={DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
-
-            string sql = "SELECT category, PtID, PtName, result, reqDate, reqFile, resDate, resFile, ID FROM reqResults ORDER BY reqResults.ID DESC";
-
-            try
+            if (!await WaitForDbUnlock(1000))
             {
-                using (OleDbConnection connection = new OleDbConnection(connectionString))
+                AddLog("データベースがロックされていたためreloadDataAsyncをスキップししました");
+            }
+            else
+            {
+                DataDbLock = true;
+
+                AddLog("DataGridViewを更新します");
+                string connectionString = $"Provider={DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
+
+                string sql = "SELECT CategoryName,  PtID, PtName, result, reqDate, reqFile, resDate, resFile, category, ID FROM reqResults ORDER BY reqResults.ID DESC";
+
+                try
                 {
-                    // 接続を開く
-                    await connection.OpenAsync();
-
-                    // データを取得してDataTableに格納
-                    using (var command = new OleDbCommand(sql, connection))
+                    using (OleDbConnection connection = new OleDbConnection(connectionString))
                     {
-                        using (var reader = await command.ExecuteReaderAsync())
-                        using (var dataTable = new DataTable())
+                        // 接続を開く
+                        await connection.OpenAsync();
+
+                        // データを取得してDataTableに格納
+                        using (var command = new OleDbCommand(sql, connection))
                         {
-                            dataTable.Load(reader);
-
-                            // DataGridViewに表示
-                            dataGridView1.Invoke(new Action(() =>
+                            using (var reader = await command.ExecuteReaderAsync())
+                            using (var dataTable = new DataTable())
                             {
-                                //UI スレッド
-                                dataGridView1.DataSource = dataTable;
+                                dataTable.Load(reader);
 
-                                ConfigureDataGridView(dataGridView1);
+                                DataDbLock = false;
 
-
-                            }));
-                            AddLog("reqResultsテーブルを読み込みました");
+                                // DataGridViewに表示
+                                dataGridView1.Invoke(new Action(() =>
+                                {
+                                    //UI スレッド
+                                    dataGridView1.DataSource = dataTable;
+                                    ConfigureDataGridView(dataGridView1);
+                                }));
+                                AddLog("reqResultsテーブルを読み込みました");
+                            }
                         }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                // エラー処理
-                AddLog($"エラー: {ex.Message}");
+                catch (Exception ex)
+                {
+                    // エラー処理
+                    AddLog($"エラー: {ex.Message}");
+                }
+                finally { DataDbLock = false; }
             }
         }
 
@@ -191,7 +282,7 @@ namespace OQSDrug
             //動作中の場合は停止する
             if (isTimerRunning)
             {
-                MessageBox.Show("一旦タイマー動作を停止します");
+                Invoke(new Action(() => MessageBox.Show("一旦タイマー動作を停止します")));
                 StartStop.Checked = false;
             }
 
@@ -224,19 +315,25 @@ namespace OQSDrug
                 //開始
                 StartStop.Text = "停止";
                 StartStop.Image = Properties.Resources.Stop;
-                timer.Interval = Properties.Settings.Default.TimerInterval * 1000;
-                timer.Start();
-                AddLog($"タイマー処理を開始します。間隔は{timer.Interval / 1000}秒です");
+                //timer.Interval = Properties.Settings.Default.TimerInterval * 1000;
+                //timer.Start();
+
+                StartTimer();
+
+                AddLog($"タイマー処理を開始します。間隔は{Properties.Settings.Default.TimerInterval}秒です");
 
                 //初回実行
-                await Task.Run(() => Timer_Tick(timer, EventArgs.Empty));
+                //await Task.Run(() => Timer_Tick(timer, EventArgs.Empty));
 
             }
             else
             {
                 StartStop.Text = "開始";
                 StartStop.Image = Properties.Resources.Go;
-                timer.Stop();
+                //timer.Stop();
+                
+                StopTimer();
+
                 AddLog("タイマー処理を終了します");
             }
         }
@@ -252,6 +349,7 @@ namespace OQSDrug
             bool doReq = true;
             int reqCategory = 0, fileCategory = 0;
             string OQSpath = Properties.Settings.Default.OQSFolder;
+            string CategoryName = "";
 
             string startDate = DateTime.Now.AddMonths(-Span).ToString("yyyyMM");
             string endDate = DateTime.Now.ToString("yyyyMM");
@@ -263,7 +361,7 @@ namespace OQSDrug
             string updateRecordSQL = "UPDATE reqResults SET reqFile = ?, reqDate = ?, resFile = NULL, resDate= NULL, result = NULL  WHERE ID = ?";
 
             // レコードの新規追加クエリ
-            string insertRecordSQL = "INSERT INTO reqResults (Category, PtID, PtName, reqFile, reqDate) VALUES (?, ?, ?, ?, ?)";
+            string insertRecordSQL = "INSERT INTO reqResults (Category, PtID, PtName, reqFile, reqDate, CategoryName) VALUES (?, ?, ?, ?, ?, ?)";
 
             switch (category)
             {
@@ -273,6 +371,7 @@ namespace OQSDrug
                     Interval = YZinterval;  // Replace with appropriate interval
                     reqCategory = 1;
                     fileCategory = 1;
+                    CategoryName = "薬剤PDF";
                     AddLog("PDF薬剤情報取得用reqファイルを作成します");
                     break;
                 case 101:
@@ -281,6 +380,7 @@ namespace OQSDrug
                     Interval = KSinterval;
                     reqCategory = 2;
                     fileCategory = 1;
+                    CategoryName = "健診PDF";
                     AddLog("特定検診情報取得用reqファイルを作成します");
                     break;
                 case 12:
@@ -289,6 +389,7 @@ namespace OQSDrug
                     Interval = YZinterval;  // Replace with appropriate interval
                     reqCategory = 3;
                     fileCategory = 2;
+                    CategoryName = "薬剤xml";
                     AddLog("xml薬剤情報取得用reqファイルを作成します");
                     break;
                 case 13:
@@ -297,6 +398,7 @@ namespace OQSDrug
                     Interval = YZinterval;  // Replace with appropriate interval
                     reqCategory = 4;
                     fileCategory = 1;
+                    CategoryName = "薬剤診療PDF";
                     AddLog("PDF薬剤診療情報取得用reqファイルを作成します");
                     break;
                 default:
@@ -319,6 +421,7 @@ namespace OQSDrug
                     {
                         AddLog($"{ptName}さんのカルテ番号が空のため取得を試みます");
                         ptId = Name2ID(ptName, DouiRow["生年月日西暦"].ToString(), dynaTable);
+                        
                         AddLog($"カルテ番号{ptId}を取得しました。処理を継続します");
                     }
 
@@ -326,102 +429,125 @@ namespace OQSDrug
                     {
                         AddLog($"{ptId}:{ptName}さんの同意有効期限が切れているのでスキップします");
                     }
+                    else if(ptId == 0)
+                    { //再取得もできない場合はスキップ
+                        AddLog($"{ptName}さんのカルテ番号の取得ができなかったため処理をスキップします");
+                    }
                     else
                     {   // 同意有効
-                        using (OleDbConnection connData = new OleDbConnection(connectionOQSData))
+                        if (!await WaitForDbUnlock(1000))
                         {
-                            await connData.OpenAsync();
-
-                            string reqXml = "";
-                            object resultId = null;
-
-                            using (OleDbCommand cmd = new OleDbCommand(reqDateSQL, connData))
+                            AddLog("データベースがロックされています。Makereq処理をスキップします");
+                        }
+                        else
+                        {
+                            DataDbLock = true;
+                            try
                             {
-                                cmd.Parameters.AddWithValue("?", ptId);
-                                cmd.Parameters.AddWithValue("?", category);
-
-                                using (OleDbDataReader reqReader = (OleDbDataReader)await cmd.ExecuteReaderAsync())
+                                using (OleDbConnection connData = new OleDbConnection(connectionOQSData))
                                 {
-                                    doReq = false;
+                                    await connData.OpenAsync();
 
-                                    if (reqReader.HasRows && reqReader.Read())
+                                    string reqXml = "";
+                                    object resultId = null;
+
+                                    using (OleDbCommand cmd = new OleDbCommand(reqDateSQL, connData))
                                     {
-                                        DateTime reqDate = reqReader.GetDateTime(reqReader.GetOrdinal("reqDate"));
+                                        cmd.Parameters.AddWithValue("?", ptId);
+                                        cmd.Parameters.AddWithValue("?", category);
 
-                                        if (reqDate < checkDate)
+                                        using (OleDbDataReader reqReader = (OleDbDataReader)await cmd.ExecuteReaderAsync())
                                         {
-                                            doReq = true;
-                                            resultId = reqReader["ID"];
-                                            AddLog($"{ptId}:{ptName}さんのxmlを作成します（更新）");
-                                        }
-                                        else
+                                            doReq = false;
+
+                                            if (reqReader.HasRows && reqReader.Read())
+                                            {
+                                                DateTime reqDate = reqReader.GetDateTime(reqReader.GetOrdinal("reqDate"));
+
+                                                if (reqDate < checkDate)
+                                                {
+                                                    doReq = true;
+                                                    resultId = reqReader["ID"];
+                                                    AddLog($"{ptId}:{ptName}さんのxmlを作成します（更新）");
+                                                }
+                                                else
+                                                {
+                                                    AddLog($"{ptId}:{ptName}さん再取得期間外なのでスキップします");
+                                                }
+                                            }
+                                            else
+                                            {
+                                                AddLog($"{ptId}:{ptName}さんのxmlを作成します（新規）");
+                                                doReq = true;
+                                            }
+
+                                            DataDbLock=false;
+
+                                            if (doReq)
+                                            {
+                                                var ptData = new
+                                                {
+                                                    Id = ptId,
+                                                    Name = ptName,
+                                                    InsurerNumber = DouiRow["保険者番号"].ToString(),
+                                                    InsuranceCardSymbol = DouiRow["被保険者証記号"].ToString(),
+                                                    InsuredPersonIdentificationNumber = DouiRow["被保険者証番号"].ToString(),
+                                                    BranchNumber = DouiRow["被保険者証枝番"].ToString()
+                                                };
+
+                                                reqXml = await Task.Run(() => GenerateXML(ptData, OQSpath, startDate, endDate, Properties.Settings.Default.MCode, category));
+
+
+                                                if (!string.IsNullOrEmpty(reqXml))
+                                                {
+                                                    // Save or update reqResults table
+                                                    AddLog($"{ptId}:{ptName}さんのXML生成成功");
+                                                }
+                                            }
+                                        } //Reader
+
+                                        if (reqXml.Length > 0) //xml作成済み
                                         {
-                                            AddLog($"{ptId}:{ptName}さん再取得期間外なのでスキップします");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        AddLog($"{ptId}:{ptName}さんのxmlを作成します（新規）");
-                                        doReq = true;
-                                    }
+                                            if (resultId != null)
+                                            {
+                                                // レコードが存在する場合は更新
+                                                using (OleDbCommand updateCmd = new OleDbCommand(updateRecordSQL, connData))
+                                                {
+                                                    updateCmd.Parameters.AddWithValue("?", reqXml);
+                                                    updateCmd.Parameters.AddWithValue("?", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                                                    updateCmd.Parameters.AddWithValue("?", resultId);
+                                                    await updateCmd.ExecuteNonQueryAsync();
 
-                                    if (doReq)
-                                    {
-                                        var ptData = new
-                                        {
-                                            Id = ptId,
-                                            Name = ptName,
-                                            InsurerNumber = DouiRow["保険者番号"].ToString(),
-                                            InsuranceCardSymbol = DouiRow["被保険者証記号"].ToString(),
-                                            InsuredPersonIdentificationNumber = DouiRow["被保険者証番号"].ToString(),
-                                            BranchNumber = DouiRow["被保険者証枝番"].ToString()
-                                        };
+                                                    AddLog($"{ptId}:{ptName}さんのxml作成に成功しました (更新)");
+                                                    //reqReadyFlag = true;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                // レコードが存在しない場合は新規追加
+                                                using (OleDbCommand insertCmd = new OleDbCommand(insertRecordSQL, connData))
+                                                {
+                                                    insertCmd.Parameters.AddWithValue("?", category);
+                                                    insertCmd.Parameters.AddWithValue("?", ptId);
+                                                    insertCmd.Parameters.AddWithValue("?", ptName); // 患者名を渡す
+                                                    insertCmd.Parameters.AddWithValue("?", reqXml);
+                                                    insertCmd.Parameters.AddWithValue("?", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                                                    insertCmd.Parameters.AddWithValue("?", CategoryName);
+                                                    await insertCmd.ExecuteNonQueryAsync();
 
-                                        reqXml = await Task.Run(() => GenerateXML(ptData, OQSpath, startDate, endDate, Properties.Settings.Default.MCode, category));
-
-
-                                        if (!string.IsNullOrEmpty(reqXml))
-                                        {
-                                            // Save or update reqResults table
-                                            AddLog($"{ptId}:{ptName}さんのXML生成成功");
-                                        }
-                                    }
-                                } //Reader
-
-                                if (reqXml.Length > 0) //xml作成済み
-                                {
-                                    if (resultId != null)
-                                    {
-                                        // レコードが存在する場合は更新
-                                        using (OleDbCommand updateCmd = new OleDbCommand(updateRecordSQL, connData))
-                                        {
-                                            updateCmd.Parameters.AddWithValue("?", reqXml);
-                                            updateCmd.Parameters.AddWithValue("?", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                                            updateCmd.Parameters.AddWithValue("?", resultId);
-                                            await updateCmd.ExecuteNonQueryAsync();
-
-                                            AddLog($"{ptId}:{ptName}さんのxml作成に成功しました (更新)");
-                                            //reqReadyFlag = true;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        // レコードが存在しない場合は新規追加
-                                        using (OleDbCommand insertCmd = new OleDbCommand(insertRecordSQL, connData))
-                                        {
-                                            insertCmd.Parameters.AddWithValue("?", category);
-                                            insertCmd.Parameters.AddWithValue("?", ptId);
-                                            insertCmd.Parameters.AddWithValue("?", ptName); // 患者名を渡す
-                                            insertCmd.Parameters.AddWithValue("?", reqXml);
-                                            insertCmd.Parameters.AddWithValue("?", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                                            await insertCmd.ExecuteNonQueryAsync();
-
-                                            AddLog($"{ptId}:{ptName}さんのxml作成に成功しました (新規追加)");
-                                            //reqReadyFlag = true;
+                                                    AddLog($"{ptId}:{ptName}さんのxml作成に成功しました (新規追加)");
+                                                    //reqReadyFlag = true;
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
+                            catch (Exception ex)
+                            {
+                                AddLog($"Makereqでエラー：{ex.ToString()}");
+                            }
+                            finally { DataDbLock = false; }
                         }
                     }
                 }
@@ -688,10 +814,11 @@ namespace OQSDrug
             {
                 //テーブルフィールドのアップデート
                 bool fieldCheck = await AddFieldIfNotExists(Properties.Settings.Default.OQSDrugData, "drug_history", "Source", "INTEGER")
-                                && await AddFieldIfNotExists(Properties.Settings.Default.OQSDrugData, "drug_history", "Revised", "YESNO");
+                                && await AddFieldIfNotExists(Properties.Settings.Default.OQSDrugData, "drug_history", "Revised", "YESNO")
+                                && await AddFieldIfNotExists(Properties.Settings.Default.OQSDrugData, "reqResults", "CategoryName", "TEXT(12) NULL");
                 if (!fieldCheck)
                 {
-                    MessageBox.Show("OQSDrugDataのアップデートでエラーが発生しました。OQSDrugData.mdbにアクセスできるかを調べて再起動してください");
+                    Invoke(new Action(() => MessageBox.Show("OQSDrugDataのアップデートでエラーが発生しました。OQSDrugData.mdbにアクセスできるかを調べて再起動してください")));
                 }
                 await reloadDataAsync();
             }
@@ -801,11 +928,11 @@ namespace OQSDrug
         {
             if (MessageBox.Show("終了しますか？", "終了", MessageBoxButtons.OKCancel) == DialogResult.OK)
             {
-                if (timer.Enabled)
-                {
-                    timer.Stop();
-                    timer.Dispose();
-                }
+                //if (timer.Enabled)
+                //{
+                //    timer.Stop();
+                //    timer.Dispose();
+                //}
 
                 if(animationTimer.Enabled)
                 {
@@ -901,7 +1028,7 @@ namespace OQSDrug
                 }
                 else
                 {
-                    fileSymbol = "YKZ";
+                    fileSymbol = "YZK";
                 }
                 fileCategory = 2 - (category % 2);
 
@@ -1004,91 +1131,109 @@ namespace OQSDrug
                         string resFilename = null;
                         string messageContent = null;
 
-                        using (OleDbConnection connection = new OleDbConnection(connectionOQSData))
+                        if (!await WaitForDbUnlock(1000))
                         {
-                            await connection.OpenAsync();
+                            AddLog("データベースがロックされています。ProcessResAsyncをスキップします");
+                        }
+                        else
+                        {
+                            DataDbLock = true;
 
-                            // reqResults テーブル内の該当レコードを検索
-                            string query = $"SELECT * FROM reqResults WHERE resFile IS NULL AND reqFile LIKE '%{fileNameWithoutExt}%'";
-
-                            using (OleDbCommand command = new OleDbCommand(query, connection))
-                            using (DbDataReader reader = await command.ExecuteReaderAsync())
+                            using (OleDbConnection connection = new OleDbConnection(connectionOQSData))
                             {
-                                if (await reader.ReadAsync())
+                                await connection.OpenAsync();
+
+                                // reqResults テーブル内の該当レコードを検索
+                                string query = $"SELECT * FROM reqResults WHERE resFile IS NULL AND reqFile LIKE '%{fileNameWithoutExt}%'";
+
+                                using (OleDbCommand command = new OleDbCommand(query, connection))
+                                using (DbDataReader reader = await command.ExecuteReaderAsync())
                                 {
-                                    long PtID = Convert.ToInt64(reader["PtID"]);
-                                    int Category = reader["Category"] != DBNull.Value ? Convert.ToInt32(reader["Category"]) : 0;
-                                    string PtName = (string)reader["PtName"];
-                                    object resultId = reader["ID"];
-
-                                    switch (extension)
+                                    if (await reader.ReadAsync())
                                     {
-                                        case ".xml":
-                                            AddLog($"{PtID}:{PtName}resフォルダにxmlファイルが見つかりました: {file}");
-                                            var xmlDoc = new XmlDocument();
+                                        long PtID = Convert.ToInt64(reader["PtID"]);
+                                        int Category = reader["Category"] != DBNull.Value ? Convert.ToInt32(reader["Category"]) : 0;
+                                        string PtName = (string)reader["PtName"];
+                                        object resultId = reader["ID"];
 
-                                            try
-                                            {
-                                                resFilename = file;
+                                        switch (extension)
+                                        {
+                                            case ".xml":
+                                                AddLog($"{PtID}:{PtName}resフォルダにxmlファイルが見つかりました: {file}");
+                                                var xmlDoc = new XmlDocument();
 
-                                                xmlDoc.Load(file);
-                                                var resultCodeNode = xmlDoc.SelectSingleNode("//ResultCode");
-
-                                                if (resultCodeNode != null && resultCodeNode.InnerText == "1")
+                                                try
                                                 {
-                                                    // xml薬歴
-                                                    messageContent = await ProcessDrugInfoAsync(PtID, xmlDoc);
+                                                    resFilename = file;
+
+                                                    xmlDoc.Load(file);
+                                                    var resultCodeNode = xmlDoc.SelectSingleNode("//ResultCode");
+
+                                                    if (resultCodeNode != null && resultCodeNode.InnerText == "1")
+                                                    {
+                                                        // xml薬歴
+                                                        messageContent = await ProcessDrugInfoAsync(PtID, xmlDoc);
+                                                    }
+                                                    else
+                                                    {
+                                                        var xmlNode = xmlDoc.SelectSingleNode("//MessageContents");
+                                                        messageContent = xmlNode != null ? xmlNode.InnerText : "<MessageContents> タグが見つかりません";
+                                                    }
                                                 }
-                                                else
+                                                catch
                                                 {
-                                                    var xmlNode = xmlDoc.SelectSingleNode("//MessageContents");
-                                                    messageContent = xmlNode != null ? xmlNode.InnerText : "<MessageContents> タグが見つかりません";
+                                                    messageContent = "XMLファイルの読み込みに失敗しました";
                                                 }
-                                            }
-                                            catch
-                                            {
-                                                messageContent = "XMLファイルの読み込みに失敗しました";
-                                            }
 
-                                            // XMLファイルを削除
-                                            System.IO.File.Delete(file);
-                                            AddLog($"{messageContent} xmlファイルを削除しました");
-                                            break;
+                                                // XMLファイルを削除
+                                                if (!Properties.Settings.Default.KeepXml)
+                                                {
+                                                    System.IO.File.Delete(file);
+                                                    AddLog($"{messageContent} xmlファイルを削除しました");
+                                                }
+                                                break;
 
-                                        case ".pdf":
-                                            int ReadCategory = (int)Math.Floor(Math.Log10(Math.Abs(Category)) + 1);
-                                            string targetFileName = $"{PtID / 10}~01~{DateTime.Now:yyyy_MM_dd}~{RSBname[ReadCategory]}~RSB.pdf";
-                                            resFilename = Path.Combine(gazouFolder, targetFileName);
+                                            case ".pdf":
+                                                int ReadCategory = (int)Math.Floor(Math.Log10(Math.Abs(Category)));
+                                                string targetFileName = $"{PtID / 10}~01~{DateTime.Now:yyyy_MM_dd}~{RSBname[ReadCategory]}~RSB.pdf";
+                                                resFilename = Path.Combine(gazouFolder, targetFileName);
 
-                                            System.IO.File.Move(file, resFilename);
-                                            messageContent = "成功";
-                                            AddLog($"{PtID}:{PtName} PDFファイルが見つかりgazouフォルダに移動しました: {resFilename}");
-                                            RSBreloadFlag = true;
-                                            break;
+                                                System.IO.File.Move(file, resFilename);
+                                                messageContent = "成功";
+                                                AddLog($"{PtID}:{PtName} PDFファイルが見つかりgazouフォルダに移動しました: {resFilename}");
+                                                RSBreloadFlag = true;
+                                                break;
+                                        }
+
+                                        // レコード更新
+                                        string updateQuery = "UPDATE reqResults SET resFile = ?, resDate = ?, result = ? WHERE ID = ?";
+                                        using (OleDbCommand updateCommand = new OleDbCommand(updateQuery, connection))
+                                        {
+                                            updateCommand.Parameters.AddWithValue("@resFile", resFilename ?? string.Empty);
+                                            updateCommand.Parameters.AddWithValue("@resDate", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                                            updateCommand.Parameters.AddWithValue("@result", messageContent ?? string.Empty);
+                                            updateCommand.Parameters.AddWithValue("@ID", resultId);
+                                            await updateCommand.ExecuteNonQueryAsync();
+                                        }
                                     }
-
-                                    // レコード更新
-                                    string updateQuery = "UPDATE reqResults SET resFile = ?, resDate = ?, result = ? WHERE ID = ?";
-                                    using (OleDbCommand updateCommand = new OleDbCommand(updateQuery, connection))
+                                    else
                                     {
-                                        updateCommand.Parameters.AddWithValue("@resFile", resFilename ?? string.Empty);
-                                        updateCommand.Parameters.AddWithValue("@resDate", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                                        updateCommand.Parameters.AddWithValue("@result", messageContent ?? string.Empty);
-                                        updateCommand.Parameters.AddWithValue("@ID", resultId);
-                                        await updateCommand.ExecuteNonQueryAsync();
+                                        AddLog("すべてのresファイルの処理が終了しました");
+                                        AllDataProcessed = true;
                                     }
-                                }
-                                else
-                                {
-                                    AddLog("すべてのresファイルの処理が終了しました");
-                                    AllDataProcessed = true;
                                 }
                             }
+
+                            DataDbLock = false;
                         }
                     }
                     catch (Exception ex)
                     {
                         AddLog($"{file}ファイル処理中にエラーが発生しました: {ex.Message}");
+                    }
+                    finally
+                    {
+                        DataDbLock = false;
                     }
                 }
 
@@ -1102,11 +1247,15 @@ namespace OQSDrug
                 }
 
                 AddLog("ProcessResAsyncを終了します");
+                
+                DataDbLock = false;
+
                 return AllDataProcessed;
             }
             catch (Exception ex)
             {
                 AddLog($"エラーが発生しました: {ex.Message}");
+                DataDbLock = false;
                 return false;
             }
         }
@@ -1146,7 +1295,7 @@ namespace OQSDrug
                 "/XmlMsg/MessageBody/ShPrInf/ShPrMonthInf",
                 "/XmlMsg/MessageBody/CzDiInf/CzDiMonthInf"
             };
-
+            
             try
             {
                 // データベース接続
@@ -1624,6 +1773,8 @@ namespace OQSDrug
                 // ファイル内容の読み取り
                 await ReadIdAsync(e.FullPath, idStyle);
 
+                await reloadDataAsync();
+
                 idChageCalled = false;
             }
         }
@@ -1696,24 +1847,35 @@ namespace OQSDrug
 
             try
             {
-                using (OleDbConnection connection = new OleDbConnection(connectionOQSData))
+                if (await WaitForDbUnlock(1000))
                 {
-                    await connection.OpenAsync();
+                    DataDbLock = true;
 
-                    // SQL文の構文を修正
-                    string sql = "SELECT COUNT(*) FROM drug_history WHERE PtIDmain = ?;";
-
-                    using (OleDbCommand command = new OleDbCommand(sql, connection))
+                    using (OleDbConnection connection = new OleDbConnection(connectionOQSData))
                     {
-                        // パラメータを追加
-                        command.Parameters.AddWithValue("?", PtIDmain);
+                        await connection.OpenAsync();
 
-                        // レコードのカウントを取得
-                        int count = (int)await command.ExecuteScalarAsync();
+                        // SQL文の構文を修正
+                        string sql = "SELECT COUNT(*) FROM drug_history WHERE PtIDmain = ?;";
 
-                        // レコードが1つ以上存在するか確認
-                        return count > 0;
-                    }
+                        using (OleDbCommand command = new OleDbCommand(sql, connection))
+                        {
+                            // パラメータを追加
+                            command.Parameters.AddWithValue("?", PtIDmain);
+
+                            // レコードのカウントを取得
+                            int count = (int)await command.ExecuteScalarAsync();
+
+                            // レコードが1つ以上存在するか確認
+                            DataDbLock = false;
+                            return count > 0;
+                        }
+                    }                    
+                }
+                else
+                {
+                    AddLog("existDrugHistoryでデータベースロックタイムアウト");
+                    return false;
                 }
             }
             catch (Exception ex)
@@ -1722,7 +1884,10 @@ namespace OQSDrug
                 AddLog($"existDrugHistory Error: {ex.Message}");
                 return false;
             }
-
+            finally
+            {
+                DataDbLock = false;
+            }
         }
 
         private void toolStripButtonVersion_Click(object sender, EventArgs e)
@@ -1996,8 +2161,9 @@ namespace OQSDrug
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             // クリーンアップ
-            timer?.Stop();
-            timer?.Dispose();
+            //timer?.Stop();
+            //timer?.Dispose();
+            backgroundTimer?.Dispose();
 
             notifyIcon1?.Dispose();
             animationTimer?.Stop();
@@ -2010,6 +2176,29 @@ namespace OQSDrug
             // フォームを非表示にし、タスクバーから削除
             this.Hide();
             this.ShowInTaskbar = false;
+        }
+
+        public async Task<bool> WaitForDbUnlock(int maxWaitms)
+        {
+            int interval = 10;
+            int retry = maxWaitms / interval;
+            for(int i = 0; i < retry; i++) 
+            {
+                    if (DataDbLock)
+                    {
+                        await Task.Delay(interval);
+                    }
+                    else
+                    {
+                        return true;
+                    }
+            }
+            return false;               
+        }
+
+        private async void buttonReload_Click(object sender, EventArgs e)
+        {
+            await Task.Run(async ()=>  await reloadDataAsync());
         }
     }
 }

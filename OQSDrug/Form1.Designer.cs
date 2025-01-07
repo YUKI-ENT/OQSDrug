@@ -53,6 +53,7 @@
             this.buttonKSPDF = new System.Windows.Forms.Button();
             this.buttonKSXML = new System.Windows.Forms.Button();
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
+            this.buttonReload = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.toolStripVersion.SuspendLayout();
             this.SuspendLayout();
@@ -306,12 +307,25 @@
             this.notifyIcon1.Visible = true;
             this.notifyIcon1.DoubleClick += new System.EventHandler(this.notifyIcon1_DoubleClick);
             // 
+            // buttonReload
+            // 
+            this.buttonReload.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonReload.Font = new System.Drawing.Font("Meiryo UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.buttonReload.Location = new System.Drawing.Point(888, 38);
+            this.buttonReload.Name = "buttonReload";
+            this.buttonReload.Size = new System.Drawing.Size(74, 33);
+            this.buttonReload.TabIndex = 28;
+            this.buttonReload.Text = "表示更新";
+            this.buttonReload.UseVisualStyleBackColor = true;
+            this.buttonReload.Click += new System.EventHandler(this.buttonReload_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.ClientSize = new System.Drawing.Size(974, 717);
+            this.Controls.Add(this.buttonReload);
             this.Controls.Add(this.checkBoxAutoview);
             this.Controls.Add(this.buttonKSXML);
             this.Controls.Add(this.buttonKSPDF);
@@ -362,6 +376,7 @@
         private System.Windows.Forms.ToolStripButton toolStripButtonVersion;
         private System.Windows.Forms.NotifyIcon notifyIcon1;
         private System.Windows.Forms.ToolStripButton toolStripButtonToTaskTray;
+        private System.Windows.Forms.Button buttonReload;
     }
 }
 

@@ -137,6 +137,9 @@ namespace OQSDrug
             {
                 comboBoxRSBID.SelectedIndex = 0;
             }
+
+            checkBoxKeepXml.Checked = Properties.Settings.Default.KeepXml;
+
         }
 
         private void SaveSettings()
@@ -183,6 +186,8 @@ namespace OQSDrug
             Properties.Settings.Default.MinimumStart = checkBoxMinimumStart.Checked;
 
             Properties.Settings.Default.RSBID = comboBoxRSBID.SelectedIndex;
+
+            Properties.Settings.Default.KeepXml = checkBoxKeepXml.Checked;
 
             Properties.Settings.Default.Save();
 

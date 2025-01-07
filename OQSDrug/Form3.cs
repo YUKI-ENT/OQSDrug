@@ -6,6 +6,7 @@ using System.Data.OleDb;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -28,85 +29,101 @@ namespace OQSDrug
 
         public async Task LoadDataIntoComboBoxes()
         {
-            // クエリ文字列
-            string query = @"SELECT PtIDmain, PtName, Max(id) AS Maxid
+            if (await _parentForm.WaitForDbUnlock(2000))
+            {
+                _parentForm.DataDbLock = true;
+
+                // クエリ文字列
+                string query = @"SELECT PtIDmain, PtName, Max(id) AS Maxid
                             FROM drug_history
                             GROUP BY PtIDmain, PtName
                             ORDER BY Max(id) DESC;";
 
-            string connectionOQSData = $"Provider={provider};Data Source={Properties.Settings.Default.OQSDrugData};";
-            // データテーブルを作成
-            DataTable dataTable = new DataTable();
-            dataTable.Columns.Add("PtID", typeof(long));
-            dataTable.Columns.Add("DisplayName", typeof(string));
+                string connectionOQSData = $"Provider={provider};Data Source={Properties.Settings.Default.OQSDrugData};";
+                // データテーブルを作成
+                DataTable dataTable = new DataTable();
+                dataTable.Columns.Add("PtID", typeof(long));
+                dataTable.Columns.Add("DisplayName", typeof(string));
 
-            using (OleDbConnection connection = new OleDbConnection(connectionOQSData))
-            {
-                try
+                using (OleDbConnection connection = new OleDbConnection(connectionOQSData))
                 {
-                    // 接続を開く
-                    await connection.OpenAsync();
-
-                    // コマンドを作成
-                    using (OleDbCommand command = new OleDbCommand(query, connection))
+                    try
                     {
-                        // データを取得
-                        using (OleDbDataReader reader = (OleDbDataReader)await command.ExecuteReaderAsync())
+                        // 接続を開く
+                        await connection.OpenAsync();
+
+                        // コマンドを作成
+                        using (OleDbCommand command = new OleDbCommand(query, connection))
                         {
-                            while (reader.Read())
+                            // データを取得
+                            using (OleDbDataReader reader = (OleDbDataReader)await command.ExecuteReaderAsync())
                             {
-                                long ptID = reader["PtIDmain"] == DBNull.Value ? 0 : Convert.ToInt64((reader["PtIDmain"]));
-                                string ptName = reader["PtName"].ToString();
+                                while (reader.Read())
+                                {
+                                    long ptID = reader["PtIDmain"] == DBNull.Value ? 0 : Convert.ToInt64((reader["PtIDmain"]));
+                                    string ptName = reader["PtName"].ToString();
 
-                                // PtIDとPtNameを結合した表示名を作成
-                                string displayName = $"{ptID.ToString().PadLeft(6, ' ')} : {ptName}";
+                                    // PtIDとPtNameを結合した表示名を作成
+                                    string displayName = $"{ptID.ToString().PadLeft(6, ' ')} : {ptName}";
 
-                                // DataTableに行を追加
-                                dataTable.Rows.Add(ptID, displayName);
+                                    // DataTableに行を追加
+                                    dataTable.Rows.Add(ptID, displayName);
+                                }
                             }
                         }
+
+                        _parentForm.DataDbLock = false;
+
+                        comboBoxPtID.Invoke(new Action(() =>
+                        {
+                            // ComboBoxのデータソースを一旦クリア
+                            comboBoxPtID.DataSource = null;
+
+                            // ComboBoxにデータをバインド
+                            comboBoxPtID.SelectedIndexChanged -= comboBoxPtID_SelectedIndexChanged; // イベントを一時解除 selectedvalueのnull対策
+
+                            comboBoxPtID.DataSource = dataTable;
+                            comboBoxPtID.ValueMember = "PtID";
+                            comboBoxPtID.DisplayMember = "DisplayName";
+
+                            comboBoxPtID.SelectedIndexChanged += comboBoxPtID_SelectedIndexChanged; // イベントを再登録
+
+                            // RSB 連動
+                            if (_parentForm.autoRSB)
+                            {
+                                // PtID が _parentForm.tempId に一致する行を検索
+                                DataRow[] rows = dataTable.Select($"PtID = {_parentForm.tempId}");
+
+                                // 一致するデータが見つかれば、選択する
+                                if (rows.Length > 0)
+                                {
+                                    // 最初の一致したレコードの PtID を SelectedValue に設定
+                                    comboBoxPtID.SelectedValue = rows[0]["PtID"];
+                                }
+                                else
+                                {
+                                    comboBoxPtID.SelectedIndex = -1;
+                                }
+                            }
+                        }));
+
                     }
-
-                    comboBoxPtID.Invoke(new Action(() =>
+                    catch (Exception ex)
                     {
-                        // ComboBoxのデータソースを一旦クリア
-                        comboBoxPtID.DataSource = null;
-
-                        // ComboBoxにデータをバインド
-                        comboBoxPtID.SelectedIndexChanged -= comboBoxPtID_SelectedIndexChanged; // イベントを一時解除 selectedvalueのnull対策
-
-                        comboBoxPtID.DataSource = dataTable;
-                        comboBoxPtID.ValueMember = "PtID";
-                        comboBoxPtID.DisplayMember = "DisplayName";
-
-                        comboBoxPtID.SelectedIndexChanged += comboBoxPtID_SelectedIndexChanged; // イベントを再登録
-
-                        // RSB 連動
-                        if (_parentForm.autoRSB)
-                        {
-                            // PtID が _parentForm.tempId に一致する行を検索
-                            DataRow[] rows = dataTable.Select($"PtID = {_parentForm.tempId}");
-
-                            // 一致するデータが見つかれば、選択する
-                            if (rows.Length > 0)
-                            {
-                                // 最初の一致したレコードの PtID を SelectedValue に設定
-                                comboBoxPtID.SelectedValue = rows[0]["PtID"];
-                            }
-                            else
-                            {
-                                comboBoxPtID.SelectedIndex = -1;
-                            }
-                        }
-                    }));
-
-                }
-                catch (Exception ex)
-                {
-                    // エラー処理
-                    MessageBox.Show($"データの取得中にエラーが発生しました: {ex.Message}", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        // エラー処理
+                        MessageBox.Show($"データの取得中にエラーが発生しました: {ex.Message}", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        _parentForm.DataDbLock = false;
+                    }
                 }
             }
+            else
+            {
+                MessageBox.Show("データベースがロックされており、LoadDataIntoComboBoxに失敗しました。もう一度やり直してみてください。");
+            }
+            
         }
 
         private void buttonClose_Click(object sender, EventArgs e)
@@ -127,8 +144,12 @@ namespace OQSDrug
 
         private async Task ShowDrugData(long PtID)
         {
-            // 動的クエリをC#コード内で作成
-            string query = @"
+            if (await _parentForm.WaitForDbUnlock(2000))
+            {
+                _parentForm.DataDbLock = true;
+
+                // 動的クエリをC#コード内で作成
+                string query = @"
                             TRANSFORM Sum(drug_history.Times) AS Times
                             SELECT 
                                 IIf(Len([PrlsHNm])=0, [MeTrDiHNm], [PrlsHNm]) AS Hospital, 
@@ -150,97 +171,108 @@ namespace OQSDrug
                             PIVOT
                                 %FIELD% ;";
 
-            string pivot = (Properties.Settings.Default.Sum) ? "drug_history.MeTrMonth" : "drug_history.DiDate";
+                string pivot = (Properties.Settings.Default.Sum) ? "drug_history.MeTrMonth" : "drug_history.DiDate";
 
-            query = query.Replace("%FIELD%", pivot);
+                query = query.Replace("%FIELD%", pivot);
 
-            // 固定列の定義
-            var fixedColumns = new List<string> { "Hospital", "DrugN", "Qua1", "Unit" };
+                // 固定列の定義
+                var fixedColumns = new List<string> { "Hospital", "DrugN", "Qua1", "Unit" };
 
-            string connectionOQSData = $"Provider={provider};Data Source={Properties.Settings.Default.OQSDrugData};";
+                string connectionOQSData = $"Provider={provider};Data Source={Properties.Settings.Default.OQSDrugData};";
 
-            try
-            {
-                using (OleDbConnection connection = new OleDbConnection(connectionOQSData))
+                try
                 {
-                    // 接続を開く
-                    await connection.OpenAsync();
-
-                    // データ取得
-                    using (var command = new OleDbCommand(query, connection))
+                    using (OleDbConnection connection = new OleDbConnection(connectionOQSData))
                     {
+                        // 接続を開く
+                        await connection.OpenAsync();
 
-                        command.Parameters.AddWithValue("?", PtID);
-
-                        using (var reader = await command.ExecuteReaderAsync())
-                        using (var dataTable = new DataTable())
+                        // データ取得
+                        using (var command = new OleDbCommand(query, connection))
                         {
-                            dataTable.Load(reader);
 
-                            // 手動で加工する
-                            var processedTable = new DataTable();
-                            Color[] RowColorSetting = new Color[100];
-                            int colorIndex = 0, i = 0;
+                            command.Parameters.AddWithValue("?", PtID);
 
-                            // 列構造をコピー
-                            foreach (DataColumn col in dataTable.Columns)
+                            using (var reader = await command.ExecuteReaderAsync())
+                            using (var dataTable = new DataTable())
                             {
-                                processedTable.Columns.Add(col.ColumnName, col.DataType);
-                            }
+                                dataTable.Load(reader);
 
-                            string previousHospital = null; // 前回のHospital値
-                            foreach (DataRow row in dataTable.Rows)
-                            {
-                                var newRow = processedTable.NewRow();
+                                _parentForm.DataDbLock = false;
 
-                                // Hospital列を加工
-                                if (previousHospital == null || previousHospital != row["Hospital"].ToString())
-                                {
-                                    newRow["Hospital"] = row["Hospital"];
-                                    previousHospital = row["Hospital"].ToString();
-                                    colorIndex++;
-                                    if (colorIndex > 1) colorIndex = 0;
-                                }
-                                else
-                                {
-                                    newRow["Hospital"] = ""; // 同じHospitalが続く場合は空白
-                                }
-                                RowColorSetting[i] = RowColors[colorIndex];
-                                i++;
+                                // 手動で加工する
+                                var processedTable = new DataTable();
+                                Color[] RowColorSetting = new Color[100];
+                                int colorIndex = 0, i = 0;
 
-                                
-                                // その他の列をそのままコピー
+                                // 列構造をコピー
                                 foreach (DataColumn col in dataTable.Columns)
                                 {
-                                    if (col.ColumnName != "Hospital")
-                                    {
-                                        newRow[col.ColumnName] = row[col.ColumnName];
-                                    }
+                                    processedTable.Columns.Add(col.ColumnName, col.DataType);
                                 }
 
-                                processedTable.Rows.Add(newRow);
+                                string previousHospital = null; // 前回のHospital値
+                                foreach (DataRow row in dataTable.Rows)
+                                {
+                                    var newRow = processedTable.NewRow();
+
+                                    // Hospital列を加工
+                                    if (previousHospital == null || previousHospital != row["Hospital"].ToString())
+                                    {
+                                        newRow["Hospital"] = row["Hospital"];
+                                        previousHospital = row["Hospital"].ToString();
+                                        colorIndex++;
+                                        if (colorIndex > 1) colorIndex = 0;
+                                    }
+                                    else
+                                    {
+                                        newRow["Hospital"] = ""; // 同じHospitalが続く場合は空白
+                                    }
+                                    RowColorSetting[i] = RowColors[colorIndex];
+                                    i++;
+
+
+                                    // その他の列をそのままコピー
+                                    foreach (DataColumn col in dataTable.Columns)
+                                    {
+                                        if (col.ColumnName != "Hospital")
+                                        {
+                                            newRow[col.ColumnName] = row[col.ColumnName];
+                                        }
+                                    }
+
+                                    processedTable.Rows.Add(newRow);
+                                }
+
+                                // DataGridViewにバインド
+                                // 非同期関数内でのUIスレッド操作
+                                dataGridViewDH.Invoke(new Action(() =>
+                                {
+                                    // DataGridViewを初期化
+                                    InitializeDataGridView(dataGridViewDH);
+
+                                    // DataGridViewにデータをバインド
+                                    dataGridViewDH.DataSource = processedTable;
+
+                                    // DataGridViewの外観や動作を設定
+                                    ConfigureDataGridView(dataGridViewDH, RowColorSetting);
+                                }));
                             }
-
-                            // DataGridViewにバインド
-                            // 非同期関数内でのUIスレッド操作
-                            dataGridViewDH.Invoke(new Action(() =>
-                            {
-                                // DataGridViewを初期化
-                                InitializeDataGridView(dataGridViewDH);
-
-                                // DataGridViewにデータをバインド
-                                dataGridViewDH.DataSource = processedTable;
-
-                                // DataGridViewの外観や動作を設定
-                                ConfigureDataGridView(dataGridViewDH, RowColorSetting);
-                            }));
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"エラーが発生しました: {ex.Message}");
+                }
+                finally
+                {
+                    _parentForm.DataDbLock = false;
+                }
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show($"エラーが発生しました: {ex.Message}");
+                MessageBox.Show("データベースがロックされており、ShowDrugDataに失敗しました。もう一度やり直してみてください。");
             }
         }
 

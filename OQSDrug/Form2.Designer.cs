@@ -83,6 +83,7 @@
             this.checkBoxMinimumStart = new System.Windows.Forms.CheckBox();
             this.toolTipSetting = new System.Windows.Forms.ToolTip(this.components);
             this.comboBoxRSBID = new System.Windows.Forms.ComboBox();
+            this.checkBoxKeepXml = new System.Windows.Forms.CheckBox();
             this.groupBoxDrug.SuspendLayout();
             this.groupBoxKensin.SuspendLayout();
             this.SuspendLayout();
@@ -112,6 +113,7 @@
             // 
             // groupBoxDrug
             // 
+            this.groupBoxDrug.Controls.Add(this.checkBoxKeepXml);
             this.groupBoxDrug.Controls.Add(this.checkBoxSinryou);
             this.groupBoxDrug.Controls.Add(this.label12);
             this.groupBoxDrug.Controls.Add(this.label10);
@@ -125,7 +127,7 @@
             this.groupBoxDrug.Controls.Add(this.radioButtonD1);
             this.groupBoxDrug.Location = new System.Drawing.Point(35, 230);
             this.groupBoxDrug.Name = "groupBoxDrug";
-            this.groupBoxDrug.Size = new System.Drawing.Size(192, 171);
+            this.groupBoxDrug.Size = new System.Drawing.Size(192, 187);
             this.groupBoxDrug.TabIndex = 4;
             this.groupBoxDrug.TabStop = false;
             this.groupBoxDrug.Text = "薬剤情報(xmlは常時取得)";
@@ -481,7 +483,7 @@
             this.groupBoxKensin.Controls.Add(this.radioButtonK1);
             this.groupBoxKensin.Location = new System.Drawing.Point(264, 230);
             this.groupBoxKensin.Name = "groupBoxKensin";
-            this.groupBoxKensin.Size = new System.Drawing.Size(192, 171);
+            this.groupBoxKensin.Size = new System.Drawing.Size(192, 187);
             this.groupBoxKensin.TabIndex = 5;
             this.groupBoxKensin.TabStop = false;
             this.groupBoxKensin.Text = "特定健診";
@@ -578,7 +580,7 @@
             // checkBoxMinimumStart
             // 
             this.checkBoxMinimumStart.AutoSize = true;
-            this.checkBoxMinimumStart.Location = new System.Drawing.Point(33, 408);
+            this.checkBoxMinimumStart.Location = new System.Drawing.Point(33, 432);
             this.checkBoxMinimumStart.Name = "checkBoxMinimumStart";
             this.checkBoxMinimumStart.Size = new System.Drawing.Size(96, 16);
             this.checkBoxMinimumStart.TabIndex = 60;
@@ -598,6 +600,17 @@
             this.comboBoxRSBID.Name = "comboBoxRSBID";
             this.comboBoxRSBID.Size = new System.Drawing.Size(161, 20);
             this.comboBoxRSBID.TabIndex = 61;
+            // 
+            // checkBoxKeepXml
+            // 
+            this.checkBoxKeepXml.AutoSize = true;
+            this.checkBoxKeepXml.Location = new System.Drawing.Point(8, 159);
+            this.checkBoxKeepXml.Name = "checkBoxKeepXml";
+            this.checkBoxKeepXml.Size = new System.Drawing.Size(128, 16);
+            this.checkBoxKeepXml.TabIndex = 29;
+            this.checkBoxKeepXml.Text = "xml薬歴を削除しない";
+            this.toolTipSetting.SetToolTip(this.checkBoxKeepXml, "ON: RESフォルダにxml薬歴を残します。\r\n適宜手動で削除してください。");
+            this.checkBoxKeepXml.UseVisualStyleBackColor = true;
             // 
             // Form2
             // 
@@ -705,5 +718,6 @@
         private System.Windows.Forms.CheckBox checkBoxMinimumStart;
         private System.Windows.Forms.ToolTip toolTipSetting;
         private System.Windows.Forms.ComboBox comboBoxRSBID;
+        private System.Windows.Forms.CheckBox checkBoxKeepXml;
     }
 }
