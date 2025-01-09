@@ -310,5 +310,29 @@ namespace OQSDrug.Properties {
                 this["KeepXml"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("T_資格確認結果表示")]
+        public string DynaTable {
+            get {
+                return ((string)(this["DynaTable"]));
+            }
+            set {
+                this["DynaTable"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("6")]
+        public int ViewerSpan {
+            get {
+                return ((int)(this["ViewerSpan"]));
+            }
+            set {
+                this["ViewerSpan"] = value;
+            }
+        }
     }
 }

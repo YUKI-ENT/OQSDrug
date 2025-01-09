@@ -120,6 +120,13 @@
   <metadata name="toolTipSetting.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
+  <data name="textBoxDatadyna.ToolTip" xml:space="preserve">
+    <value>ダイナクライアントを起動してないPCでは、サーバーのdatadynaを指定してください。
+クライアントを起動しているPCでは、クライアントダイナを指定し、参照テーブルを「WKO資格確認結果表示」
+にしてください。
+ダイナクライアント起動しているPCで薬歴取込動作は不安定になることがありますので、別PCで取得を行い、
+クライアントPCでは同じOQSDrug_data.mdbを指定して薬歴を表示させるのがおすすめです。</value>
+  </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>

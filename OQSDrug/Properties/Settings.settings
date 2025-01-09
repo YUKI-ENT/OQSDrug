@@ -74,5 +74,11 @@
     <Setting Name="KeepXml" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="DynaTable" Type="System.String" Scope="User">
+      <Value Profile="(Default)">T_資格確認結果表示</Value>
+    </Setting>
+    <Setting Name="ViewerSpan" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">6</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

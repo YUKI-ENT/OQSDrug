@@ -140,6 +140,18 @@ namespace OQSDrug
 
             checkBoxKeepXml.Checked = Properties.Settings.Default.KeepXml;
 
+            comboBoxDynaTable.SelectedItem = Properties.Settings.Default.DynaTable;
+
+            comboBoxViewSpan.Items.AddRange(new object[] { 0, 1, 3, 6, 12 });
+            if (comboBoxViewSpan.Items.Contains(Properties.Settings.Default.ViewerSpan))
+            {
+                comboBoxViewSpan.SelectedItem = Properties.Settings.Default.ViewerSpan;
+            }
+            else
+            {
+                comboBoxViewSpan.SelectedIndex = 3;
+            }
+
         }
 
         private void SaveSettings()
@@ -188,6 +200,10 @@ namespace OQSDrug
             Properties.Settings.Default.RSBID = comboBoxRSBID.SelectedIndex;
 
             Properties.Settings.Default.KeepXml = checkBoxKeepXml.Checked;
+
+            Properties.Settings.Default.DynaTable = comboBoxDynaTable.SelectedItem.ToString();
+
+            Properties.Settings.Default.ViewerSpan = Convert.ToInt16(comboBoxViewSpan.SelectedItem.ToString());
 
             Properties.Settings.Default.Save();
 

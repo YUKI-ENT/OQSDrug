@@ -25,7 +25,7 @@ namespace OQSDrug
     {
         public string DBProvider = "";
         public long tempId = 0;
-        public bool autoRSB = false;
+        public bool autoRSB = false, forceIdLink = false;
         public bool DataDbLock = false;
 
         byte okSettings = 0;
@@ -139,21 +139,23 @@ namespace OQSDrug
             // Datadynaのデータ取得
             DataTable dynaTable = await LoadDataFromDatabaseAsync(Properties.Settings.Default.Datadyna);
 
-            // 薬剤PDF
-            if (Properties.Settings.Default.DrugFileCategory > 0)
+            if (dynaTable != null)
             {
-                MakeReq(Properties.Settings.Default.DrugFileCategory + 10, dynaTable);
+                // 薬剤PDF
+                if (Properties.Settings.Default.DrugFileCategory > 0)
+                {
+                    MakeReq(Properties.Settings.Default.DrugFileCategory + 10, dynaTable);
+                }
+
+                // 薬剤xmlは常に実行
+                MakeReq(12, dynaTable);
+
+                // 健診PDF
+                if (Properties.Settings.Default.KensinFileCategory > 0)
+                {
+                    MakeReq(Properties.Settings.Default.KensinFileCategory + 100, dynaTable);
+                }
             }
-
-            // 薬剤xmlは常に実行
-            MakeReq(12, dynaTable);
-
-            // 健診PDF
-            if (Properties.Settings.Default.KensinFileCategory > 0)
-            {
-                MakeReq(Properties.Settings.Default.KensinFileCategory + 100, dynaTable);
-            }
-
             await reloadDataAsync();
 
             // Resフォルダの処理
@@ -161,10 +163,12 @@ namespace OQSDrug
             bool isRemainRes = true;
 
             // 5秒ごとにProcessResAsyncを呼び出し
-            while (!processCompleted || isRemainRes)
+            while ((!processCompleted || isRemainRes) && backgroundTimer != null)
             {
                 await Task.Delay(5000);
 
+                if (!isTimerRunning || backgroundTimer == null) break;
+                
                 processCompleted = await ProcessResAsync();
                 isRemainRes = await RemainResTask();
 
@@ -176,11 +180,6 @@ namespace OQSDrug
                 }
 
                 await reloadDataAsync();
-
-                if (!isTimerRunning || backgroundTimer == null)
-                {
-                    break;
-                }
             }
 
             AddLog($"タイマーイベント終了");
@@ -202,6 +201,7 @@ namespace OQSDrug
         public void StopTimer()
         {
             backgroundTimer?.Dispose();
+            backgroundTimer = null;
         }
 
 
@@ -406,7 +406,7 @@ namespace OQSDrug
                     return;
             }
 
-            checkDate = fileCategory == 1 ? DateTime.Now.AddMonths(-Interval) : DateTime.Now.AddDays(-1);
+            checkDate = fileCategory == 1 ? DateTime.Now.AddMonths(-Interval) : DateTime.Now.AddHours(-3); // xmlの場合は取得間隔3時間
 
             try
             {
@@ -562,8 +562,8 @@ namespace OQSDrug
         private async Task<DataTable> LoadDataFromDatabaseAsync(string dynaPath)
         {
             string connectionString = $"Provider={DBProvider};Data Source={dynaPath};Mode=Read;Persist Security Info=False;";
-            string query = "SELECT * FROM T_資格確認結果表示";
-
+            string query = "SELECT * FROM " + Properties.Settings.Default.DynaTable + ";";
+            
             DataTable dataTable = new DataTable();
 
             try
@@ -581,11 +581,11 @@ namespace OQSDrug
                     }
                 }
 
-                AddLog("DatadynaのT_資格確認結果表示の取り込みが完了しました");
+                AddLog("ダイナミクスの"+ Properties.Settings.Default.DynaTable +"の取り込みが完了しました");
             }
             catch (Exception ex)
             {
-                AddLog($"Datadynaの読み込みエラー:{ex.Message}");
+                AddLog($"ダイナミクスの読み込みエラー:{ex.Message}");
                 return null;
             }
 
@@ -664,7 +664,7 @@ namespace OQSDrug
             var tasks = new[]
             {
                 CheckDatabaseAsync(Properties.Settings.Default.OQSDrugData, "reqResults"),
-                CheckDatabaseAsync(Properties.Settings.Default.Datadyna, "T_資格確認結果表示"),
+                CheckDatabaseAsync(Properties.Settings.Default.Datadyna, Properties.Settings.Default.DynaTable),
                 CheckDirectoryExistsAsync(Properties.Settings.Default.OQSFolder),
                 CheckDirectoryExistsAsync(Properties.Settings.Default.RSBgazouFolder)
             };
@@ -1016,8 +1016,8 @@ namespace OQSDrug
             try
             {
                 // ArbitraryFileIdentifier を生成
-                string currentDate = DateTime.Now.ToString("yyyyMMdd");
-                string currentTime = DateTime.Now.ToString("HHmmss");
+                string currentDate = DateTime.Now.ToString("yyMMdd");
+                string currentTime = DateTime.Now.ToString("HHmm");
                 string arbitraryFileIdentifier = ptData.Id.ToString();
 
                 // FileSymbol を決定
@@ -1033,7 +1033,7 @@ namespace OQSDrug
                 fileCategory = 2 - (category % 2);
 
                 // ファイル名を生成
-                string fileName = $"{fileSymbol}siquc01req_99{fileCategory:00}{currentDate}{ptData.Id}.xml";
+                string fileName = $"{fileSymbol}siquc01req_{fileCategory:00}{currentDate}{currentTime}{ptData.Id}.xml";
 
                 // XMLファイルのフルパス
                 string filePath = Path.Combine(folderPath, "req", fileName);
@@ -1639,6 +1639,11 @@ namespace OQSDrug
                 {
                     form3Instance.StartPosition = FormStartPosition.Manual;
                     form3Instance.Bounds = Properties.Settings.Default.ViewerBounds;
+
+                    // マージンと境界線を設定
+                    form3Instance.Padding = new Padding(0);
+                    form3Instance.Margin = new Padding(0);
+                    //form3Instance.FormBorderStyle = FormBorderStyle.None;
                 }
 
                 // TopMost状態を設定
@@ -1807,28 +1812,7 @@ namespace OQSDrug
                     // 数値に変換できた場合
                     tempId = idValue;
 
-                    if (await existDrugHistory(tempId))
-                    {
-                        // UIスレッドで操作
-                        Invoke((Action)(() =>
-                        {
-                            AddLog($"{tempId}の薬歴を開きます");
-                            buttonViewer_Click(toolStripButtonViewer, EventArgs.Empty);
-                        }));
-                    } else
-                    {
-                        //薬歴なしの場合はViewerを閉じる
-                        if (form3Instance != null && !form3Instance.IsDisposed)
-                        {
-                            // UI スレッドで操作する必要があるため Invoke を使用
-                            form3Instance.Invoke((Action)(() =>
-                            {
-                                form3Instance.Close(); // Form3 を閉じる
-                                form3Instance = null;
-                                AddLog($"{tempId}は薬歴がないので薬歴ビュワーを閉じます");
-                            }));
-                        }
-                    }
+                    await OpenDrugHistory(tempId,false);
                 }
                 else
                 {
@@ -1838,6 +1822,38 @@ namespace OQSDrug
             catch (Exception ex)
             {
                 MessageBox.Show($"FileWatcherエラー: {ex.Message}");
+            }
+        }
+
+        private async Task OpenDrugHistory(long ptId, bool messagePopup = false)
+        {
+            if (await existDrugHistory(ptId))
+            {
+                tempId = ptId;
+                // UIスレッドで操作
+                Invoke((Action)(() =>
+                {
+                    AddLog($"{ptId}の薬歴を開きます");
+                    buttonViewer_Click(toolStripButtonViewer, EventArgs.Empty);
+                }));
+            }
+            else
+            {
+                //薬歴なしの場合はViewerを閉じる
+                if (form3Instance != null && !form3Instance.IsDisposed)
+                {
+                    // UI スレッドで操作する必要があるため Invoke を使用
+                    form3Instance.Invoke((Action)(() =>
+                    {
+                        form3Instance.Close(); // Form3 を閉じる
+                        form3Instance = null;
+                        AddLog($"{ptId}は薬歴がないので薬歴ビュワーを閉じます");
+                    }));
+                }
+                if (messagePopup)
+                {
+                    MessageBox.Show($"{ptId}の薬歴はありません");
+                }
             }
         }
 
@@ -2199,6 +2215,30 @@ namespace OQSDrug
         private async void buttonReload_Click(object sender, EventArgs e)
         {
             await Task.Run(async ()=>  await reloadDataAsync());
+        }
+
+        private async void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            {
+                var cellValue = dataGridView1.Rows[e.RowIndex].Cells["PtID"].Value;
+
+                if (cellValue != null && long.TryParse(cellValue.ToString(), out long ptId))
+                {
+                    tempId = ptId / 10;
+                    AddLog($"{tempId}のダブルクリックを検知しました");
+
+                    forceIdLink = true;
+
+                    await OpenDrugHistory(tempId,true);
+
+                    //forceIdLink = false; //Form3側でクリアする
+                }
+                else
+                {
+                    MessageBox.Show("患者IDデータがありません。");
+                }
+            }
         }
     }
 }

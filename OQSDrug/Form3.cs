@@ -9,15 +9,22 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
 
 namespace OQSDrug
 {
     public partial class Form3 : Form
     {
+        private const int SnapDistance = 16; // 吸着の距離（ピクセル）
+        private int SnapCompPixel = 8;  //余白補正
+
         private Form1 _parentForm;
         private string provider;
 
-        private Color[] RowColors = { Color.White, Color.WhiteSmoke};
+        private Color[] RowColors = {Color.WhiteSmoke, Color.White};
+
+        private int ShowSpan = Properties.Settings.Default.ViewerSpan;
 
         public Form3(Form1 parentForm)
         {
@@ -76,21 +83,27 @@ namespace OQSDrug
 
                         comboBoxPtID.Invoke(new Action(() =>
                         {
-                            // ComboBoxのデータソースを一旦クリア
-                            comboBoxPtID.DataSource = null;
-
+                            
                             // ComboBoxにデータをバインド
                             comboBoxPtID.SelectedIndexChanged -= comboBoxPtID_SelectedIndexChanged; // イベントを一時解除 selectedvalueのnull対策
+
+                            // ComboBoxのデータソースを一旦クリア
+                            comboBoxPtID.DataSource = null;
 
                             comboBoxPtID.DataSource = dataTable;
                             comboBoxPtID.ValueMember = "PtID";
                             comboBoxPtID.DisplayMember = "DisplayName";
 
+                            comboBoxPtID.SelectedIndex = -1;
+                            //comboBoxPtID.SelectedValue = null;
+
                             comboBoxPtID.SelectedIndexChanged += comboBoxPtID_SelectedIndexChanged; // イベントを再登録
 
-                            // RSB 連動
-                            if (_parentForm.autoRSB)
+                            // RSB 連動か ダブルクリック起動か
+                            if (_parentForm.autoRSB || _parentForm.forceIdLink)
                             {
+                                _parentForm.forceIdLink = false;
+
                                 // PtID が _parentForm.tempId に一致する行を検索
                                 DataRow[] rows = dataTable.Select($"PtID = {_parentForm.tempId}");
 
@@ -133,6 +146,9 @@ namespace OQSDrug
 
         private async void Form3_Load(object sender, EventArgs e)
         {
+            SetRadioButtonState(ShowSpan);
+            SetRadioButtonEvent();
+
             InitializeContextMenu();
 
             await LoadDataIntoComboBoxes();
@@ -159,8 +175,8 @@ namespace OQSDrug
                             FROM 
                                 drug_history
                             WHERE 
-                                Revised = false AND 
-                                drug_history.PtIDmain = ?
+                                Revised = false AND %SPANFILTER%  
+                                drug_history.PtIDmain = ? 
                             GROUP BY 
                                 IIf(Len([PrlsHNm])=0, [MeTrDiHNm], [PrlsHNm]), 
                                 drug_history.DrugN, 
@@ -173,7 +189,12 @@ namespace OQSDrug
 
                 string pivot = (Properties.Settings.Default.Sum) ? "drug_history.MeTrMonth" : "drug_history.DiDate";
 
+                //long viewSpan = GetComboBoxSelectedValue(comboBoxSpan);
+                string startDate = DateTime.Now.AddMonths(0 - ShowSpan).ToString("yyyyMM");
+                string spanfilter = (ShowSpan == 0) ? "" : $" MeTrMonth >= '{startDate}' AND ";
+                
                 query = query.Replace("%FIELD%", pivot);
+                query = query.Replace("%SPANFILTER%", spanfilter);
 
                 // 固定列の定義
                 var fixedColumns = new List<string> { "Hospital", "DrugN", "Qua1", "Unit" };
@@ -281,7 +302,11 @@ namespace OQSDrug
             try
             {
                 // nullチェック
-                if (comboBoxPtID.SelectedValue != null)
+                if (comboBoxPtID.SelectedValue == null)
+                {
+                    InitializeDataGridView(dataGridViewDH);
+                }
+                else
                 {
                     // PtIDmainの値を取得
                     string strPtID = comboBoxPtID.SelectedValue.ToString();
@@ -289,8 +314,15 @@ namespace OQSDrug
                     // 数字としてパース可能かチェック
                     if (long.TryParse(strPtID, out long PtID))
                     {
-
-                        // 必要に応じて処理を実行
+                        // sender が RadioButton かどうかを判定
+                        if (!(sender is System.Windows.Forms.RadioButton radioButton))
+                        {
+                            //表示期間をリセットする
+                            ShowSpan = Properties.Settings.Default.ViewerSpan;
+                            RemoveRadioButtonEvent();
+                            SetRadioButtonState(ShowSpan);
+                            SetRadioButtonEvent();
+                        }
                         await ShowDrugData(PtID);
                     }
                 }
@@ -401,6 +433,100 @@ namespace OQSDrug
             Properties.Settings.Default.Save();
 
             comboBoxPtID_SelectedIndexChanged(comboBoxPtID, EventArgs.Empty);
+        }
+
+        private void SnapToScreenEdges()
+        {
+            // 現在のスクリーンの作業領域を取得
+            Rectangle workingArea = Screen.FromControl(this).WorkingArea;
+
+            int newX = this.Left;
+            int newY = this.Top;
+
+            // 左端に吸着
+            if (Math.Abs(this.Left - workingArea.Left) <= SnapDistance)
+            {
+                newX = workingArea.Left - SnapCompPixel;
+            }
+            // 右端に吸着
+            else if (Math.Abs(this.Right - workingArea.Right) <= SnapDistance)
+            {
+                newX = workingArea.Right - this.Width + SnapCompPixel;
+            }
+
+            // 上端に吸着
+            if (Math.Abs(this.Top - workingArea.Top) <= SnapDistance)
+            {
+                newY = workingArea.Top;
+            }
+            // 下端に吸着
+            else if (Math.Abs(this.Bottom - workingArea.Bottom) <= SnapDistance)
+            {
+                newY = workingArea.Bottom - this.Height + SnapCompPixel;
+            }
+
+            // 新しい位置を設定
+            this.Location = new Point(newX, newY);
+        }
+
+        private void Form3_LocationChanged(object sender, EventArgs e)
+        {
+            SnapToScreenEdges();
+        }
+
+        private void Form3_SizeChanged(object sender, EventArgs e)
+        {
+            SnapToScreenEdges();
+        }
+
+        private void radioButton_CheckedChanged(object sender, EventArgs e)
+        {
+            System.Windows.Forms.RadioButton selectedButton = sender as System.Windows.Forms.RadioButton;
+
+            if (selectedButton != null && selectedButton.Checked)
+            {
+                if (int.TryParse(selectedButton.Tag.ToString(), out int tagValue))
+                {
+                    ShowSpan = tagValue; // Tag から値を取得
+                }
+            }
+        
+            comboBoxPtID_SelectedIndexChanged(sender, e);
+        }
+
+        // 変数値に基づいてラジオボタンの状態を設定
+        private void SetRadioButtonState(int value)
+        {
+            // フォーム内のすべての RadioButton を走査
+            foreach (Control control in this.Controls)
+            {
+                if (control is System.Windows.Forms.RadioButton radioButton && radioButton.Tag != null)
+                {
+                    // Tag の値が指定された値と一致する場合のみ Checked を true にする
+                    if (int.TryParse(radioButton.Tag.ToString(), out int tagValue))
+                    {
+                        radioButton.Checked = tagValue == value;
+                    }
+                }
+            }
+        }
+
+        private void SetRadioButtonEvent()
+        {
+            radioButton1M.CheckedChanged += radioButton_CheckedChanged;
+            radioButton3M.CheckedChanged += radioButton_CheckedChanged;
+            radioButton6M.CheckedChanged += radioButton_CheckedChanged;
+            radioButton12M.CheckedChanged += radioButton_CheckedChanged;
+            radioButtonAll.CheckedChanged += radioButton_CheckedChanged;
+        }
+
+        private void RemoveRadioButtonEvent()
+        {
+            radioButton1M.CheckedChanged -= radioButton_CheckedChanged;
+            radioButton3M.CheckedChanged -= radioButton_CheckedChanged;
+            radioButton6M.CheckedChanged -= radioButton_CheckedChanged;
+            radioButton12M.CheckedChanged -= radioButton_CheckedChanged;
+            radioButtonAll.CheckedChanged -= radioButton_CheckedChanged;
         }
     }
 }
