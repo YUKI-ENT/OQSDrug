@@ -84,37 +84,36 @@
             this.checkBoxMinimumStart = new System.Windows.Forms.CheckBox();
             this.toolTipSetting = new System.Windows.Forms.ToolTip(this.components);
             this.comboBoxRSBID = new System.Windows.Forms.ComboBox();
-            this.comboBoxDynaTable = new System.Windows.Forms.ComboBox();
-            this.label16 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
             this.comboBoxViewSpan = new System.Windows.Forms.ComboBox();
             this.label19 = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
             this.groupBoxDrug.SuspendLayout();
             this.groupBoxKensin.SuspendLayout();
             this.SuspendLayout();
             // 
             // textBoxDatadyna
             // 
-            this.textBoxDatadyna.Location = new System.Drawing.Point(174, 57);
+            this.textBoxDatadyna.Location = new System.Drawing.Point(186, 57);
             this.textBoxDatadyna.Name = "textBoxDatadyna";
-            this.textBoxDatadyna.Size = new System.Drawing.Size(377, 19);
+            this.textBoxDatadyna.Size = new System.Drawing.Size(365, 19);
             this.textBoxDatadyna.TabIndex = 2;
             this.toolTipSetting.SetToolTip(this.textBoxDatadyna, resources.GetString("textBoxDatadyna.ToolTip"));
             // 
             // textBoxOQSFolder
             // 
-            this.textBoxOQSFolder.Location = new System.Drawing.Point(174, 130);
+            this.textBoxOQSFolder.Location = new System.Drawing.Point(186, 130);
             this.textBoxOQSFolder.Name = "textBoxOQSFolder";
-            this.textBoxOQSFolder.Size = new System.Drawing.Size(377, 19);
+            this.textBoxOQSFolder.Size = new System.Drawing.Size(365, 19);
             this.textBoxOQSFolder.TabIndex = 4;
             this.toolTipSetting.SetToolTip(this.textBoxOQSFolder, "オン資PCのreq/res/face等のフォルダが有る場所を指定します");
             // 
             // textBoxRSBgazou
             // 
-            this.textBoxRSBgazou.Location = new System.Drawing.Point(174, 158);
+            this.textBoxRSBgazou.Location = new System.Drawing.Point(186, 158);
             this.textBoxRSBgazou.Name = "textBoxRSBgazou";
-            this.textBoxRSBgazou.Size = new System.Drawing.Size(377, 19);
+            this.textBoxRSBgazou.Size = new System.Drawing.Size(365, 19);
             this.textBoxRSBgazou.TabIndex = 6;
             this.toolTipSetting.SetToolTip(this.textBoxRSBgazou, "RSBaseのgazouフォルダ、RSAうとの自動取り込みフォルダを指定します");
             // 
@@ -137,12 +136,12 @@
             this.groupBoxDrug.Size = new System.Drawing.Size(192, 187);
             this.groupBoxDrug.TabIndex = 4;
             this.groupBoxDrug.TabStop = false;
-            this.groupBoxDrug.Text = "薬剤情報(xmlは常時取得)";
+            this.groupBoxDrug.Text = "⑧薬剤情報(xmlは常時取得)";
             // 
             // checkBoxKeepXml
             // 
             this.checkBoxKeepXml.AutoSize = true;
-            this.checkBoxKeepXml.Location = new System.Drawing.Point(8, 159);
+            this.checkBoxKeepXml.Location = new System.Drawing.Point(9, 159);
             this.checkBoxKeepXml.Name = "checkBoxKeepXml";
             this.checkBoxKeepXml.Size = new System.Drawing.Size(128, 16);
             this.checkBoxKeepXml.TabIndex = 29;
@@ -261,36 +260,36 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(33, 60);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(87, 12);
+            this.label1.Size = new System.Drawing.Size(103, 12);
             this.label1.TabIndex = 5;
-            this.label1.Text = "Datadynaの場所";
+            this.label1.Text = "②ダイナミクスの場所";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(33, 133);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(97, 12);
+            this.label2.Size = new System.Drawing.Size(109, 12);
             this.label2.TabIndex = 6;
-            this.label2.Text = "OQSフォルダの場所";
+            this.label2.Text = "③OQSフォルダの場所";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(33, 161);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(105, 12);
+            this.label3.Size = new System.Drawing.Size(117, 12);
             this.label3.TabIndex = 7;
-            this.label3.Text = "RSBase取込フォルダ";
+            this.label3.Text = "④RSBase取込フォルダ";
             // 
             // label4
             // 
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(33, 245);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(85, 12);
+            this.label4.Size = new System.Drawing.Size(97, 12);
             this.label4.TabIndex = 8;
-            this.label4.Text = "タイマー間隔(秒)";
+            this.label4.Text = "⑦タイマー間隔(秒)";
             // 
             // comboBoxTimerSecond
             // 
@@ -306,9 +305,9 @@
             this.label5.AutoSize = true;
             this.label5.Location = new System.Drawing.Point(33, 217);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(80, 12);
+            this.label5.Size = new System.Drawing.Size(92, 12);
             this.label5.TabIndex = 10;
-            this.label5.Text = "医療機関コード";
+            this.label5.Text = "⑥医療機関コード";
             // 
             // textBoxMCode
             // 
@@ -383,28 +382,28 @@
             this.label8.AutoSize = true;
             this.label8.Location = new System.Drawing.Point(33, 32);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(135, 12);
+            this.label8.Size = new System.Drawing.Size(147, 12);
             this.label8.TabIndex = 21;
-            this.label8.Text = "OQSDrug_data.mdbの場所";
+            this.label8.Text = "①OQSDrug_data.mdbの場所";
             // 
             // textBoxOQSDrugData
             // 
-            this.textBoxOQSDrugData.Location = new System.Drawing.Point(174, 29);
+            this.textBoxOQSDrugData.Location = new System.Drawing.Point(186, 29);
             this.textBoxOQSDrugData.Name = "textBoxOQSDrugData";
-            this.textBoxOQSDrugData.Size = new System.Drawing.Size(377, 19);
+            this.textBoxOQSDrugData.Size = new System.Drawing.Size(365, 19);
             this.textBoxOQSDrugData.TabIndex = 0;
             // 
             // textBoxRSBaseURL
             // 
-            this.textBoxRSBaseURL.Location = new System.Drawing.Point(205, 187);
+            this.textBoxRSBaseURL.Location = new System.Drawing.Point(217, 187);
             this.textBoxRSBaseURL.Name = "textBoxRSBaseURL";
-            this.textBoxRSBaseURL.Size = new System.Drawing.Size(346, 19);
+            this.textBoxRSBaseURL.Size = new System.Drawing.Size(334, 19);
             this.textBoxRSBaseURL.TabIndex = 10;
             // 
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(172, 190);
+            this.label9.Location = new System.Drawing.Point(184, 190);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(27, 12);
             this.label9.TabIndex = 24;
@@ -413,7 +412,7 @@
             // checkBoxRSBReload
             // 
             this.checkBoxRSBReload.AutoSize = true;
-            this.checkBoxRSBReload.Location = new System.Drawing.Point(33, 189);
+            this.checkBoxRSBReload.Location = new System.Drawing.Point(56, 189);
             this.checkBoxRSBReload.Name = "checkBoxRSBReload";
             this.checkBoxRSBReload.Size = new System.Drawing.Size(100, 16);
             this.checkBoxRSBReload.TabIndex = 8;
@@ -504,7 +503,7 @@
             this.groupBoxKensin.Size = new System.Drawing.Size(192, 187);
             this.groupBoxKensin.TabIndex = 5;
             this.groupBoxKensin.TabStop = false;
-            this.groupBoxKensin.Text = "特定健診";
+            this.groupBoxKensin.Text = "⑨特定健診";
             // 
             // radioButtonK2
             // 
@@ -539,9 +538,9 @@
             // 
             // textBoxTemprs
             // 
-            this.textBoxTemprs.Location = new System.Drawing.Point(369, 531);
+            this.textBoxTemprs.Location = new System.Drawing.Point(392, 531);
             this.textBoxTemprs.Name = "textBoxTemprs";
-            this.textBoxTemprs.Size = new System.Drawing.Size(192, 19);
+            this.textBoxTemprs.Size = new System.Drawing.Size(169, 19);
             this.textBoxTemprs.TabIndex = 54;
             this.textBoxTemprs.Visible = false;
             // 
@@ -550,9 +549,9 @@
             this.label14.AutoSize = true;
             this.label14.Location = new System.Drawing.Point(43, 534);
             this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(109, 12);
+            this.label14.Size = new System.Drawing.Size(121, 12);
             this.label14.TabIndex = 55;
-            this.label14.Text = "RSBase ID連携方式";
+            this.label14.Text = "⑪RSBase ID連携方式";
             this.toolTipSetting.SetToolTip(this.label14, "RSBaseのID連携を設定すると\r\nカルテ遷移に連動して自動で薬歴ビュワーを起動します");
             // 
             // checkBoxTopmost
@@ -560,14 +559,14 @@
             this.checkBoxTopmost.AutoSize = true;
             this.checkBoxTopmost.Location = new System.Drawing.Point(44, 556);
             this.checkBoxTopmost.Name = "checkBoxTopmost";
-            this.checkBoxTopmost.Size = new System.Drawing.Size(127, 16);
+            this.checkBoxTopmost.Size = new System.Drawing.Size(139, 16);
             this.checkBoxTopmost.TabIndex = 56;
-            this.checkBoxTopmost.Text = "薬歴を最前面で表示";
+            this.checkBoxTopmost.Text = "⑫薬歴を最前面で表示";
             this.checkBoxTopmost.UseVisualStyleBackColor = true;
             // 
             // buttonViewerPositionReset
             // 
-            this.buttonViewerPositionReset.Location = new System.Drawing.Point(174, 552);
+            this.buttonViewerPositionReset.Location = new System.Drawing.Point(186, 552);
             this.buttonViewerPositionReset.Name = "buttonViewerPositionReset";
             this.buttonViewerPositionReset.Size = new System.Drawing.Size(179, 23);
             this.buttonViewerPositionReset.TabIndex = 57;
@@ -598,11 +597,11 @@
             // checkBoxMinimumStart
             // 
             this.checkBoxMinimumStart.AutoSize = true;
-            this.checkBoxMinimumStart.Location = new System.Drawing.Point(33, 477);
+            this.checkBoxMinimumStart.Location = new System.Drawing.Point(35, 468);
             this.checkBoxMinimumStart.Name = "checkBoxMinimumStart";
-            this.checkBoxMinimumStart.Size = new System.Drawing.Size(96, 16);
+            this.checkBoxMinimumStart.Size = new System.Drawing.Size(108, 16);
             this.checkBoxMinimumStart.TabIndex = 60;
-            this.checkBoxMinimumStart.Text = "最小化して開く";
+            this.checkBoxMinimumStart.Text = "⑩最小化して開く";
             this.toolTipSetting.SetToolTip(this.checkBoxMinimumStart, "タスクトレイに最小化して起動します");
             this.checkBoxMinimumStart.UseVisualStyleBackColor = true;
             // 
@@ -614,50 +613,30 @@
             "ID.dat",
             "temp_rs.txt",
             "thept.txt"});
-            this.comboBoxRSBID.Location = new System.Drawing.Point(174, 531);
+            this.comboBoxRSBID.Location = new System.Drawing.Point(186, 531);
             this.comboBoxRSBID.Name = "comboBoxRSBID";
             this.comboBoxRSBID.Size = new System.Drawing.Size(179, 20);
             this.comboBoxRSBID.TabIndex = 61;
-            // 
-            // comboBoxDynaTable
-            // 
-            this.comboBoxDynaTable.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxDynaTable.FormattingEnabled = true;
-            this.comboBoxDynaTable.Items.AddRange(new object[] {
-            "T_資格確認結果表示",
-            "WKO資格確認結果表示"});
-            this.comboBoxDynaTable.Location = new System.Drawing.Point(247, 82);
-            this.comboBoxDynaTable.Name = "comboBoxDynaTable";
-            this.comboBoxDynaTable.Size = new System.Drawing.Size(304, 20);
-            this.comboBoxDynaTable.TabIndex = 62;
-            // 
-            // label16
-            // 
-            this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(172, 85);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(67, 12);
-            this.label16.TabIndex = 63;
-            this.label16.Text = "参照テーブル";
             // 
             // label17
             // 
             this.label17.AutoSize = true;
             this.label17.Font = new System.Drawing.Font("MS UI Gothic", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.label17.Location = new System.Drawing.Point(182, 105);
+            this.label17.Location = new System.Drawing.Point(174, 79);
             this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(341, 22);
+            this.label17.Size = new System.Drawing.Size(364, 33);
             this.label17.TabIndex = 64;
-            this.label17.Text = "datadyna.mdbを設定したときは「T_資格確認結果表示」を、\r\nクライアントダイナを設定したときは「WKO資格確認結果表示」を選んでください";
+            this.label17.Text = "本アプリを動かすPCでダイナミクスクライアントが稼働中の場合はクライアントダイナを、\r\nクライアントが稼働してない場合は、サーバーのdatadyna.mdbを指定" +
+    "してください。\r\nクライアントを指定した場合は、クライアントアップデート後再指定が必要です";
             // 
             // label18
             // 
             this.label18.AutoSize = true;
             this.label18.Location = new System.Drawing.Point(44, 582);
             this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(97, 12);
+            this.label18.Size = new System.Drawing.Size(109, 12);
             this.label18.TabIndex = 65;
-            this.label18.Text = "初期表示期間(月)";
+            this.label18.Text = "⑬初期表示期間(月)";
             // 
             // comboBoxViewSpan
             // 
@@ -676,17 +655,25 @@
             this.label19.TabIndex = 67;
             this.label19.Text = "(全期間は0)";
             // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(33, 190);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(17, 12);
+            this.label16.TabIndex = 68;
+            this.label16.Text = "⑤";
+            // 
             // Form2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(596, 641);
+            this.Controls.Add(this.label16);
             this.Controls.Add(this.label19);
             this.Controls.Add(this.comboBoxViewSpan);
             this.Controls.Add(this.label18);
             this.Controls.Add(this.label17);
-            this.Controls.Add(this.label16);
-            this.Controls.Add(this.comboBoxDynaTable);
             this.Controls.Add(this.comboBoxRSBID);
             this.Controls.Add(this.checkBoxMinimumStart);
             this.Controls.Add(this.button2);
@@ -789,11 +776,10 @@
         private System.Windows.Forms.ToolTip toolTipSetting;
         private System.Windows.Forms.ComboBox comboBoxRSBID;
         private System.Windows.Forms.CheckBox checkBoxKeepXml;
-        private System.Windows.Forms.ComboBox comboBoxDynaTable;
-        private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Label label17;
         private System.Windows.Forms.Label label18;
         private System.Windows.Forms.ComboBox comboBoxViewSpan;
         private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.Label label16;
     }
 }

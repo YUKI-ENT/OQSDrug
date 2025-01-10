@@ -63,7 +63,7 @@
             this.comboBoxPtID.FormattingEnabled = true;
             this.comboBoxPtID.Location = new System.Drawing.Point(12, 11);
             this.comboBoxPtID.Name = "comboBoxPtID";
-            this.comboBoxPtID.Size = new System.Drawing.Size(256, 24);
+            this.comboBoxPtID.Size = new System.Drawing.Size(189, 24);
             this.comboBoxPtID.TabIndex = 1;
             this.comboBoxPtID.SelectedIndexChanged += new System.EventHandler(this.comboBoxPtID_SelectedIndexChanged);
             // 
@@ -87,11 +87,11 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxSum.AutoSize = true;
             this.checkBoxSum.Font = new System.Drawing.Font("Meiryo UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.checkBoxSum.Location = new System.Drawing.Point(291, 12);
+            this.checkBoxSum.Location = new System.Drawing.Point(207, 13);
             this.checkBoxSum.Name = "checkBoxSum";
-            this.checkBoxSum.Size = new System.Drawing.Size(94, 21);
+            this.checkBoxSum.Size = new System.Drawing.Size(79, 21);
             this.checkBoxSum.TabIndex = 4;
-            this.checkBoxSum.Text = "月ごとに集計";
+            this.checkBoxSum.Text = "月毎集計";
             this.checkBoxSum.UseVisualStyleBackColor = true;
             this.checkBoxSum.CheckedChanged += new System.EventHandler(this.checkBoxSum_CheckedChanged);
             // 
@@ -99,7 +99,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Meiryo UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.label1.Location = new System.Drawing.Point(402, 14);
+            this.label1.Location = new System.Drawing.Point(292, 14);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(60, 17);
             this.label1.TabIndex = 6;
@@ -110,14 +110,14 @@
             this.radioButton1M.Appearance = System.Windows.Forms.Appearance.Button;
             this.radioButton1M.FlatAppearance.BorderSize = 0;
             this.radioButton1M.Font = new System.Drawing.Font("Meiryo UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.radioButton1M.Location = new System.Drawing.Point(466, 9);
+            this.radioButton1M.Location = new System.Drawing.Point(355, 10);
             this.radioButton1M.Margin = new System.Windows.Forms.Padding(0);
             this.radioButton1M.Name = "radioButton1M";
-            this.radioButton1M.Size = new System.Drawing.Size(54, 27);
+            this.radioButton1M.Size = new System.Drawing.Size(42, 27);
             this.radioButton1M.TabIndex = 7;
             this.radioButton1M.TabStop = true;
             this.radioButton1M.Tag = "1";
-            this.radioButton1M.Text = "1ヶ月";
+            this.radioButton1M.Text = "1M";
             this.radioButton1M.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.radioButton1M.UseVisualStyleBackColor = true;
             // 
@@ -126,14 +126,14 @@
             this.radioButton3M.Appearance = System.Windows.Forms.Appearance.Button;
             this.radioButton3M.FlatAppearance.BorderSize = 0;
             this.radioButton3M.Font = new System.Drawing.Font("Meiryo UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.radioButton3M.Location = new System.Drawing.Point(520, 9);
+            this.radioButton3M.Location = new System.Drawing.Point(397, 10);
             this.radioButton3M.Margin = new System.Windows.Forms.Padding(0);
             this.radioButton3M.Name = "radioButton3M";
-            this.radioButton3M.Size = new System.Drawing.Size(54, 27);
+            this.radioButton3M.Size = new System.Drawing.Size(42, 27);
             this.radioButton3M.TabIndex = 8;
             this.radioButton3M.TabStop = true;
             this.radioButton3M.Tag = "3";
-            this.radioButton3M.Text = "3ヶ月";
+            this.radioButton3M.Text = "3M";
             this.radioButton3M.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.radioButton3M.UseVisualStyleBackColor = true;
             // 
@@ -142,14 +142,14 @@
             this.radioButton6M.Appearance = System.Windows.Forms.Appearance.Button;
             this.radioButton6M.FlatAppearance.BorderSize = 0;
             this.radioButton6M.Font = new System.Drawing.Font("Meiryo UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.radioButton6M.Location = new System.Drawing.Point(574, 9);
+            this.radioButton6M.Location = new System.Drawing.Point(439, 10);
             this.radioButton6M.Margin = new System.Windows.Forms.Padding(0);
             this.radioButton6M.Name = "radioButton6M";
-            this.radioButton6M.Size = new System.Drawing.Size(54, 27);
+            this.radioButton6M.Size = new System.Drawing.Size(42, 27);
             this.radioButton6M.TabIndex = 9;
             this.radioButton6M.TabStop = true;
             this.radioButton6M.Tag = "6";
-            this.radioButton6M.Text = "6ヶ月";
+            this.radioButton6M.Text = "6M";
             this.radioButton6M.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.radioButton6M.UseVisualStyleBackColor = true;
             // 
@@ -158,14 +158,14 @@
             this.radioButton12M.Appearance = System.Windows.Forms.Appearance.Button;
             this.radioButton12M.FlatAppearance.BorderSize = 0;
             this.radioButton12M.Font = new System.Drawing.Font("Meiryo UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.radioButton12M.Location = new System.Drawing.Point(628, 9);
+            this.radioButton12M.Location = new System.Drawing.Point(481, 10);
             this.radioButton12M.Margin = new System.Windows.Forms.Padding(0);
             this.radioButton12M.Name = "radioButton12M";
-            this.radioButton12M.Size = new System.Drawing.Size(54, 27);
+            this.radioButton12M.Size = new System.Drawing.Size(42, 27);
             this.radioButton12M.TabIndex = 10;
             this.radioButton12M.TabStop = true;
             this.radioButton12M.Tag = "12";
-            this.radioButton12M.Text = "12ヶ月";
+            this.radioButton12M.Text = "12M";
             this.radioButton12M.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.radioButton12M.UseVisualStyleBackColor = true;
             // 
@@ -174,14 +174,14 @@
             this.radioButtonAll.Appearance = System.Windows.Forms.Appearance.Button;
             this.radioButtonAll.FlatAppearance.BorderSize = 0;
             this.radioButtonAll.Font = new System.Drawing.Font("Meiryo UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.radioButtonAll.Location = new System.Drawing.Point(682, 9);
+            this.radioButtonAll.Location = new System.Drawing.Point(523, 10);
             this.radioButtonAll.Margin = new System.Windows.Forms.Padding(0);
             this.radioButtonAll.Name = "radioButtonAll";
-            this.radioButtonAll.Size = new System.Drawing.Size(54, 27);
+            this.radioButtonAll.Size = new System.Drawing.Size(42, 27);
             this.radioButtonAll.TabIndex = 11;
             this.radioButtonAll.TabStop = true;
             this.radioButtonAll.Tag = "0";
-            this.radioButtonAll.Text = "すべて";
+            this.radioButtonAll.Text = "All";
             this.radioButtonAll.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.radioButtonAll.UseVisualStyleBackColor = true;
             // 

@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
+using Microsoft.VisualBasic;
 
 namespace OQSDrug
 {
@@ -315,7 +316,7 @@ namespace OQSDrug
                     if (long.TryParse(strPtID, out long PtID))
                     {
                         // sender が RadioButton かどうかを判定
-                        if (!(sender is System.Windows.Forms.RadioButton radioButton))
+                        if (!(sender is System.Windows.Forms.RadioButton radioButton) && !(sender is System.Windows.Forms.CheckBox))
                         {
                             //表示期間をリセットする
                             ShowSpan = Properties.Settings.Default.ViewerSpan;
@@ -406,33 +407,57 @@ namespace OQSDrug
 
         private void CopyMenuItem_Click(object sender, EventArgs e)
         {
-            // DataGridViewの選択されているセルを確認
             if (dataGridViewDH.SelectedCells.Count > 0)
             {
-                // セルの値を格納するためのリスト
-                List<string> cellValues = new List<string>();
 
-                // 選択されたすべてのセルをループ
+                List<string> cellValues = new List<string>();
                 foreach (DataGridViewCell selectedCell in dataGridViewDH.SelectedCells)
                 {
-                    // セルの値をリストに追加
                     cellValues.Add(selectedCell.Value?.ToString() ?? string.Empty);
                 }
 
-                // セルの値を区切り文字で連結（カンマ区切りなど）
                 string clipboardText = string.Join(",", cellValues);
+                // 半角変換
+                string halfWidthText = Strings.StrConv(clipboardText, VbStrConv.Narrow, 0x0411);
 
-                // クリップボードにコピー
-                Clipboard.SetText(clipboardText);
+                // リトライを使ってクリップボードにコピー
+                bool success = false;
+                int retryCount = 3; // リトライ回数
+                while (!success && retryCount > 0)
+                {
+                    try
+                    {
+                        if (this.InvokeRequired)
+                        {
+                            this.Invoke(new Action(() => Clipboard.SetText(halfWidthText)));
+                        }
+                        else
+                        {
+                            Clipboard.SetText(halfWidthText);
+                        }
+                        success = true; // 成功したらループを抜ける
+                    }
+                    catch (System.Runtime.InteropServices.ExternalException)
+                    {
+                        retryCount--;
+                        System.Threading.Thread.Sleep(100); // 少し待機してリトライ
+                    }
+                }
+
+                if (!success)
+                {
+                    MessageBox.Show("クリップボードへのコピーに失敗しました。もう一度トライしてみてください。");
+                }
             }
         }
+
 
         private void checkBoxSum_CheckedChanged(object sender, EventArgs e)
         {
             Properties.Settings.Default.Sum = checkBoxSum.Checked;
             Properties.Settings.Default.Save();
 
-            comboBoxPtID_SelectedIndexChanged(comboBoxPtID, EventArgs.Empty);
+            comboBoxPtID_SelectedIndexChanged(sender, EventArgs.Empty);
         }
 
         private void SnapToScreenEdges()

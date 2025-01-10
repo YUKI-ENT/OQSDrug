@@ -29,5 +29,5 @@ using System.Runtime.InteropServices;
 //      ビルド番号
 //      リビジョン
 //
-[assembly: AssemblyVersion("1.25.1.9")]
-[assembly: AssemblyFileVersion("1.25.1.9")]
+[assembly: AssemblyVersion("1.25.1.10")]
+[assembly: AssemblyFileVersion("1.25.1.10")]

@@ -28,6 +28,8 @@ namespace OQSDrug
         public bool autoRSB = false, forceIdLink = false;
         public bool DataDbLock = false;
 
+        string DynaTable = "T_資格確認結果表示";
+
         byte okSettings = 0;
 
         //private Timer timer;
@@ -652,6 +654,9 @@ namespace OQSDrug
         {
             byte resultCode = 0;
 
+            //DynaTable
+            DynaTable = (Properties.Settings.Default.Datadyna.IndexOf("datadyna.mdb", StringComparison.OrdinalIgnoreCase) >= 0) ? "T_資格確認結果表示" : "WKO資格確認結果表示";
+ 
             //設定初期値の確認
             if (Properties.Settings.Default.TimerInterval <= 0)
             {
@@ -664,7 +669,7 @@ namespace OQSDrug
             var tasks = new[]
             {
                 CheckDatabaseAsync(Properties.Settings.Default.OQSDrugData, "reqResults"),
-                CheckDatabaseAsync(Properties.Settings.Default.Datadyna, Properties.Settings.Default.DynaTable),
+                CheckDatabaseAsync(Properties.Settings.Default.Datadyna, DynaTable),
                 CheckDirectoryExistsAsync(Properties.Settings.Default.OQSFolder),
                 CheckDirectoryExistsAsync(Properties.Settings.Default.RSBgazouFolder)
             };
@@ -791,7 +796,7 @@ namespace OQSDrug
             SetupYZKSindicator();
 
             listViewLog.Columns.Add("TimeStamp", 100); // 列1: タイムスタンプ
-            listViewLog.Columns.Add("Log", 400);   // 列2: メッセージ
+            listViewLog.Columns.Add("Log");   // 列2: メッセージ
 
             okSettings = await UpdateStatus();
 
@@ -803,9 +808,7 @@ namespace OQSDrug
             LoadViewerSettings();
 
             InitNotifyIcon();
-
             
-
         }
 
         private async Task setStatus()
@@ -1957,25 +1960,20 @@ namespace OQSDrug
 
             // 行の高さを変更できないようにする
             dataGridView.AllowUserToResizeRows = false;
-            // レコードセレクタを非表示にする
-            dataGridView.RowHeadersVisible = false;
-
-            // カラム幅を自動調整する
-            dataGridView.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
 
             // ソート機能を無効にする
-            dataGridView.AllowUserToOrderColumns = false;
-            // 各列のソートモードを無効にする
-            foreach (DataGridViewColumn column in dataGridView.Columns)
-            {
-                column.SortMode = DataGridViewColumnSortMode.NotSortable;
-            }
+            //dataGridView.AllowUserToOrderColumns = false;
+            //// 各列のソートモードを無効にする
+            //foreach (DataGridViewColumn column in dataGridView.Columns)
+            //{
+            //    column.SortMode = DataGridViewColumnSortMode.NotSortable;
+            //}
 
-            
             // 縦方向の罫線を非表示にする
             dataGridView.CellBorderStyle = DataGridViewCellBorderStyle.Raised;
 
-
+            dataGridView.SelectionMode = DataGridViewSelectionMode.FullRowSelect; //行全体選択
+            dataGridView.MultiSelect = false; // 複数行選択を無効にする
 
         }
 
@@ -2215,6 +2213,12 @@ namespace OQSDrug
         private async void buttonReload_Click(object sender, EventArgs e)
         {
             await Task.Run(async ()=>  await reloadDataAsync());
+        }
+
+        private void listViewLog_SizeChanged(object sender, EventArgs e)
+        {
+            // 残りの幅を "Log" 列に割り当て
+            listViewLog.Columns[1].Width = -2;
         }
 
         private async void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)

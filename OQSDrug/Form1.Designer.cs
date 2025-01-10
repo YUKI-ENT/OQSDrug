@@ -181,6 +181,7 @@
             this.listViewLog.TabIndex = 8;
             this.listViewLog.UseCompatibleStateImageBehavior = false;
             this.listViewLog.View = System.Windows.Forms.View.Details;
+            this.listViewLog.SizeChanged += new System.EventHandler(this.listViewLog_SizeChanged);
             // 
             // tableLayoutPanel
             // 
