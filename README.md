@@ -13,7 +13,10 @@
   ![oqsdrug4](https://github.com/user-attachments/assets/fc92e45c-42fa-453f-94ff-ef45789aca44)
 
 - 薬歴はこんな感じです。選択してコピーし、電カル等へのペーストも可能です。
-![oqsdrug3](https://github.com/user-attachments/assets/e9631708-a4b7-49e4-85d1-8bc7446bb032)
+- ![oqsdrug3](https://github.com/user-attachments/assets/de5afc3c-3be1-4793-8a07-04c71064e090)
+
+
+
 
 ---
 
@@ -59,7 +62,7 @@
    - ③は取得結果が表示されます
    - ④は動作ログが表示されます
    - `薬歴自動起動`は、RSBaseの連携(ID.datまたはtemp_rs.txtまたはthept.txt)が設定されている場合、ここをチェックすると患者遷移に連動して薬歴がある場合自動で薬歴をポップアップ表示します。（thept.txtが最も安定しているように思います）
-   ![oqsdrug1](https://github.com/user-attachments/assets/3e6aac17-33f5-4eb7-b288-b717fd02cd4d)
+   ![oqsdrug1](https://github.com/user-attachments/assets/97e978fb-3a94-476d-bfe7-4497559d59ab)
 
 
 2. **設定**
@@ -72,7 +75,8 @@
    - xmlの薬歴は標準で必ず取得します
    - Viewer設定、`RSBase連動`は、ID.dat, temp_rs.txt、thept.txt方式に対応しますが、**thept.txtが一番安定している**ようです。RSBaseの`(52)  c:\common\thept.txt (&& c:\ID_temp.txt)にIDを出力 `をyesにしてください。
    - `薬歴を最前面で表示`をチェックすると、薬歴ウインドウが最前面で表示されるようになります
-     ![oqsdrugsetting](https://github.com/user-attachments/assets/6daf97be-b1de-48dc-964f-ca5d43a98d22)
+     ![oqsdrug2](https://github.com/user-attachments/assets/0508c666-e05e-4afe-80e1-4b8ca8154812)
+
 
  
    
@@ -81,7 +85,7 @@
    - ウインドウサイズと位置を記憶しますので、初回に適宜見やすい場所に移動して閉じてみてください。次回以降起動時はその位置サイズで表示されます。ウインドウが行方不明になったときは、`設定`で`位置サイズをリセット`のボタンを押すと、メインウィンドウ近くに表示されます。
    - `月ごと集計`がオンのときは、各医療機関ごとの処方を月ごとに合計して表示します。オフのときは処方日毎の表示になります。見やすい方で適宜切り替えてください。
    - メインウィンドウで、`薬歴自動起動`のオプションを設定すると、カルテ遷移しそのカルテ番号で過去の薬歴があれば薬歴ビュワーウインドウをポップアップで表示します。
-![oqsdrug3](https://github.com/user-attachments/assets/e9631708-a4b7-49e4-85d1-8bc7446bb032)
+ ![oqsdrug3](https://github.com/user-attachments/assets/de5afc3c-3be1-4793-8a07-04c71064e090)
 
 4. **タスクトレイアイコン**
 
