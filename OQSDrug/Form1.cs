@@ -47,7 +47,7 @@ namespace OQSDrug
         private Label[] statusLabels;
         private Label[] statusTexts;
 
-        private Form3 form3Instance = null;
+        public Form3 form3Instance = null;
 
         // アイコンの配列を用意 (例: 3つのアイコン)
         private Timer animationTimer;
@@ -289,7 +289,7 @@ namespace OQSDrug
             }
 
             //Form2を開く
-            Form2 form2 = new Form2();
+            Form2 form2 = new Form2(this);
             form2.ShowDialog(this);
 
             //Form2閉じたあと
@@ -1365,6 +1365,8 @@ namespace OQSDrug
                             int prIsOrg = (int)NzConvert(GetNodeValue(monthInfNode, GetMatchingNodeName(monthInfNode, elementMappings, "IsOrg")));
                             int inOut = (int)NzConvert(GetNodeValue(monthInfNode, GetMatchingNodeName(monthInfNode, elementMappings, "Cl")));
 
+                            string MIcode = GetMedicalInstitutionCode(meTrDiHCd, prlsHCd); //医科歯科のコード
+
                             XmlNodeList dateInfList = monthInfNode.SelectNodes(GetMatchingNodeName(monthInfNode, elementMappings, "DateInf"));
                             foreach (XmlNode dateInfNode in dateInfList)
                             {
@@ -1372,12 +1374,13 @@ namespace OQSDrug
                                 string prDate = GetNodeValue(dateInfNode, GetMatchingNodeName(dateInfNode, elementMappings, "PrDate"));
 
                                 //既登録か
-                                string sql = "SELECT ID, Source, Revised FROM drug_history WHERE PtIDmain = ? AND MeTrDiHCd = ?  AND DiDate = ?";
+                                string sql = "SELECT ID, Source, Revised FROM drug_history WHERE PtIDmain = ? AND (MeTrDiHCd = ? OR  PrlsHCd = ?) AND DiDate = ?";
 
                                 using (OleDbCommand checkCommand = new OleDbCommand(sql, dbConnection))
                                 {
                                     checkCommand.Parameters.AddWithValue("?", ptIDMain);
-                                    checkCommand.Parameters.AddWithValue("?", meTrDiHCd);
+                                    checkCommand.Parameters.AddWithValue("?", MIcode);
+                                    checkCommand.Parameters.AddWithValue("?", MIcode);
                                     checkCommand.Parameters.AddWithValue("?", diDate);
 
                                     using (OleDbDataReader reader = checkCommand.ExecuteReader())
@@ -1393,7 +1396,7 @@ namespace OQSDrug
                                             // 既存の電処or調剤由来のデータならRevised=1とする
                                             if (resultSource > Source)
                                             {
-                                                string updateSql = "UPDATE drug_history SET Revised = 1 WHERE ID = ?";
+                                                string updateSql = "UPDATE drug_history SET Revised = True WHERE ID = ?";
 
                                                 using (OleDbCommand updateCmd = new OleDbCommand(updateSql, dbConnection))
                                                 {
@@ -1475,6 +1478,30 @@ namespace OQSDrug
             {
                 return "エラー：" + ex.Message;
             }
+        }
+
+        private string GetMedicalInstitutionCode(string meTrDiHCd, string prlsHCd)
+        {
+            // コードが10桁かつ左から3番目が1または3の場合に有効とする 医科歯科
+            bool IsValidCode(string code) =>
+                !string.IsNullOrEmpty(code) &&
+                code.Length == 10 &&
+                (code[2] == '1' || code[2] == '3');
+
+            // prlsHCdが条件に該当する場合は優先的に返す
+            if (IsValidCode(prlsHCd))
+            {
+                return prlsHCd;
+            }
+
+            // prlsHCdが該当しない場合、meTrDiHCdを確認
+            if (IsValidCode(meTrDiHCd))
+            {
+                return meTrDiHCd;
+            }
+
+            // どちらも該当しない場合は空文字を返す
+            return string.Empty;
         }
 
         private string GetMatchingNodeName(XmlNode node, Dictionary<string, List<string>> elementMappings, string key)
@@ -2219,6 +2246,18 @@ namespace OQSDrug
         {
             // 残りの幅を "Log" 列に割り当て
             listViewLog.Columns[1].Width = -2;
+        }
+
+        private void dataGridView1_CellMouseEnter(object sender, DataGridViewCellEventArgs e)
+        {
+               // ツールチップのテキストを設定（例えばセルの値を表示）
+                toolTip1.SetToolTip(dataGridView1, "行選択、右クリックでで削除メニュー\r\nダブルクリックで薬歴表示します\r\n");
+            
+        }
+
+        private void dataGridView1_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
+        {
+            toolTip1.Hide(dataGridView1); // ツールチップを非表示にする
         }
 
         private async void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)

@@ -18,9 +18,12 @@ namespace OQSDrug
 {
     public partial class Form2 : Form
     {
-        public Form2()
+        private Form1 form1;
+
+        public Form2(Form1 parentForm)
         {
             InitializeComponent();
+            form1 = parentForm; // Form1のインスタンスを受け取る
         }
 
         private void Form2_Load(object sender, EventArgs e)
@@ -312,7 +315,16 @@ namespace OQSDrug
 
         private void buttonViewerPositionReset_Click(object sender, EventArgs e)
         {
-            Properties.Settings.Default.ViewerBounds = System.Drawing.Rectangle.Empty;
+            if (MessageBox.Show("薬歴フォームを閉じて、位置をリセットします", "", MessageBoxButtons.OKCancel) == DialogResult.OK)
+            {
+                // Form1からForm3を取得して閉じる
+                if (form1.form3Instance != null && !form1.form3Instance.IsDisposed)
+                {
+                    form1.form3Instance.Close();
+                }
+                Properties.Settings.Default.ViewerBounds = new Rectangle(100, 100, 800, 600);
+                MessageBox.Show("リセットしました");
+            }
         }
 
         /// <summary>

@@ -72,7 +72,10 @@
             this.dataGridView1.RowTemplate.Height = 21;
             this.dataGridView1.Size = new System.Drawing.Size(950, 430);
             this.dataGridView1.TabIndex = 2;
+            this.toolTip1.SetToolTip(this.dataGridView1, "行選択、右クリックでで削除メニュー\r\nダブルクリックで薬歴表示します");
             this.dataGridView1.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellDoubleClick);
+            this.dataGridView1.CellMouseEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellMouseEnter);
+            this.dataGridView1.CellMouseLeave += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellMouseLeave);
             this.dataGridView1.CellMouseUp += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_CellMouseUp);
             // 
             // toolStripVersion
@@ -200,6 +203,12 @@
             this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.tableLayoutPanel.Size = new System.Drawing.Size(400, 130);
             this.tableLayoutPanel.TabIndex = 9;
+            // 
+            // toolTip1
+            // 
+            this.toolTip1.AutoPopDelay = 10100;
+            this.toolTip1.InitialDelay = 300;
+            this.toolTip1.ReshowDelay = 82;
             // 
             // checkBoxAutoview
             // 
