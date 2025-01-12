@@ -45,7 +45,7 @@
 
 ## 設置方法
 
-1. **Zipファイルをダウンロード**。
+1. [Release一覧](https://github.com/YUKI-ENT/OQSDrug/releases)から**Zipファイルをダウンロード**。
 2. <<**初回のみ**>>`OQSDrug_Data.mdb` を **datadyna.mdbがあるフォルダ** にコピー。
 3. その他のファイル（`OQSDrug.exe`等）を任意の場所にコピー。
 4. `OQSDrug.exe` を起動。
