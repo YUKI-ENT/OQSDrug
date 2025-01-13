@@ -12,6 +12,8 @@ using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
 using Microsoft.VisualBasic;
+using System.IO;
+using System.Text.RegularExpressions;
 
 namespace OQSDrug
 {
@@ -25,6 +27,8 @@ namespace OQSDrug
 
         private Color[] RowColors = {Color.WhiteSmoke, Color.White};
 
+        public List<string[]> RSBDI = new List<string[]>();
+
         private int ShowSpan = Properties.Settings.Default.ViewerSpan;
 
         public Form3(Form1 parentForm)
@@ -33,6 +37,8 @@ namespace OQSDrug
 
             _parentForm = parentForm;
             provider = _parentForm.DBProvider;
+
+            RSBDI = _parentForm.RSBDI;
         }
 
         public async Task LoadDataIntoComboBoxes()
@@ -394,62 +400,188 @@ namespace OQSDrug
             // ContextMenuStripの作成
             ContextMenuStrip contextMenuStrip = new ContextMenuStrip();
 
-            // 「コピー」メニューアイテムを作成
-            ToolStripMenuItem copyMenuItem = new ToolStripMenuItem("コピー");
-            copyMenuItem.Click += CopyMenuItem_Click;
+            // 「全角でコピー」メニューアイテムを作成
+            ToolStripMenuItem copyFullMenuItem = new ToolStripMenuItem("表示のままコピー");
+            copyFullMenuItem.Tag = "full"; // 引数として識別するためのタグを設定
+            copyFullMenuItem.Image = Properties.Resources.Zen;
+            copyFullMenuItem.Click += CopyMenuItem_Click;
+
+            // 「半角でコピー」メニューアイテムを作成
+            ToolStripMenuItem copyHalfMenuItem = new ToolStripMenuItem("半角でコピー");
+            copyHalfMenuItem.Tag = "half"; // 引数として識別するためのタグを設定
+            copyHalfMenuItem.Image = Properties.Resources.Han;
+            copyHalfMenuItem.Click += CopyMenuItem_Click;
+
+            // 「薬情検索」メニューアイテムを作成（初期では追加しない）
+            ToolStripMenuItem searchMedicineMenuItem = new ToolStripMenuItem("薬情検索");
+            searchMedicineMenuItem.Image = Properties.Resources.Find;
+            searchMedicineMenuItem.Click += SearchMedicineMenuItem_Click;
 
             // メニューアイテムを追加
-            contextMenuStrip.Items.Add(copyMenuItem);
-
+            contextMenuStrip.Items.Add(copyFullMenuItem);
+            contextMenuStrip.Items.Add(copyHalfMenuItem);
+            if (_parentForm.RSBdrive != null)
+            {
+                contextMenuStrip.Items.Add(searchMedicineMenuItem);
+            }
             // DataGridViewに右クリックメニューを設定
             dataGridViewDH.ContextMenuStrip = contextMenuStrip;
         }
 
         private void CopyMenuItem_Click(object sender, EventArgs e)
         {
-            if (dataGridViewDH.SelectedCells.Count > 0)
+            if (sender is ToolStripMenuItem menuItem)
             {
+                // Tagから動作を判別
+                string mode = menuItem.Tag as string;
 
-                List<string> cellValues = new List<string>();
-                foreach (DataGridViewCell selectedCell in dataGridViewDH.SelectedCells)
+                if (dataGridViewDH.SelectedCells.Count > 0)
                 {
-                    cellValues.Add(selectedCell.Value?.ToString() ?? string.Empty);
-                }
 
-                string clipboardText = string.Join(",", cellValues);
-                // 半角変換
-                string halfWidthText = Strings.StrConv(clipboardText, VbStrConv.Narrow, 0x0411);
-
-                // リトライを使ってクリップボードにコピー
-                bool success = false;
-                int retryCount = 3; // リトライ回数
-                while (!success && retryCount > 0)
-                {
-                    try
+                    List<string> cellValues = new List<string>();
+                    foreach (DataGridViewCell selectedCell in dataGridViewDH.SelectedCells)
                     {
-                        if (this.InvokeRequired)
-                        {
-                            this.Invoke(new Action(() => Clipboard.SetText(halfWidthText)));
-                        }
-                        else
-                        {
-                            Clipboard.SetText(halfWidthText);
-                        }
-                        success = true; // 成功したらループを抜ける
+                        cellValues.Add(selectedCell.Value?.ToString() ?? string.Empty);
                     }
-                    catch (System.Runtime.InteropServices.ExternalException)
-                    {
-                        retryCount--;
-                        System.Threading.Thread.Sleep(100); // 少し待機してリトライ
-                    }
-                }
 
-                if (!success)
-                {
-                    MessageBox.Show("クリップボードへのコピーに失敗しました。もう一度トライしてみてください。");
+                    string clipboardText = string.Join(",", cellValues);
+
+                    if (mode == "half")
+                    {
+                        // 半角変換
+                        clipboardText = Strings.StrConv(clipboardText, VbStrConv.Narrow, 0x0411);
+                    }
+
+                    // リトライを使ってクリップボードにコピー
+                    bool success = false;
+                    int retryCount = 3; // リトライ回数
+                    while (!success && retryCount > 0)
+                    {
+                        try
+                        {
+                            if (this.InvokeRequired)
+                            {
+                                this.Invoke(new Action(() => Clipboard.SetText(clipboardText)));
+                            }
+                            else
+                            {
+                                Clipboard.SetText(clipboardText);
+                            }
+                            success = true; // 成功したらループを抜ける
+                        }
+                        catch (System.Runtime.InteropServices.ExternalException)
+                        {
+                            retryCount--;
+                            System.Threading.Thread.Sleep(100); // 少し待機してリトライ
+                        }
+                    }
+
+                    if (!success)
+                    {
+                        MessageBox.Show("クリップボードへのコピーに失敗しました。もう一度トライしてみてください。");
+                    }
                 }
             }
         }
+
+        // 「薬情検索」メニューのクリック時処理
+        private async void SearchMedicineMenuItem_Click(object sender, EventArgs e)
+        {
+            if (dataGridViewDH.SelectedCells.Count > 0)
+            {
+                FormSearch formSearch = new FormSearch();
+                List<string[]> results = new List<string[]>();
+
+                if (RSBDI.Count == 0)
+                {
+                    RSBDI = _parentForm.RSBDI;
+                }
+
+                foreach (DataGridViewCell selectedCell in dataGridViewDH.SelectedCells)
+                {
+                    string drugName = selectedCell.Value?.ToString();
+
+                    if (drugName.Length > 0)
+                    {
+                        List<Tuple<string[], double>> topResults = await FuzzySearchAsync(drugName, RSBDI, 0.4);
+
+                        formSearch.SetDrugLists(topResults);
+
+                        formSearch.SetDrugName(drugName);
+                        formSearch.Show(this);
+                    }
+                }
+            }
+        }
+
+        // リストRSBDIのカラム1,2を対象にあいまい検索を行い、上位5件を返すメソッド
+        public async Task<List<Tuple<string[], double>>> FuzzySearchAsync(string drugName, List<string[]> DI, double cutoffThreshold = 0.4)
+        {
+            //数字アルファベットは除去しておく
+            drugName = RemoveDigits(drugName);
+
+            // 各レコードに対してN-gram類似度を計算（非同期処理）
+            var tasks = DI.Select(record => Task.Run(() =>
+            {
+                string column1 = record[0]; // 1列目
+                string column2 = record[1]; // 2列目
+
+                // 両カラムの類似度を計算し、最大値を取得
+                double similarity = Math.Max(
+                    CalculateNGramSimilarity(drugName, column1),
+                    CalculateNGramSimilarity(drugName, column2)
+                );
+                if (similarity > cutoffThreshold && record[3] == "先発") similarity += cutoffThreshold;
+
+                return new Tuple<string[], double>(record, similarity);  // レコードと類似度のタプルを返す
+            }));
+
+            // 全タスクの完了を待つ
+            var results = await Task.WhenAll(tasks);
+
+            // 類似度の降順で並び替え、カットオフ値以上のものだけフィルタリング
+            var filteredResults = results
+                .Where(r => r.Item2 >= cutoffThreshold)  // 類似度がカットオフ値以上のものを選択
+                .OrderByDescending(r => r.Item2)  // 類似度の降順で並べ替え
+                .Take(10)  // 上位5件を取得
+                .ToList();
+
+            return filteredResults;
+        }
+
+        static string RemoveDigits(string input)
+        {
+            // 正規表現で全角数字とアルファベット（全角・半角）を除去
+            string pattern = @"[０-９a-zA-ZＡ-Ｚａ-ｚ]";
+            return Regex.Replace(input, pattern, "");
+        }
+
+        private HashSet<string> GenerateNGrams(string input, int n)
+        {
+            var ngrams = new HashSet<string>();
+            if (input.Length < n) return ngrams;
+
+            for (int i = 0; i <= input.Length - n; i++)
+            {
+                ngrams.Add(input.Substring(i, n));
+            }
+
+            return ngrams;
+        }
+
+        private double CalculateNGramSimilarity(string source, string target, int n = 2)
+        {
+            var sourceNGrams = GenerateNGrams(source, n);
+            var targetNGrams = GenerateNGrams(target, n);
+
+            if (sourceNGrams.Count == 0 || targetNGrams.Count == 0) return 0.0;
+
+            int intersectionCount = sourceNGrams.Intersect(targetNGrams).Count();
+            int unionCount = sourceNGrams.Union(targetNGrams).Count();
+
+            return (double)intersectionCount / unionCount;
+        }
+
 
 
         private void checkBoxSum_CheckedChanged(object sender, EventArgs e)

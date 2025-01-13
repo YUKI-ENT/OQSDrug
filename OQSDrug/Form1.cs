@@ -27,6 +27,9 @@ namespace OQSDrug
         public long tempId = 0;
         public bool autoRSB = false, forceIdLink = false;
         public bool DataDbLock = false;
+        public string RSBdrive = "";
+
+        public List<string[]> RSBDI = new List<string[]>();
 
         string DynaTable = "T_資格確認結果表示";
 
@@ -60,79 +63,7 @@ namespace OQSDrug
             SetupTableLayout();
             //InitializeTimer();
         }
-
-        // タイマーの初期化
-        //private void InitializeTimer()
-        //{
-        //    // タイマーを作成
-        //    timer = new Timer
-        //    {
-        //        Interval = Properties.Settings.Default.TimerInterval * 1000 // インターバルを設定
-        //    };
-        //    // タイマーのイベントハンドラを登録
-        //    timer.Tick += Timer_Tick;
-        //}
-
-        // タイマーのイベントハンドラ
-        //private async void Timer_Tick(object sender, EventArgs e)
-        //{
-        //    if (!isTimerRunning)
-        //    {
-        //        isTimerRunning = true;
-        //        DateTime startTime = DateTime.Now;
-        //        AddLog($"タイマーイベント開始: {startTime}");
-
-        //        //Datadynaのデータ取得
-        //        DataTable dynaTable = await LoadDataFromDatabaseAsync(Properties.Settings.Default.Datadyna);
-
-        //        //薬剤PDF
-        //        if (Properties.Settings.Default.DrugFileCategory > 0)
-        //        {
-        //            MakeReq(Properties.Settings.Default.DrugFileCategory + 10, dynaTable);
-        //        }
-
-        //        //薬剤xmlは常に実行
-        //        MakeReq(12, dynaTable);
-
-        //        //健診PDF
-        //        if (Properties.Settings.Default.KensinFileCategory > 0)
-        //        {
-        //            MakeReq(Properties.Settings.Default.KensinFileCategory + 100, dynaTable);
-        //        }
-
-        //        await reloadDataAsync();
-
-        //        //Resフォルダの処理
-
-        //        bool processCompleted = false;
-        //        bool isRemainRes = true;
-
-        //        // 5秒ごとにProcessResAsyncを呼び出し
-        //        while (!processCompleted || isRemainRes)
-        //        {
-        //            await Task.Delay(5000);
-
-        //            processCompleted = await ProcessResAsync();
-        //            isRemainRes = await RemainResTask();
-
-        //            if ((DateTime.Now - startTime).TotalSeconds > (Properties.Settings.Default.TimerInterval - 5))
-        //            {
-        //                processCompleted = true;
-        //                isRemainRes = false;
-        //                AddLog("時間内に処理が終了しませんでしたので、タイマー処理を中止します");
-        //            }
-
-        //            await reloadDataAsync();
-        //            if (!timer.Enabled)
-        //            {
-        //                break;
-        //            }
-        //        }
-        //        isTimerRunning = false;
-        //        AddLog($"タイマーイベント終了");
-        //    }
-        //}
-
+                
         private async Task RunTimerLogicAsync()
         {
             DateTime startTime = DateTime.Now;
@@ -310,7 +241,7 @@ namespace OQSDrug
 
         }
 
-        private async void StartStop_CheckedChanged(object sender, EventArgs e)
+        private void StartStop_CheckedChanged(object sender, EventArgs e)
         {
             if (StartStop.Checked)
             {
@@ -808,7 +739,12 @@ namespace OQSDrug
             LoadViewerSettings();
 
             InitNotifyIcon();
-            
+
+            RSBdrive = await GetRSBdrive();
+            if (RSBdrive != null)
+            {
+                await LoadRSBDIAsync(RSBdrive + @"\Users\rsn\public_html\drug_RSB.dat");
+            }
         }
 
         private async Task setStatus()
@@ -2281,6 +2217,56 @@ namespace OQSDrug
                 {
                     MessageBox.Show("患者IDデータがありません。");
                 }
+            }
+        }
+
+        private async Task<string> GetRSBdrive()
+        {
+            // C: から F: ドライブまで
+            for (char driveLetter = 'C'; driveLetter <= 'F'; driveLetter++)
+            {
+                string drivePath = $"{driveLetter}:";
+                string fullPath = drivePath + @"\Users\rsn\public_html\drug_RSB.dat";
+               
+                // 非同期タスクとしてファイルの存在を確認
+                bool exists = await Task.Run(() => File.Exists(fullPath));
+
+                if (exists)
+                {
+                    AddLog($"RSBaseが{drivePath}ドライブに見つかりました。薬歴右クリックでRSB薬歴が利用できます。");
+                    return drivePath; // 見つかったドライブを返す
+                }
+            }
+
+            AddLog("RSBaseが見つかりませんでした。");
+            return null; // 見つからなかった場合
+        }
+
+        private async Task LoadRSBDIAsync(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                AddLog($"指定されたRSBase薬情ファイルが見つかりません。{filePath}");
+                return;
+            }
+
+            // ファイルを非同期で読み込み
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = new StreamReader(stream, Encoding.GetEncoding("EUC-JP")))
+            {
+                string line;
+                int count = 0;
+                while ((line = await reader.ReadLineAsync()) != null)
+                {
+                    // カンマ区切りで分割し、指定カラム(0, 3, 7)のみ取得
+                    var columns = line.Split(',');
+                    if (columns.Length > 7) // 必要なカラム数が存在するか確認
+                    {
+                        RSBDI.Add(new string[] { columns[0], columns[3], columns[7], columns[5] }); // 0:商品名、1:一般名、2:コード、3：先発
+                        count++;
+                    }
+                }
+                AddLog($"RSBase薬情ファイルから{count}件のデータを読み込みました");
             }
         }
     }
