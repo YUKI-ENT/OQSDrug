@@ -45,6 +45,7 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.checkBoxAutoview = new System.Windows.Forms.CheckBox();
             this.StartStop = new System.Windows.Forms.CheckBox();
+            this.checkBoxAutoStart = new System.Windows.Forms.CheckBox();
             this.buttonYZ = new System.Windows.Forms.Button();
             this.buttonSR = new System.Windows.Forms.Button();
             this.buttonYZPDF = new System.Windows.Forms.Button();
@@ -232,7 +233,7 @@
             this.StartStop.Image = global::OQSDrug.Properties.Resources.Go;
             this.StartStop.Location = new System.Drawing.Point(13, 30);
             this.StartStop.Name = "StartStop";
-            this.StartStop.Size = new System.Drawing.Size(399, 45);
+            this.StartStop.Size = new System.Drawing.Size(280, 45);
             this.StartStop.TabIndex = 6;
             this.StartStop.Text = "開始";
             this.StartStop.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -240,6 +241,21 @@
             this.toolTip1.SetToolTip(this.StartStop, "情報取得処理を開始/終了します");
             this.StartStop.UseVisualStyleBackColor = true;
             this.StartStop.CheckedChanged += new System.EventHandler(this.StartStop_CheckedChanged);
+            // 
+            // checkBoxAutoStart
+            // 
+            this.checkBoxAutoStart.Font = new System.Drawing.Font("Meiryo UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.checkBoxAutoStart.Image = global::OQSDrug.Properties.Resources.clock;
+            this.checkBoxAutoStart.Location = new System.Drawing.Point(299, 32);
+            this.checkBoxAutoStart.Name = "checkBoxAutoStart";
+            this.checkBoxAutoStart.Size = new System.Drawing.Size(113, 45);
+            this.checkBoxAutoStart.TabIndex = 29;
+            this.checkBoxAutoStart.Text = "自動開始";
+            this.checkBoxAutoStart.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.checkBoxAutoStart.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.toolTip1.SetToolTip(this.checkBoxAutoStart, "下の接続がOKになると自動で動作開始/停止します");
+            this.checkBoxAutoStart.UseVisualStyleBackColor = true;
+            this.checkBoxAutoStart.CheckedChanged += new System.EventHandler(this.checkBoxAutoStart_CheckedChanged);
             // 
             // buttonYZ
             // 
@@ -336,6 +352,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.ClientSize = new System.Drawing.Size(974, 717);
+            this.Controls.Add(this.checkBoxAutoStart);
             this.Controls.Add(this.buttonReload);
             this.Controls.Add(this.checkBoxAutoview);
             this.Controls.Add(this.buttonKSXML);
@@ -388,6 +405,7 @@
         private System.Windows.Forms.NotifyIcon notifyIcon1;
         private System.Windows.Forms.ToolStripButton toolStripButtonToTaskTray;
         private System.Windows.Forms.Button buttonReload;
+        private System.Windows.Forms.CheckBox checkBoxAutoStart;
     }
 }
 

@@ -10,25 +10,50 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace OQSDrug
 {
     public partial class FormSearch : Form
     {
-        public FormSearch()
+        private Form3 _parentForm3;
+
+        private static string tempHtmlFile =  Path.Combine(Path.GetTempPath(), "tempPostForm.html"); 
+
+        public FormSearch(Form3 parentForm3)
         {
             InitializeComponent();
+            _parentForm3 = parentForm3;
+        }
+
+        // フォームのロード時に前回の位置を復元
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            // 設定から位置を取得
+            var savedBounds = Properties.Settings.Default.SearchBounds;
+
+            if (savedBounds != Rectangle.Empty)
+            {
+                this.StartPosition = FormStartPosition.Manual; // マニュアルモードに設定
+                this.Bounds = savedBounds; // 保存された位置を適用
+            }
+        }
+        // フォームの閉じる直前に現在の位置を保存
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+
+            // 現在の位置を保存
+            Properties.Settings.Default.SearchBounds = this.Bounds;
+
+            // 設定を保存
+            Properties.Settings.Default.Save();
         }
 
         // Form3 から HTML を受け取るためのメソッド
-        public void SetDrugName(string drugName)
-        {
-            textBoxDrugName.Text = drugName;
-
-            buttonSearch_Click(null, EventArgs.Empty);
-        }
-
         public void SetDrugLists(List<Tuple<string[], double>> results)
         {
             listBoxDrugs.Items.Clear();
@@ -47,6 +72,13 @@ namespace OQSDrug
             }
             listBoxDrugs.DisplayMember = "Key";  // 表示されるのは Key（最初の値）
             listBoxDrugs.ValueMember = "Value";  // 実際に取得されるのは Value（2番目の値）
+
+            if (results.Count > 0)
+            {
+                listBoxDrugs.SelectedIndex = 0;
+
+                listBoxDrugs_DoubleClick(null, EventArgs.Empty);
+            }
         }
 
 
@@ -79,28 +111,19 @@ namespace OQSDrug
                     </html>";
         }
 
-        private void buttonSearch_Click(object sender, EventArgs e)
+        private async void buttonSearch_Click(object sender, EventArgs e)
         {
             if(textBoxDrugName.Text.Length > 0)
             {
-                string sjisString = ConvertToShiftJisString(textBoxDrugName.Text);
-                
-                // POST先のURLとデータを定義
-                string url = "http://localhost/~rsn/kinki.cgi";
-                //string postData = "yakka=" + WebUtility.UrlEncode(textBoxDrugName.Text);
-                string postData = "yakka=" + sjisString;
-
-                // HTMLファイルを生成
-                string htmlContent = GenerateHtmlForm(url, postData);
-                string tempHtmlPath = Path.Combine(Path.GetTempPath(), "tempPostForm.html");
-                File.WriteAllText(tempHtmlPath, htmlContent,  Encoding.GetEncoding("Shift_JIS"));
-
-                // 標準ブラウザでHTMLを開く
-                Process.Start(new ProcessStartInfo
+                List<Tuple<string[], double>> topResults = await _parentForm3.FuzzySearchAsync(textBoxDrugName.Text, "", _parentForm3.RSBDI, 0.1, 0.4, 0);
+                if (topResults.Count > 0)
                 {
-                    FileName = tempHtmlPath,
-                    UseShellExecute = true
-                });
+                    SetDrugLists(topResults);
+                }
+                else
+                {
+                    MessageBox.Show("RSB薬情に該当薬剤が見つかりませんでした。");
+                }
             }
         }
 
@@ -130,18 +153,62 @@ namespace OQSDrug
 
         private void listBoxDrugs_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (listBoxDrugs.SelectedItem is KeyValuePair<string, string> selectedItem)
-            {
-                string key = selectedItem.Key;  // 表示された値（Key）
-                string value = selectedItem.Value;  // 実際に取得したい値（Value）
+            //if (listBoxDrugs.SelectedItem is KeyValuePair<string, string> selectedItem)
+            //{
+            //    string key = selectedItem.Key;  // 表示された値（Key）
+            //    string value = selectedItem.Value;  // 実際に取得したい値（Value）
                 
-                textBoxDrugName.Text = value;
+            //    textBoxDrugName.Text = value;
+            //}
+        }
+
+        private void RequestRSB(string url, string payload)
+        {
+            if (payload.Length > 0)
+            {
+                string sjisString = ConvertToShiftJisString(payload);
+
+                string postData = "yakka=" + sjisString;
+
+                // HTMLファイルを生成
+                string htmlContent = GenerateHtmlForm(url, postData);
+                File.WriteAllText(tempHtmlFile, htmlContent, Encoding.GetEncoding("Shift_JIS"));
+
+                // 標準ブラウザでHTMLを開く
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = tempHtmlFile,
+                    UseShellExecute = true
+                });
             }
         }
 
         private void listBoxDrugs_DoubleClick(object sender, EventArgs e)
         {
-            buttonSearch_Click(sender, e);
+            if (listBoxDrugs.SelectedItem is KeyValuePair<string, string> selectedItem)
+            {
+                string value = selectedItem.Value;
+
+                if (value.Length > 0)
+                {
+                    RequestRSB("http://localhost/~rsn/kinki.cgi", value);
+                }
+            }
+                
+        }
+
+        private void textBoxDrugName_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                buttonSearch_Click(sender, e);
+            }
+        }
+
+        private void buttonExit_Click(object sender, EventArgs e)
+        {
+            File.Delete(tempHtmlFile);
+            this.Close();
         }
     }
 }

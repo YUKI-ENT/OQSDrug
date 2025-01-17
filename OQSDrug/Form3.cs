@@ -30,6 +30,7 @@ namespace OQSDrug
         public List<string[]> RSBDI = new List<string[]>();
 
         private int ShowSpan = Properties.Settings.Default.ViewerSpan;
+        private FormSearch formSearch = null;
 
         public Form3(Form1 parentForm)
         {
@@ -162,6 +163,8 @@ namespace OQSDrug
 
             checkBoxSum.Checked = Properties.Settings.Default.Sum;
 
+            checkBoxOmitMyOrg.Checked = Properties.Settings.Default.OmitMyOrg;
+
 
         }
 
@@ -177,15 +180,17 @@ namespace OQSDrug
                             SELECT 
                                 IIf(Len([PrlsHNm])=0, [MeTrDiHNm], [PrlsHNm]) AS Hospital, 
                                 drug_history.DrugN, 
+                                drug_history.IngreN,
                                 drug_history.Qua1, 
                                 drug_history.Unit
                             FROM 
                                 drug_history
                             WHERE 
-                                Revised = false AND %SPANFILTER%  
+                                Revised = false AND %SPANFILTER%  %MYORGFILTER%
                                 drug_history.PtIDmain = ? 
                             GROUP BY 
-                                IIf(Len([PrlsHNm])=0, [MeTrDiHNm], [PrlsHNm]), 
+                                IIf(Len([PrlsHNm])=0, [MeTrDiHNm], [PrlsHNm]),
+                                drug_history.IngreN,
                                 drug_history.DrugN, 
                                 drug_history.Qua1, 
                                 drug_history.Unit
@@ -199,9 +204,11 @@ namespace OQSDrug
                 //long viewSpan = GetComboBoxSelectedValue(comboBoxSpan);
                 string startDate = DateTime.Now.AddMonths(0 - ShowSpan).ToString("yyyyMM");
                 string spanfilter = (ShowSpan == 0) ? "" : $" MeTrMonth >= '{startDate}' AND ";
-                
+                string myorgfilter = (Properties.Settings.Default.OmitMyOrg) ? "drug_history.PrIsOrg <> 1 AND " : "";
+
                 query = query.Replace("%FIELD%", pivot);
                 query = query.Replace("%SPANFILTER%", spanfilter);
+                query = query.Replace("%MYORGFILTER%", myorgfilter);
 
                 // 固定列の定義
                 var fixedColumns = new List<string> { "Hospital", "DrugN", "Qua1", "Unit" };
@@ -229,47 +236,25 @@ namespace OQSDrug
                                 _parentForm.DataDbLock = false;
 
                                 // 手動で加工する
-                                var processedTable = new DataTable();
                                 Color[] RowColorSetting = new Color[100];
                                 int colorIndex = 0, i = 0;
-
-                                // 列構造をコピー
-                                foreach (DataColumn col in dataTable.Columns)
-                                {
-                                    processedTable.Columns.Add(col.ColumnName, col.DataType);
-                                }
 
                                 string previousHospital = null; // 前回のHospital値
                                 foreach (DataRow row in dataTable.Rows)
                                 {
-                                    var newRow = processedTable.NewRow();
-
                                     // Hospital列を加工
                                     if (previousHospital == null || previousHospital != row["Hospital"].ToString())
-                                    {
-                                        newRow["Hospital"] = row["Hospital"];
+                                    { //新しい病院
                                         previousHospital = row["Hospital"].ToString();
                                         colorIndex++;
                                         if (colorIndex > 1) colorIndex = 0;
                                     }
-                                    else
+                                    else //同じ病院のレコード
                                     {
-                                        newRow["Hospital"] = ""; // 同じHospitalが続く場合は空白
+                                        row["Hospital"] = ""; // 同じHospitalが続く場合は空白
                                     }
                                     RowColorSetting[i] = RowColors[colorIndex];
                                     i++;
-
-
-                                    // その他の列をそのままコピー
-                                    foreach (DataColumn col in dataTable.Columns)
-                                    {
-                                        if (col.ColumnName != "Hospital")
-                                        {
-                                            newRow[col.ColumnName] = row[col.ColumnName];
-                                        }
-                                    }
-
-                                    processedTable.Rows.Add(newRow);
                                 }
 
                                 // DataGridViewにバインド
@@ -280,7 +265,7 @@ namespace OQSDrug
                                     InitializeDataGridView(dataGridViewDH);
 
                                     // DataGridViewにデータをバインド
-                                    dataGridViewDH.DataSource = processedTable;
+                                    dataGridViewDH.DataSource = dataTable;
 
                                     // DataGridViewの外観や動作を設定
                                     ConfigureDataGridView(dataGridViewDH, RowColorSetting);
@@ -367,12 +352,16 @@ namespace OQSDrug
             // カラム幅を自動調整する
             dataGridView.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
 
+            dataGridView.EditMode = DataGridViewEditMode.EditProgrammatically;
+            dataGridView.SelectionMode = DataGridViewSelectionMode.CellSelect;
+
             // 特定のカラムの幅を固定にする（例: 1番目と3番目のカラム）
             if (dataGridView.Columns.Count > 0)
             {
                 dataGridView.Columns[0].Width = 150;  // 1番目のカラム
                 
             }
+            dataGridView.Columns["IngreN"].Visible = false; //一般名は非表示
 
             // ソート機能を無効にする
             dataGridView.AllowUserToOrderColumns = false;
@@ -428,7 +417,7 @@ namespace OQSDrug
             dataGridViewDH.ContextMenuStrip = contextMenuStrip;
         }
 
-        private void CopyMenuItem_Click(object sender, EventArgs e)
+        private async void CopyMenuItem_Click(object sender, EventArgs e)
         {
             if (sender is ToolStripMenuItem menuItem)
             {
@@ -437,7 +426,6 @@ namespace OQSDrug
 
                 if (dataGridViewDH.SelectedCells.Count > 0)
                 {
-
                     List<string> cellValues = new List<string>();
                     foreach (DataGridViewCell selectedCell in dataGridViewDH.SelectedCells)
                     {
@@ -445,6 +433,7 @@ namespace OQSDrug
                     }
 
                     string clipboardText = string.Join(",", cellValues);
+                    clipboardText = RemoveCampany(clipboardText);
 
                     if (mode == "half")
                     {
@@ -453,29 +442,8 @@ namespace OQSDrug
                     }
 
                     // リトライを使ってクリップボードにコピー
-                    bool success = false;
-                    int retryCount = 3; // リトライ回数
-                    while (!success && retryCount > 0)
-                    {
-                        try
-                        {
-                            if (this.InvokeRequired)
-                            {
-                                this.Invoke(new Action(() => Clipboard.SetText(clipboardText)));
-                            }
-                            else
-                            {
-                                Clipboard.SetText(clipboardText);
-                            }
-                            success = true; // 成功したらループを抜ける
-                        }
-                        catch (System.Runtime.InteropServices.ExternalException)
-                        {
-                            retryCount--;
-                            System.Threading.Thread.Sleep(100); // 少し待機してリトライ
-                        }
-                    }
-
+                    bool success = (clipboardText.Length > 0) ? await RetryClipboardSetTextAsync(clipboardText) : false;
+                        
                     if (!success)
                     {
                         MessageBox.Show("クリップボードへのコピーに失敗しました。もう一度トライしてみてください。");
@@ -484,54 +452,167 @@ namespace OQSDrug
             }
         }
 
+        private async Task<bool> RetryClipboardSetTextAsync(string text)
+        {
+            const int maxRetries = 10;
+            const int delayBetweenRetries = 50; // ミリ秒
+
+            for (int attempts = 0; attempts < maxRetries; attempts++)
+            {
+                try
+                {
+                    // STA スレッドで Clipboard.SetText を実行
+                    await Task.Run(() =>
+                    {
+                        var thread = new Thread(() =>
+                        {
+                            try
+                            {
+                                //Clipboard.SetText(text);
+                                Clipboard.Clear(); // クリア
+                                Clipboard.SetDataObject(text, true); // SetText の代わりに SetDataObject を利用
+                            }
+                            catch (Exception)
+                            {
+                                // 他の予期しない例外をキャッチして再スロー
+                                throw;
+                            }
+                        });
+                        thread.SetApartmentState(ApartmentState.STA);
+                        thread.Start();
+                        thread.Join();
+                    });
+
+                    return true; // 成功
+                }
+                catch (System.Runtime.InteropServices.ExternalException)
+                {
+                    // 他のプロセスがクリップボードを使用している場合
+                    await Task.Delay(delayBetweenRetries); // 少し待機してリトライ
+                }
+                catch (Exception ex)
+                {
+                    // 他の予期せぬ例外
+                    MessageBox.Show($"エラー: {ex.Message}", "クリップボードエラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+            }
+
+            return false; // 最大リトライ回数を超えた場合は失敗
+        }
+
+
         // 「薬情検索」メニューのクリック時処理
         private async void SearchMedicineMenuItem_Click(object sender, EventArgs e)
         {
             if (dataGridViewDH.SelectedCells.Count > 0)
             {
-                FormSearch formSearch = new FormSearch();
-                List<string[]> results = new List<string[]>();
-
-                if (RSBDI.Count == 0)
+                try
                 {
-                    RSBDI = _parentForm.RSBDI;
-                }
+                    List<string[]> results = new List<string[]>();
 
-                foreach (DataGridViewCell selectedCell in dataGridViewDH.SelectedCells)
-                {
-                    string drugName = selectedCell.Value?.ToString();
+                    if (RSBDI.Count == 0)
+                    {
+                        RSBDI = _parentForm.RSBDI;
+                    }
+
+                    // 選択されたセルの中で最後のセルを取得
+                    DataGridViewCell lastSelectedCell = dataGridViewDH.SelectedCells[dataGridViewDH.SelectedCells.Count - 1];
+
+                    string drugName = lastSelectedCell.Value?.ToString();
+                    string IngreN = dataGridViewDH.Rows[lastSelectedCell.RowIndex].Cells["IngreN"].Value?.ToString();
 
                     if (drugName.Length > 0)
                     {
-                        List<Tuple<string[], double>> topResults = await FuzzySearchAsync(drugName, RSBDI, 0.4);
+                        List<Tuple<string[], double>> topResults = await FuzzySearchAsync(drugName, IngreN, RSBDI, 0.2);
 
-                        formSearch.SetDrugLists(topResults);
+                        if (topResults.Count > 0)
+                        {
+                            // formSearchを開く、すでに開いていれば表示変更する
+                            if(formSearch == null || formSearch.IsDisposed)
+                            {
+                                formSearch = new FormSearch(this);
+                                formSearch.Show(this);
+                            }
 
-                        formSearch.SetDrugName(drugName);
-                        formSearch.Show(this);
+                            formSearch.SetDrugLists(topResults);
+                            //formSearch.SetDrugName(topResults[0].Item1[0]);
+                        }
+                        else
+                        {
+                            MessageBox.Show("RSB薬情に該当薬剤が見つかりませんでした。");
+                        }
+                        
                     }
                 }
-            }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("薬情表示時にエラーが発生しました。" + ex.Message);
+                }
+            }            
         }
 
-        // リストRSBDIのカラム1,2を対象にあいまい検索を行い、上位5件を返すメソッド
-        public async Task<List<Tuple<string[], double>>> FuzzySearchAsync(string drugName, List<string[]> DI, double cutoffThreshold = 0.4)
+        // リストRSBDIのカラム1,2を対象にあいまい検索を行い、上位10件を返すメソッド
+        public async Task<List<Tuple<string[], double>>> FuzzySearchAsync(string drugName, string ingreN, List<string[]> DI, double cutoffThreshold = 0.4, double bonusForOriginator = 0.4, double penaltyForMissingIngreN = 0.5)
         {
+            //double bonusForOriginator = 0.4;        // "先発" の場合のボーナス
+            //double penaltyForMissingIngreN = 0.5;   // 一般名が含まれない場合のペナルティ
+            double weightColumn1 = 0.3;             // 1列目のスコアに対する重み
+            double weightColumn2 = 0.5;             // 2列目のスコアに対する重み
+
+            // 正規表現で「」や【】に囲まれた部分を削除
+            string processedDrugName = RemoveCampany(drugName);
+
             //数字アルファベットは除去しておく
-            drugName = RemoveDigits(drugName);
+            //string drugNameNoDigit = RemoveDigits(drugName);
+
+            if (ingreN == null || ingreN == "") ingreN = processedDrugName;
 
             // 各レコードに対してN-gram類似度を計算（非同期処理）
             var tasks = DI.Select(record => Task.Run(() =>
             {
                 string column1 = record[0]; // 1列目
                 string column2 = record[1]; // 2列目
+                string column4 = record[3]; // 4列目（"先発" の確認に使用）
 
-                // 両カラムの類似度を計算し、最大値を取得
-                double similarity = Math.Max(
-                    CalculateNGramSimilarity(drugName, column1),
-                    CalculateNGramSimilarity(drugName, column2)
-                );
-                if (similarity > cutoffThreshold && record[3] == "先発") similarity += cutoffThreshold;
+                double similarityColumn1 = CalculateNGramSimilarity(processedDrugName, column1);
+                double similarityColumn2 = CalculateNGramSimilarity(ingreN, column2);
+
+                // 編集距離を考慮したスコア
+                double editDistanceScore = 1.0 - (double)CalculateLevenshteinDistance(processedDrugName, column1)
+                                           / Math.Max(processedDrugName.Length, column1.Length);
+
+                // 最終的なスコア（加重平均）
+                double similarity = weightColumn1 * Math.Max(similarityColumn1, editDistanceScore) +
+                                    weightColumn2 * similarityColumn2;
+
+                bool exact = false;
+                // 完全一致の特別スコア
+                if (drugName == column1)
+                {
+                    similarity = 1.0;
+                    exact = true;
+                }
+                else if (ingreN == column1)
+                {
+                    similarity = 0.9;
+                    exact = true;
+                }
+
+                // "先発" のボーナス
+                if (similarity > cutoffThreshold && column4 == "先発")
+                {
+                    similarity += bonusForOriginator;
+                }
+
+                // 一般名が含まれない場合のペナルティ
+                if (!exact && !column2.Contains(ingreN) && !ingreN.Contains(column2))
+                {
+                    similarity -= penaltyForMissingIngreN;
+                }
+
+                // 類似度の下限を 0 に制限
+                similarity = Math.Max(0, similarity);
 
                 return new Tuple<string[], double>(record, similarity);  // レコードと類似度のタプルを返す
             }));
@@ -543,17 +624,19 @@ namespace OQSDrug
             var filteredResults = results
                 .Where(r => r.Item2 >= cutoffThreshold)  // 類似度がカットオフ値以上のものを選択
                 .OrderByDescending(r => r.Item2)  // 類似度の降順で並べ替え
-                .Take(10)  // 上位5件を取得
+                .Take(20)  // 上位10件を取得
                 .ToList();
 
             return filteredResults;
         }
 
-        static string RemoveDigits(string input)
+        private string RemoveCampany(string drugName)
         {
-            // 正規表現で全角数字とアルファベット（全角・半角）を除去
-            string pattern = @"[０-９a-zA-ZＡ-Ｚａ-ｚ]";
-            return Regex.Replace(input, pattern, "");
+            // 正規表現で「」や【】に囲まれた部分を削除
+            string pattern = @"[「【（][^」】）]*[」】）]";
+            string processedDrugName = Regex.Replace(drugName, pattern, "");
+
+            return processedDrugName;
         }
 
         private HashSet<string> GenerateNGrams(string input, int n)
@@ -582,7 +665,24 @@ namespace OQSDrug
             return (double)intersectionCount / unionCount;
         }
 
+        public int CalculateLevenshteinDistance(string source, string target)
+        {
+            int[,] dp = new int[source.Length + 1, target.Length + 1];
 
+            for (int i = 0; i <= source.Length; i++) dp[i, 0] = i;
+            for (int j = 0; j <= target.Length; j++) dp[0, j] = j;
+
+            for (int i = 1; i <= source.Length; i++)
+            {
+                for (int j = 1; j <= target.Length; j++)
+                {
+                    int cost = source[i - 1] == target[j - 1] ? 0 : 1;
+                    dp[i, j] = Math.Min(Math.Min(dp[i - 1, j] + 1, dp[i, j - 1] + 1), dp[i - 1, j - 1] + cost);
+                }
+            }
+
+            return dp[source.Length, target.Length];
+        }
 
         private void checkBoxSum_CheckedChanged(object sender, EventArgs e)
         {
@@ -670,7 +770,7 @@ namespace OQSDrug
 
         private void SetRadioButtonEvent()
         {
-            radioButton1M.CheckedChanged += radioButton_CheckedChanged;
+            //radioButton1M.CheckedChanged += radioButton_CheckedChanged;
             radioButton3M.CheckedChanged += radioButton_CheckedChanged;
             radioButton6M.CheckedChanged += radioButton_CheckedChanged;
             radioButton12M.CheckedChanged += radioButton_CheckedChanged;
@@ -679,11 +779,19 @@ namespace OQSDrug
 
         private void RemoveRadioButtonEvent()
         {
-            radioButton1M.CheckedChanged -= radioButton_CheckedChanged;
+            //radioButton1M.CheckedChanged -= radioButton_CheckedChanged;
             radioButton3M.CheckedChanged -= radioButton_CheckedChanged;
             radioButton6M.CheckedChanged -= radioButton_CheckedChanged;
             radioButton12M.CheckedChanged -= radioButton_CheckedChanged;
             radioButtonAll.CheckedChanged -= radioButton_CheckedChanged;
+        }
+
+        private void checkBoxOmitMyOrg_CheckedChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.OmitMyOrg = checkBoxOmitMyOrg.Checked;
+            Properties.Settings.Default.Save();
+
+            comboBoxPtID_SelectedIndexChanged(sender, e);
         }
     }
 }

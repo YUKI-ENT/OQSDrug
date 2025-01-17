@@ -155,6 +155,10 @@ namespace OQSDrug
                 comboBoxViewSpan.SelectedIndex = 3;
             }
 
+            checkBoxOmitMyOrg.Checked = Properties.Settings.Default.OmitMyOrg;
+
+            checkBoxAutoStart.Checked = Properties.Settings.Default.AutoStart;
+
         }
 
         private void SaveSettings()
@@ -207,6 +211,10 @@ namespace OQSDrug
             //Properties.Settings.Default.DynaTable = comboBoxDynaTable.SelectedItem.ToString();
 
             Properties.Settings.Default.ViewerSpan = Convert.ToInt16(comboBoxViewSpan.SelectedItem.ToString());
+
+            Properties.Settings.Default.OmitMyOrg = checkBoxOmitMyOrg.Checked;
+
+            Properties.Settings.Default.AutoStart = checkBoxAutoStart.Checked;
 
             Properties.Settings.Default.Save();
 
@@ -296,6 +304,35 @@ namespace OQSDrug
                     Environment.GetFolderPath(Environment.SpecialFolder.Personal),
                     "OQSDrug.config"
                 );
+
+                // バックアップファイルのパス
+                string backupPath1 = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.Personal),
+                    "OQSDrug1.config"
+                );
+                string backupPath2 = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.Personal),
+                    "OQSDrug2.config"
+                );
+
+                // 世代バックアップのロジック
+                if (File.Exists(backupPath1))
+                {
+                    // 既存の OQSDrug1.config を OQSDrug2.config にリネーム
+                    if (File.Exists(backupPath2))
+                    {
+                        File.Delete(backupPath2); // OQSDrug2.config を削除
+                    }
+                    File.Move(backupPath1, backupPath2);
+                }
+
+                if (File.Exists(defaultPath))
+                {
+                    // 現在の OQSDrug.config を OQSDrug1.config にリネーム
+                    File.Move(defaultPath, backupPath1);
+                }
+
+                // 設定を保存
                 var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
                 config.SaveAs(defaultPath, ConfigurationSaveMode.Full);
             }
@@ -305,6 +342,7 @@ namespace OQSDrug
             }
             this.Close();
         }
+
 
         private void buttonSave_Click(object sender, EventArgs e)
         {

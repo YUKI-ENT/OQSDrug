@@ -89,6 +89,8 @@
             this.comboBoxViewSpan = new System.Windows.Forms.ComboBox();
             this.label19 = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
+            this.checkBoxOmitMyOrg = new System.Windows.Forms.CheckBox();
+            this.checkBoxAutoStart = new System.Windows.Forms.CheckBox();
             this.groupBoxDrug.SuspendLayout();
             this.groupBoxKensin.SuspendLayout();
             this.SuspendLayout();
@@ -349,17 +351,17 @@
             // 
             // buttonSaveExit
             // 
-            this.buttonSaveExit.Location = new System.Drawing.Point(503, 606);
+            this.buttonSaveExit.Location = new System.Drawing.Point(491, 643);
             this.buttonSaveExit.Name = "buttonSaveExit";
-            this.buttonSaveExit.Size = new System.Drawing.Size(75, 23);
+            this.buttonSaveExit.Size = new System.Drawing.Size(93, 23);
             this.buttonSaveExit.TabIndex = 50;
-            this.buttonSaveExit.Text = "閉じる";
+            this.buttonSaveExit.Text = "保存して閉じる";
             this.buttonSaveExit.UseVisualStyleBackColor = true;
             this.buttonSaveExit.Click += new System.EventHandler(this.buttonSaveExit_Click);
             // 
             // buttonCancel
             // 
-            this.buttonCancel.Location = new System.Drawing.Point(422, 606);
+            this.buttonCancel.Location = new System.Drawing.Point(410, 643);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(75, 23);
             this.buttonCancel.TabIndex = 44;
@@ -538,9 +540,9 @@
             // 
             // textBoxTemprs
             // 
-            this.textBoxTemprs.Location = new System.Drawing.Point(392, 531);
+            this.textBoxTemprs.Location = new System.Drawing.Point(410, 531);
             this.textBoxTemprs.Name = "textBoxTemprs";
-            this.textBoxTemprs.Size = new System.Drawing.Size(169, 19);
+            this.textBoxTemprs.Size = new System.Drawing.Size(151, 19);
             this.textBoxTemprs.TabIndex = 54;
             this.textBoxTemprs.Visible = false;
             // 
@@ -549,9 +551,9 @@
             this.label14.AutoSize = true;
             this.label14.Location = new System.Drawing.Point(43, 534);
             this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(121, 12);
+            this.label14.Size = new System.Drawing.Size(125, 12);
             this.label14.TabIndex = 55;
-            this.label14.Text = "⑪RSBase ID連携方式";
+            this.label14.Text = "⑪ RSBase ID連携方式";
             this.toolTipSetting.SetToolTip(this.label14, "RSBaseのID連携を設定すると\r\nカルテ遷移に連動して自動で薬歴ビュワーを起動します");
             // 
             // checkBoxTopmost
@@ -559,16 +561,16 @@
             this.checkBoxTopmost.AutoSize = true;
             this.checkBoxTopmost.Location = new System.Drawing.Point(44, 556);
             this.checkBoxTopmost.Name = "checkBoxTopmost";
-            this.checkBoxTopmost.Size = new System.Drawing.Size(139, 16);
+            this.checkBoxTopmost.Size = new System.Drawing.Size(143, 16);
             this.checkBoxTopmost.TabIndex = 56;
-            this.checkBoxTopmost.Text = "⑫薬歴を最前面で表示";
+            this.checkBoxTopmost.Text = "⑫ 薬歴を最前面で表示";
             this.checkBoxTopmost.UseVisualStyleBackColor = true;
             // 
             // buttonViewerPositionReset
             // 
             this.buttonViewerPositionReset.Location = new System.Drawing.Point(186, 552);
             this.buttonViewerPositionReset.Name = "buttonViewerPositionReset";
-            this.buttonViewerPositionReset.Size = new System.Drawing.Size(179, 23);
+            this.buttonViewerPositionReset.Size = new System.Drawing.Size(218, 23);
             this.buttonViewerPositionReset.TabIndex = 57;
             this.buttonViewerPositionReset.Text = "薬歴Windowの位置サイズをリセット";
             this.buttonViewerPositionReset.UseVisualStyleBackColor = true;
@@ -576,7 +578,7 @@
             // 
             // buttonImport
             // 
-            this.buttonImport.Location = new System.Drawing.Point(260, 606);
+            this.buttonImport.Location = new System.Drawing.Point(248, 643);
             this.buttonImport.Name = "buttonImport";
             this.buttonImport.Size = new System.Drawing.Size(75, 23);
             this.buttonImport.TabIndex = 58;
@@ -586,7 +588,7 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(341, 606);
+            this.button2.Location = new System.Drawing.Point(329, 643);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 59;
@@ -615,7 +617,7 @@
             "thept.txt"});
             this.comboBoxRSBID.Location = new System.Drawing.Point(186, 531);
             this.comboBoxRSBID.Name = "comboBoxRSBID";
-            this.comboBoxRSBID.Size = new System.Drawing.Size(179, 20);
+            this.comboBoxRSBID.Size = new System.Drawing.Size(124, 20);
             this.comboBoxRSBID.TabIndex = 61;
             // 
             // label17
@@ -641,7 +643,7 @@
             // comboBoxViewSpan
             // 
             this.comboBoxViewSpan.FormattingEnabled = true;
-            this.comboBoxViewSpan.Location = new System.Drawing.Point(174, 579);
+            this.comboBoxViewSpan.Location = new System.Drawing.Point(186, 579);
             this.comboBoxViewSpan.Name = "comboBoxViewSpan";
             this.comboBoxViewSpan.Size = new System.Drawing.Size(65, 20);
             this.comboBoxViewSpan.TabIndex = 66;
@@ -649,7 +651,7 @@
             // label19
             // 
             this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(245, 582);
+            this.label19.Location = new System.Drawing.Point(257, 582);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(65, 12);
             this.label19.TabIndex = 67;
@@ -664,11 +666,34 @@
             this.label16.TabIndex = 68;
             this.label16.Text = "⑤";
             // 
+            // checkBoxOmitMyOrg
+            // 
+            this.checkBoxOmitMyOrg.AutoSize = true;
+            this.checkBoxOmitMyOrg.Location = new System.Drawing.Point(44, 606);
+            this.checkBoxOmitMyOrg.Name = "checkBoxOmitMyOrg";
+            this.checkBoxOmitMyOrg.Size = new System.Drawing.Size(100, 16);
+            this.checkBoxOmitMyOrg.TabIndex = 69;
+            this.checkBoxOmitMyOrg.Text = "⑭ 自施設除外";
+            this.checkBoxOmitMyOrg.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxAutoStart
+            // 
+            this.checkBoxAutoStart.AutoSize = true;
+            this.checkBoxAutoStart.Location = new System.Drawing.Point(248, 244);
+            this.checkBoxAutoStart.Name = "checkBoxAutoStart";
+            this.checkBoxAutoStart.Size = new System.Drawing.Size(102, 16);
+            this.checkBoxAutoStart.TabIndex = 70;
+            this.checkBoxAutoStart.Text = "自動開始/停止";
+            this.toolTipSetting.SetToolTip(this.checkBoxAutoStart, "起動時に設定値がすべてOKなら、自動で取込動作を開始します");
+            this.checkBoxAutoStart.UseVisualStyleBackColor = true;
+            // 
             // Form2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(596, 641);
+            this.ClientSize = new System.Drawing.Size(596, 678);
+            this.Controls.Add(this.checkBoxAutoStart);
+            this.Controls.Add(this.checkBoxOmitMyOrg);
             this.Controls.Add(this.label16);
             this.Controls.Add(this.label19);
             this.Controls.Add(this.comboBoxViewSpan);
@@ -781,5 +806,7 @@
         private System.Windows.Forms.ComboBox comboBoxViewSpan;
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.CheckBox checkBoxOmitMyOrg;
+        private System.Windows.Forms.CheckBox checkBoxAutoStart;
     }
 }

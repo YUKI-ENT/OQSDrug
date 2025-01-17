@@ -37,6 +37,7 @@ namespace OQSDrug
 
         //private Timer timer;
         private bool isTimerRunning = false; // タイマーの状態フラグ
+        private bool isOQSRunnnig = false;   //取得開始しているか
 
         private System.Threading.Timer backgroundTimer; //非同期タイマー
 
@@ -67,51 +68,72 @@ namespace OQSDrug
         private async Task RunTimerLogicAsync()
         {
             DateTime startTime = DateTime.Now;
-            AddLog($"タイマーイベント開始: {startTime}");
+            AddLog("タイマーイベント開始");
 
-            // Datadynaのデータ取得
-            DataTable dynaTable = await LoadDataFromDatabaseAsync(Properties.Settings.Default.Datadyna);
+            // Status check
+            okSettings = await UpdateStatus();
+            this.StartStop.Enabled = (okSettings == 0b1111);
 
-            if (dynaTable != null)
+            //AutoStartStop
+            if (Properties.Settings.Default.AutoStart)
             {
-                // 薬剤PDF
-                if (Properties.Settings.Default.DrugFileCategory > 0)
-                {
-                    MakeReq(Properties.Settings.Default.DrugFileCategory + 10, dynaTable);
-                }
-
-                // 薬剤xmlは常に実行
-                MakeReq(12, dynaTable);
-
-                // 健診PDF
-                if (Properties.Settings.Default.KensinFileCategory > 0)
-                {
-                    MakeReq(Properties.Settings.Default.KensinFileCategory + 100, dynaTable);
-                }
+                Invoke(new Action(() =>  StartStop.Checked = (okSettings == 0b1111)));
             }
-            await reloadDataAsync();
 
-            // Resフォルダの処理
-            bool processCompleted = false;
-            bool isRemainRes = true;
+            //取得作業
+            if (isOQSRunnnig && okSettings == 0b1111)
+            {  
 
-            // 5秒ごとにProcessResAsyncを呼び出し
-            while ((!processCompleted || isRemainRes) && backgroundTimer != null)
-            {
-                await Task.Delay(5000);
+                // Datadynaのデータ取得
+                DataTable dynaTable = await LoadDataFromDatabaseAsync(Properties.Settings.Default.Datadyna);
 
-                if (!isTimerRunning || backgroundTimer == null) break;
-                
-                processCompleted = await ProcessResAsync();
-                isRemainRes = await RemainResTask();
-
-                if ((DateTime.Now - startTime).TotalSeconds > (Properties.Settings.Default.TimerInterval - 5))
+                if (dynaTable != null)
                 {
-                    processCompleted = true;
-                    isRemainRes = false;
-                    AddLog("時間内に処理が終了しませんでしたので、タイマー処理を中止します");
+                    // 薬剤PDF
+                    if (Properties.Settings.Default.DrugFileCategory > 0)
+                    {
+                        MakeReq(Properties.Settings.Default.DrugFileCategory + 10, dynaTable);
+                    }
+
+                    // 薬剤xmlは常に実行
+                    MakeReq(12, dynaTable);
+
+                    // 健診PDF
+                    if (Properties.Settings.Default.KensinFileCategory > 0)
+                    {
+                        MakeReq(Properties.Settings.Default.KensinFileCategory + 100, dynaTable);
+                    }
+                }
+                await reloadDataAsync();
+
+                // Resフォルダの処理
+                bool processCompleted = false;
+                bool isRemainRes = true;
+
+                // 5秒ごとにProcessResAsyncを呼び出し
+                while ((!processCompleted || isRemainRes) && isOQSRunnnig)
+                {
+                    await Task.Delay(5000);
+
+                    if (!isTimerRunning || !isOQSRunnnig) break;
+
+                    processCompleted = await ProcessResAsync();
+                    isRemainRes = await RemainResTask();
+
+                    if ((DateTime.Now - startTime).TotalSeconds > (Properties.Settings.Default.TimerInterval - 5))
+                    {
+                        processCompleted = true;
+                        isRemainRes = false;
+                        AddLog("時間内に処理が終了しませんでしたので、タイマー処理を中止します");
+                    }
+
+                    await reloadDataAsync();
                 }
 
+            }
+            else if((okSettings & 0b0001) == 1)  //OQSDrugData OK
+            {
+                //取得停止中はreloadのみ
                 await reloadDataAsync();
             }
 
@@ -217,6 +239,7 @@ namespace OQSDrug
             {
                 Invoke(new Action(() => MessageBox.Show("一旦タイマー動作を停止します")));
                 StartStop.Checked = false;
+                StopTimer();
             }
 
             //Form2を開く
@@ -235,9 +258,13 @@ namespace OQSDrug
             //checkBoxAutoview.Checked = autoRSB;
             checkBoxAutoview_CheckedChanged(sender, EventArgs.Empty);
 
+            checkBoxAutoStart.Checked = Properties.Settings.Default.AutoStart;
+
             LoadViewerSettings();
 
             InitNotifyIcon();
+
+            StartTimer();
 
         }
 
@@ -248,16 +275,14 @@ namespace OQSDrug
                 //開始
                 StartStop.Text = "停止";
                 StartStop.Image = Properties.Resources.Stop;
-                //timer.Interval = Properties.Settings.Default.TimerInterval * 1000;
-                //timer.Start();
-
-                StartTimer();
+                
+                //StartTimer();
+                isOQSRunnnig = true;
 
                 AddLog($"タイマー処理を開始します。間隔は{Properties.Settings.Default.TimerInterval}秒です");
 
                 //初回実行
                 //await Task.Run(() => Timer_Tick(timer, EventArgs.Empty));
-
             }
             else
             {
@@ -265,7 +290,8 @@ namespace OQSDrug
                 StartStop.Image = Properties.Resources.Go;
                 //timer.Stop();
                 
-                StopTimer();
+                //StopTimer();
+                isOQSRunnnig = false;
 
                 AddLog("タイマー処理を終了します");
             }
@@ -736,6 +762,8 @@ namespace OQSDrug
             autoRSB = Properties.Settings.Default.autoRSB;
             checkBoxAutoview.Checked = autoRSB;
 
+            checkBoxAutoStart.Checked = Properties.Settings.Default.AutoStart;
+
             LoadViewerSettings();
 
             InitNotifyIcon();
@@ -745,6 +773,9 @@ namespace OQSDrug
             {
                 await LoadRSBDIAsync(RSBdrive + @"\Users\rsn\public_html\drug_RSB.dat");
             }
+
+            // Timer start
+            StartTimer();
         }
 
         private async Task setStatus()
@@ -821,7 +852,7 @@ namespace OQSDrug
             // 状態表示の項目
             string[] items = {
             "OQSDrug_data.mdb",
-            "datadyna.mdb",
+            "ダイナミクス",
             "OQSフォルダ",
             "Gazouフォルダ"
         };
@@ -2233,7 +2264,7 @@ namespace OQSDrug
 
                 if (exists)
                 {
-                    AddLog($"RSBaseが{drivePath}ドライブに見つかりました。薬歴右クリックでRSB薬歴が利用できます。");
+                    AddLog($"RSBaseが{drivePath}ドライブに見つかりました。薬歴情報をバッファに読み込んでいます...");
                     return drivePath; // 見つかったドライブを返す
                 }
             }
@@ -2242,11 +2273,18 @@ namespace OQSDrug
             return null; // 見つからなかった場合
         }
 
+        private void checkBoxAutoStart_CheckedChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.AutoStart = checkBoxAutoStart.Checked;
+            Properties.Settings.Default.Save(); 
+
+        }
+
         private async Task LoadRSBDIAsync(string filePath)
         {
             if (!File.Exists(filePath))
             {
-                AddLog($"指定されたRSBase薬情ファイルが見つかりません。{filePath}");
+                AddLog($"指定されたRSBase薬情ファイルが見つかりませんでした。{filePath}");
                 return;
             }
 
@@ -2266,7 +2304,8 @@ namespace OQSDrug
                         count++;
                     }
                 }
-                AddLog($"RSBase薬情ファイルから{count}件のデータを読み込みました");
+                AddLog($"RSBase薬情インデックス{count}件を読み込みました。");
+                AddLog("薬歴の右クリックでRSBase薬情表示が可能になります。");
             }
         }
     }

@@ -199,6 +199,7 @@
     <Content Include="OQSDrug_data.mdb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\Alarm clock.png" />
     <None Include="Resources\Han.png" />
     <None Include="Resources\Zen.png" />
     <None Include="Resources\Find.png" />
