@@ -39,6 +39,7 @@
             this.toolStripButtonVersion = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonSettings = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonTKK = new System.Windows.Forms.ToolStripButton();
             this.toolStripComboBoxDBProviders = new System.Windows.Forms.ToolStripComboBox();
             this.listViewLog = new System.Windows.Forms.ListView();
             this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
@@ -46,6 +47,7 @@
             this.checkBoxAutoview = new System.Windows.Forms.CheckBox();
             this.StartStop = new System.Windows.Forms.CheckBox();
             this.checkBoxAutoStart = new System.Windows.Forms.CheckBox();
+            this.checkBoxAutoTKK = new System.Windows.Forms.CheckBox();
             this.buttonYZ = new System.Windows.Forms.Button();
             this.buttonSR = new System.Windows.Forms.Button();
             this.buttonYZPDF = new System.Windows.Forms.Button();
@@ -55,8 +57,10 @@
             this.buttonKSXML = new System.Windows.Forms.Button();
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
             this.buttonReload = new System.Windows.Forms.Button();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.toolStripVersion.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // dataGridView1
@@ -75,6 +79,7 @@
             this.dataGridView1.TabIndex = 2;
             this.toolTip1.SetToolTip(this.dataGridView1, "行選択、右クリックでで削除メニュー\r\nダブルクリックで薬歴表示します");
             this.dataGridView1.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellDoubleClick);
+            this.dataGridView1.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dataGridView1_CellFormatting);
             this.dataGridView1.CellMouseEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellMouseEnter);
             this.dataGridView1.CellMouseLeave += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellMouseLeave);
             this.dataGridView1.CellMouseUp += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_CellMouseUp);
@@ -90,6 +95,7 @@
             this.toolStripButtonVersion,
             this.toolStripSeparator2,
             this.toolStripButtonSettings,
+            this.toolStripButtonTKK,
             this.toolStripComboBoxDBProviders});
             this.toolStripVersion.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.toolStripVersion.Location = new System.Drawing.Point(0, 0);
@@ -128,8 +134,8 @@
             this.toolStripButtonToTaskTray.Image = global::OQSDrug.Properties.Resources.Down;
             this.toolStripButtonToTaskTray.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonToTaskTray.Name = "toolStripButtonToTaskTray";
-            this.toolStripButtonToTaskTray.Size = new System.Drawing.Size(179, 24);
-            this.toolStripButtonToTaskTray.Text = "タスクトレイに最小化";
+            this.toolStripButtonToTaskTray.Size = new System.Drawing.Size(74, 24);
+            this.toolStripButtonToTaskTray.Text = "最小化";
             this.toolStripButtonToTaskTray.Click += new System.EventHandler(this.toolStripButtonToTaskTray_Click);
             // 
             // toolStripSeparator1
@@ -165,6 +171,15 @@
             this.toolStripButtonSettings.Size = new System.Drawing.Size(59, 24);
             this.toolStripButtonSettings.Text = "設定";
             this.toolStripButtonSettings.Click += new System.EventHandler(this.toolStripButtonSettings_Click);
+            // 
+            // toolStripButtonTKK
+            // 
+            this.toolStripButtonTKK.Image = global::OQSDrug.Properties.Resources.Heart;
+            this.toolStripButtonTKK.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonTKK.Name = "toolStripButtonTKK";
+            this.toolStripButtonTKK.Size = new System.Drawing.Size(89, 24);
+            this.toolStripButtonTKK.Text = "健診結果";
+            this.toolStripButtonTKK.Click += new System.EventHandler(this.toolStripButtonTKK_Click);
             // 
             // toolStripComboBoxDBProviders
             // 
@@ -213,13 +228,14 @@
             // 
             // checkBoxAutoview
             // 
-            this.checkBoxAutoview.AutoSize = true;
-            this.checkBoxAutoview.Font = new System.Drawing.Font("Meiryo UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.checkBoxAutoview.Location = new System.Drawing.Point(422, 42);
+            this.checkBoxAutoview.Font = new System.Drawing.Font("Meiryo UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.checkBoxAutoview.Image = global::OQSDrug.Properties.Resources.Text_preview;
+            this.checkBoxAutoview.Location = new System.Drawing.Point(6, 16);
             this.checkBoxAutoview.Name = "checkBoxAutoview";
-            this.checkBoxAutoview.Size = new System.Drawing.Size(124, 24);
+            this.checkBoxAutoview.Size = new System.Drawing.Size(90, 33);
             this.checkBoxAutoview.TabIndex = 27;
-            this.checkBoxAutoview.Text = "薬歴自動起動";
+            this.checkBoxAutoview.Text = "薬歴";
+            this.checkBoxAutoview.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.toolTip1.SetToolTip(this.checkBoxAutoview, "RSBaseと連動して薬歴が存在すれば自動で表示します");
             this.checkBoxAutoview.UseVisualStyleBackColor = true;
             this.checkBoxAutoview.CheckedChanged += new System.EventHandler(this.checkBoxAutoview_CheckedChanged);
@@ -246,7 +262,7 @@
             // 
             this.checkBoxAutoStart.Font = new System.Drawing.Font("Meiryo UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.checkBoxAutoStart.Image = global::OQSDrug.Properties.Resources.clock;
-            this.checkBoxAutoStart.Location = new System.Drawing.Point(299, 32);
+            this.checkBoxAutoStart.Location = new System.Drawing.Point(299, 40);
             this.checkBoxAutoStart.Name = "checkBoxAutoStart";
             this.checkBoxAutoStart.Size = new System.Drawing.Size(113, 45);
             this.checkBoxAutoStart.TabIndex = 29;
@@ -256,6 +272,20 @@
             this.toolTip1.SetToolTip(this.checkBoxAutoStart, "下の接続がOKになると自動で動作開始/停止します");
             this.checkBoxAutoStart.UseVisualStyleBackColor = true;
             this.checkBoxAutoStart.CheckedChanged += new System.EventHandler(this.checkBoxAutoStart_CheckedChanged);
+            // 
+            // checkBoxAutoTKK
+            // 
+            this.checkBoxAutoTKK.Font = new System.Drawing.Font("Meiryo UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.checkBoxAutoTKK.Image = global::OQSDrug.Properties.Resources.Heart;
+            this.checkBoxAutoTKK.Location = new System.Drawing.Point(102, 16);
+            this.checkBoxAutoTKK.Name = "checkBoxAutoTKK";
+            this.checkBoxAutoTKK.Size = new System.Drawing.Size(81, 33);
+            this.checkBoxAutoTKK.TabIndex = 28;
+            this.checkBoxAutoTKK.Text = "健診";
+            this.checkBoxAutoTKK.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.toolTip1.SetToolTip(this.checkBoxAutoTKK, "RSBaseと連動して薬歴が存在すれば自動で表示します");
+            this.checkBoxAutoTKK.UseVisualStyleBackColor = true;
+            this.checkBoxAutoTKK.CheckedChanged += new System.EventHandler(this.checkBoxAutoview_CheckedChanged);
             // 
             // buttonYZ
             // 
@@ -346,15 +376,27 @@
             this.buttonReload.UseVisualStyleBackColor = true;
             this.buttonReload.Click += new System.EventHandler(this.buttonReload_Click);
             // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.checkBoxAutoTKK);
+            this.groupBox1.Controls.Add(this.checkBoxAutoview);
+            this.groupBox1.Font = new System.Drawing.Font("Meiryo UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.groupBox1.Location = new System.Drawing.Point(422, 30);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(189, 49);
+            this.groupBox1.TabIndex = 30;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "RSBase連動";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.ClientSize = new System.Drawing.Size(974, 717);
+            this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.checkBoxAutoStart);
             this.Controls.Add(this.buttonReload);
-            this.Controls.Add(this.checkBoxAutoview);
             this.Controls.Add(this.buttonKSXML);
             this.Controls.Add(this.buttonKSPDF);
             this.Controls.Add(this.buttonKS);
@@ -375,6 +417,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.toolStripVersion.ResumeLayout(false);
             this.toolStripVersion.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -406,6 +449,9 @@
         private System.Windows.Forms.ToolStripButton toolStripButtonToTaskTray;
         private System.Windows.Forms.Button buttonReload;
         private System.Windows.Forms.CheckBox checkBoxAutoStart;
+        private System.Windows.Forms.ToolStripButton toolStripButtonTKK;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.CheckBox checkBoxAutoTKK;
     }
 }
 

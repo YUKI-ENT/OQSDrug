@@ -117,59 +117,58 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="Exit" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Exit.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Stop" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Stop.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="drug2" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\drug2.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Go" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Go.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="drug1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\drug1.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="drug4" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\drug4.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="drug3" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\drug3.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="drugicon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\drugicon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Down" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Down.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Text_preview" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Text preview.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Info" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Info.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Find" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Find.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Han" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Han.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Zen" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Zen.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="clock" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Alarm clock.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Heart" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Heart.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Application" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Application.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Copy" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Copy.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>25</value>
+  </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        AAABAAIAEBAAAAEACABoBQAAJgAAABAQAAABACAAaAQAAI4FAAAoAAAAEAAAACAAAAABAAgAAAAAAEAB
+        AAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAXGvgAAAAAAAAAAAAdK/kAb479AAAAAAAAAAAAGyT4AAAA
+        AAAAAAAAZH78ACQ++QBhe/wAGB34AAAAAAAAAAAAAAAAAB4v+QAAAAAAAAAAACQ8+QAAAAAAGSD4ABke
+        +ABLRvoAKkn7AAAAAABmg/0AAAAAACc/+QALCd8AAAAAAFxz/AAAAAAAAAAAAAAAAAAnQPkAIj77AAAA
+        AABti/0AGiL4AB8z+QAAAAAAIDb5ACM7+QAdLfkAIjn5ACE3+QAiOPkAHSz5AG+N/QB0lf0AdZf+AHOS
+        /QAAAAAAAAAAAAAAAABwj/0AYXn8AAAAAAAAAAAAGyf4AAgDzwAAAAAAHCj4AB0p+QBgePwAoLb+AAAA
+        AAB1lv0AKEH5ABoj+AAeMPkAAAAAAGuL/QAAAAAAAAAAAAAAAAAAAAAATGr8AF5v/AAAAAAAAAAAALHL
+        /wBWefwAAAAAAAAAAAAAAAAAMS3yAB85+QAAAAAAAAAAALfP/wAAAAAAAAAAAAAAAAATEfoAFRjqAAAA
+        AAB1j/4AAAAAAAAAAAAAAAAAVEz7AAAAAAAAAAAAXHb8AEdA+QAAAAAAJ0T7AHGO/QAAAAAAQDfsAAAA
+        AAAAAAAAAAAAABYV+wAAAAAAh5D9ACI6+QAAAAAAIjv5AB80+QAAAAAAfIj+AAAAAAAAAAAAHjH5AIGZ
+        /wAiOfwAAAAAAFFI7QAAAAAAAAAAAAAAAAAAAAAAAAAAAC5K+wAAAAAAAAAAACZC+wB2l/4AAAAAACkg
+        7gA6NfgAGSj5AAAAAAArQvkAGBz6ABke+wAAAAAAe5v+AHCT/gAAAAAAGSf5AAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAKUL7AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKO7/wAAAAAAWnn8AAAAAAAAAAAAco39AAAA
+        AABniP0AAAAAAAAAAAAAAAAAAAAAAGF//QAzT/sAAAAAAAAAAACfvP8AXXX8AAAAAAAAAAAAP2D8AAAA
+        AABUTPUAAAAAAAAAAAAAAAAAAAAAABoh/AAAAAAAAAAAAHGP/QAAAAAAMEj7AAAAAABCPOgAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAHCn5AAAAAAAAAAAAGyT7ABUV+wAAAAAAAAAAABgX+gAAAAAAAAAAAAAA
+        AAAAAAAAZ4b9AAAAAAAAAAAALSXeAB0u+QAAAAAAIzr5AAAAAAAaJO8AAAAAAB42+QBMR/sAAAAAAAAA
+        AAAAAAAACATBAH6L/gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAChA+QBKX/sAAAAAAAAA
+        AABvjP0AHSr8AAAAAAAAAAAA////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEAAAAAAAAAAAAAAAAAA
+        QHZiQAAAAAAAAAAAAAAAY9UPAtZAAAAAAAAAAAAAQPwJGBkC2UAAAAAAAAAA5oOB4kM/KhiWQAAAAAAA
+        QCd7LSsvBT9JGZftAAAAICdI9xbkMSsTM0IJxEAAIGMNG6ImDXkyK0oF0kljQJG1KVa9b44fDS4wfBOc
+        k+FasDv7rqtRtotb6JXJ+FLLkppHN3A0Kd5lHQw8RLoicm2ZNkc1xwZMRR0dDA5EbIWF7rm5ubmPGulF
+        qampgn6FAGnuVVXuGgAAGnheXoK/AAAAv7+/vwAAAAC/v7+/AAD//wAA/n8AAPw/AAD4HwAA8A8AAOAH
+        AADAAwAAgAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIGBAADDwwAAKAAAABAAAAAgAAAAAQAgAAAA
+        AABABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAJoqBwbE/wYD
+        u/8AAHsqAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAKwhCgjH/xoa
+        //8UEv//BgS3/wIAmCUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHALgsDQvQ/xsj
+        //8YHvv/Fxn5/xYV//8KCM7/BACnLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHAMglDxDX/x4u
+        //8cKPv/GSL4/xkf+P8YHfn/Ghv//wwJ1f8GALAlAAAAAAAAAAAAAAAAAAAAAAAAAAAHAM0sERHf/yI5
+        //8eM/v/Hi35/xwp+f8bJPj/GSH4/xke+f8ZHv//DgrU/wYAtScAAAAAAAAAAAAAAAACAM0lCwfT/yZB
+        //8lPvv/ITf5/yA0+f8eL/n/HSv5/xwo+P8bJPj/GSH5/xkf//8MCdP/CATAJQAAAAAAANIZAADW/xsw
+        9P8rR/z/Jj/5/yQ8+f8iOfn/IDb5/x8y+f8eL/n/HSr5/xsn+P8bJfr/Gh/+/wwH0P8HBMQZJBzogDFD
+        9f8rTv//IkD7/yZA+v8nQfn/JT75/yM7+f8hOfn/ITb5/yAy+f8dLfn/HCv5/x0p/v8VGfL/AQDJgDw6
+        8P93mf//aYr9/1Bw/P8wUfz/I0D7/yI7+v8hOvn/HTb5/xsz+f8aMPn/GS35/xgo+f8VJfn/Gyj9/yEc
+        3/9SWffyfqX//3CP/f92k/3/dZL9/2eG/P9Scfz/RGP8/zxX+/80Tfr/NU36/zxU+v8+V/v/TWL7/2N6
+        //9OT/HyYmb78Iux//9tkP3/c5P9/3CN/f9xj/3/c5D9/2+N/f90kP7/bYr9/2+K/P9qg/z/Zn/8/2F4
+        /P9eff//SEvx8E1I+f+jw///bZP+/3SV/f9zlv3/cY/9/2iH/f98m/7/obf+/1x9/f9gff3/Y378/2B6
+        /P9adPz/aoj+/0hC8P8qHvpve4P9/6rJ//+Dp///dpz+/3CX/f+HrP//cXb9/3x+/f+pw/7/cpX9/2iL
+        /v9oiP//e5j//2x3+/8yJu1vAAAAACUZ+mFeXvz/kJ79/4aZ/v+Mnv3/W1v7/zsx+Bk7MvoZYmH8/5Wl
+        /f+Hl/3/gY/8/1lZ+/8qH/FhAAAAAAAAAAAqH/oCNi76aUtF+NBeXv3PUU771Dcs+U8AAAAAAAAAADUt
+        +hFTUPrUXmD6z0dC99A3MPiUAAAAAAAAAAD//wAA/D8AAPgfAADwDwAA4AcAAMADAACAAQAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAIABAACBgwAA
+</value>
   </data>
 </root>

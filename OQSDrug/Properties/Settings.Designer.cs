@@ -370,5 +370,29 @@ namespace OQSDrug.Properties {
                 this["AutoStart"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0, 0, 0")]
+        public global::System.Drawing.Rectangle TKKBounds {
+            get {
+                return ((global::System.Drawing.Rectangle)(this["TKKBounds"]));
+            }
+            set {
+                this["TKKBounds"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool autoTKK {
+            get {
+                return ((bool)(this["autoTKK"]));
+            }
+            set {
+                this["autoTKK"] = value;
+            }
+        }
     }
 }

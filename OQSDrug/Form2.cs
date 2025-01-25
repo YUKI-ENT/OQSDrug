@@ -107,6 +107,12 @@ namespace OQSDrug
                 case 1:
                     radioButtonK1.Checked = true;
                     break;
+                case 2:
+                    radioButtonK2.Checked = true;
+                    break;
+                case 3:
+                    radioButtonK3.Checked = true;
+                    break;
                 default:
                     // デフォルト動作（例: 何も選択しない）
                     radioButtonK0.Checked = true;
@@ -186,13 +192,21 @@ namespace OQSDrug
             Properties.Settings.Default.YZname = textBoxDrugName.Text;
 
             //健診グループボックス
-            if (radioButtonK0.Checked)
-            {
-                KensinFileCategory = 0;
-            }
-            else if (radioButtonK1.Checked)
+            if (radioButtonK1.Checked)
             {
                 KensinFileCategory = 1;
+            }
+            else if (radioButtonK2.Checked)
+            {
+                KensinFileCategory = 2;
+            }
+            else if (radioButtonK3.Checked)
+            {
+                KensinFileCategory = 3;
+            }
+            else
+            {
+                KensinFileCategory = 0;
             }
             Properties.Settings.Default.KensinFileCategory = KensinFileCategory;
             Properties.Settings.Default.KSinterval = Convert.ToUInt16(comboBoxKSinterval.SelectedItem.ToString());
@@ -297,49 +311,6 @@ namespace OQSDrug
         {
             SaveSettings();
 
-            try
-            {
-                // デフォルトの保存場所に自動保存
-                string defaultPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.Personal),
-                    "OQSDrug.config"
-                );
-
-                // バックアップファイルのパス
-                string backupPath1 = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.Personal),
-                    "OQSDrug1.config"
-                );
-                string backupPath2 = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.Personal),
-                    "OQSDrug2.config"
-                );
-
-                // 世代バックアップのロジック
-                if (File.Exists(backupPath1))
-                {
-                    // 既存の OQSDrug1.config を OQSDrug2.config にリネーム
-                    if (File.Exists(backupPath2))
-                    {
-                        File.Delete(backupPath2); // OQSDrug2.config を削除
-                    }
-                    File.Move(backupPath1, backupPath2);
-                }
-
-                if (File.Exists(defaultPath))
-                {
-                    // 現在の OQSDrug.config を OQSDrug1.config にリネーム
-                    File.Move(defaultPath, backupPath1);
-                }
-
-                // 設定を保存
-                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-                config.SaveAs(defaultPath, ConfigurationSaveMode.Full);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"設定値のエクスポート時にエラーが発生しました：{ex.Message}");
-            }
             this.Close();
         }
 
@@ -361,6 +332,12 @@ namespace OQSDrug
                     form1.form3Instance.Close();
                 }
                 Properties.Settings.Default.ViewerBounds = new Rectangle(100, 100, 800, 600);
+
+                if (form1.formTKKInstance != null && !form1.formTKKInstance.IsDisposed)
+                {
+                    form1.formTKKInstance.Close();
+                }
+                Properties.Settings.Default.TKKBounds = new Rectangle(100, 100, 500, 600);
                 MessageBox.Show("リセットしました");
             }
         }

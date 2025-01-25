@@ -65,13 +65,13 @@
             this.label9 = new System.Windows.Forms.Label();
             this.checkBoxRSBReload = new System.Windows.Forms.CheckBox();
             this.radioButtonK1 = new System.Windows.Forms.RadioButton();
-            this.radioButtonK3 = new System.Windows.Forms.RadioButton();
             this.textBoxKensinName = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
             this.radioButtonK0 = new System.Windows.Forms.RadioButton();
             this.comboBoxKSinterval = new System.Windows.Forms.ComboBox();
             this.label11 = new System.Windows.Forms.Label();
             this.groupBoxKensin = new System.Windows.Forms.GroupBox();
+            this.radioButtonK3 = new System.Windows.Forms.RadioButton();
             this.radioButtonK2 = new System.Windows.Forms.RadioButton();
             this.label13 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
@@ -83,6 +83,7 @@
             this.button2 = new System.Windows.Forms.Button();
             this.checkBoxMinimumStart = new System.Windows.Forms.CheckBox();
             this.toolTipSetting = new System.Windows.Forms.ToolTip(this.components);
+            this.checkBoxAutoStart = new System.Windows.Forms.CheckBox();
             this.comboBoxRSBID = new System.Windows.Forms.ComboBox();
             this.label17 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
@@ -90,7 +91,6 @@
             this.label19 = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
             this.checkBoxOmitMyOrg = new System.Windows.Forms.CheckBox();
-            this.checkBoxAutoStart = new System.Windows.Forms.CheckBox();
             this.groupBoxDrug.SuspendLayout();
             this.groupBoxKensin.SuspendLayout();
             this.SuspendLayout();
@@ -200,10 +200,10 @@
             this.radioButtonD0.AutoSize = true;
             this.radioButtonD0.Location = new System.Drawing.Point(9, 41);
             this.radioButtonD0.Name = "radioButtonD0";
-            this.radioButtonD0.Size = new System.Drawing.Size(84, 16);
+            this.radioButtonD0.Size = new System.Drawing.Size(62, 16);
             this.radioButtonD0.TabIndex = 16;
             this.radioButtonD0.TabStop = true;
-            this.radioButtonD0.Text = "取り込まない";
+            this.radioButtonD0.Text = "xmlのみ";
             this.radioButtonD0.UseVisualStyleBackColor = true;
             // 
             // label6
@@ -227,10 +227,9 @@
             this.radioButtonD3.AutoSize = true;
             this.radioButtonD3.Location = new System.Drawing.Point(9, 109);
             this.radioButtonD3.Name = "radioButtonD3";
-            this.radioButtonD3.Size = new System.Drawing.Size(73, 16);
+            this.radioButtonD3.Size = new System.Drawing.Size(14, 13);
             this.radioButtonD3.TabIndex = 22;
             this.radioButtonD3.TabStop = true;
-            this.radioButtonD3.Text = "PDF+XML";
             this.radioButtonD3.UseVisualStyleBackColor = true;
             this.radioButtonD3.Visible = false;
             // 
@@ -239,10 +238,9 @@
             this.radioButtonD2.AutoSize = true;
             this.radioButtonD2.Location = new System.Drawing.Point(9, 86);
             this.radioButtonD2.Name = "radioButtonD2";
-            this.radioButtonD2.Size = new System.Drawing.Size(45, 16);
+            this.radioButtonD2.Size = new System.Drawing.Size(14, 13);
             this.radioButtonD2.TabIndex = 20;
             this.radioButtonD2.TabStop = true;
-            this.radioButtonD2.Text = "XML";
             this.radioButtonD2.UseVisualStyleBackColor = true;
             this.radioButtonD2.Visible = false;
             // 
@@ -433,19 +431,6 @@
             this.radioButtonK1.Text = "PDF to RSBase";
             this.radioButtonK1.UseVisualStyleBackColor = true;
             // 
-            // radioButtonK3
-            // 
-            this.radioButtonK3.AutoSize = true;
-            this.radioButtonK3.Enabled = false;
-            this.radioButtonK3.Location = new System.Drawing.Point(7, 109);
-            this.radioButtonK3.Name = "radioButtonK3";
-            this.radioButtonK3.Size = new System.Drawing.Size(73, 16);
-            this.radioButtonK3.TabIndex = 36;
-            this.radioButtonK3.TabStop = true;
-            this.radioButtonK3.Text = "PDF+XML";
-            this.radioButtonK3.UseVisualStyleBackColor = true;
-            this.radioButtonK3.Visible = false;
-            // 
             // textBoxKensinName
             // 
             this.textBoxKensinName.Location = new System.Drawing.Point(77, 134);
@@ -467,16 +452,16 @@
             this.radioButtonK0.AutoSize = true;
             this.radioButtonK0.Location = new System.Drawing.Point(7, 41);
             this.radioButtonK0.Name = "radioButtonK0";
-            this.radioButtonK0.Size = new System.Drawing.Size(84, 16);
+            this.radioButtonK0.Size = new System.Drawing.Size(62, 16);
             this.radioButtonK0.TabIndex = 30;
             this.radioButtonK0.TabStop = true;
-            this.radioButtonK0.Text = "取り込まない";
+            this.radioButtonK0.Text = "xmlのみ";
             this.radioButtonK0.UseVisualStyleBackColor = true;
             // 
             // comboBoxKSinterval
             // 
             this.comboBoxKSinterval.FormattingEnabled = true;
-            this.comboBoxKSinterval.Location = new System.Drawing.Point(128, 62);
+            this.comboBoxKSinterval.Location = new System.Drawing.Point(172, 62);
             this.comboBoxKSinterval.Name = "comboBoxKSinterval";
             this.comboBoxKSinterval.Size = new System.Drawing.Size(38, 20);
             this.comboBoxKSinterval.TabIndex = 38;
@@ -484,7 +469,7 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(128, 41);
+            this.label11.Location = new System.Drawing.Point(117, 65);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(49, 12);
             this.label11.TabIndex = 9;
@@ -502,23 +487,34 @@
             this.groupBoxKensin.Controls.Add(this.radioButtonK1);
             this.groupBoxKensin.Location = new System.Drawing.Point(264, 275);
             this.groupBoxKensin.Name = "groupBoxKensin";
-            this.groupBoxKensin.Size = new System.Drawing.Size(192, 187);
+            this.groupBoxKensin.Size = new System.Drawing.Size(221, 187);
             this.groupBoxKensin.TabIndex = 5;
             this.groupBoxKensin.TabStop = false;
-            this.groupBoxKensin.Text = "⑨特定健診";
+            this.groupBoxKensin.Text = "⑨特定健診(xmlは常時取得)";
+            // 
+            // radioButtonK3
+            // 
+            this.radioButtonK3.AutoSize = true;
+            this.radioButtonK3.Location = new System.Drawing.Point(7, 109);
+            this.radioButtonK3.Name = "radioButtonK3";
+            this.radioButtonK3.Size = new System.Drawing.Size(191, 16);
+            this.radioButtonK3.TabIndex = 36;
+            this.radioButtonK3.TabStop = true;
+            this.radioButtonK3.Text = "PDF自動(健診実施日を検査日に)";
+            this.toolTipSetting.SetToolTip(this.radioButtonK3, "新しい健診結果があれば自動で取込み。\r\n健診実施日をRSBaseの検査日に登録します\r\n");
+            this.radioButtonK3.UseVisualStyleBackColor = true;
             // 
             // radioButtonK2
             // 
             this.radioButtonK2.AutoSize = true;
-            this.radioButtonK2.Enabled = false;
             this.radioButtonK2.Location = new System.Drawing.Point(7, 86);
             this.radioButtonK2.Name = "radioButtonK2";
-            this.radioButtonK2.Size = new System.Drawing.Size(45, 16);
+            this.radioButtonK2.Size = new System.Drawing.Size(167, 16);
             this.radioButtonK2.TabIndex = 34;
             this.radioButtonK2.TabStop = true;
-            this.radioButtonK2.Text = "XML";
+            this.radioButtonK2.Text = "PDF自動(取込日を検査日に)";
+            this.toolTipSetting.SetToolTip(this.radioButtonK2, "新しい健診結果があれば自動でPDFを取込み。\r\n取込日をRSBaseの検査日に登録します");
             this.radioButtonK2.UseVisualStyleBackColor = true;
-            this.radioButtonK2.Visible = false;
             // 
             // label13
             // 
@@ -561,18 +557,18 @@
             this.checkBoxTopmost.AutoSize = true;
             this.checkBoxTopmost.Location = new System.Drawing.Point(44, 556);
             this.checkBoxTopmost.Name = "checkBoxTopmost";
-            this.checkBoxTopmost.Size = new System.Drawing.Size(143, 16);
+            this.checkBoxTopmost.Size = new System.Drawing.Size(163, 16);
             this.checkBoxTopmost.TabIndex = 56;
-            this.checkBoxTopmost.Text = "⑫ 薬歴を最前面で表示";
+            this.checkBoxTopmost.Text = "⑫ 薬歴・健診を最前面表示";
             this.checkBoxTopmost.UseVisualStyleBackColor = true;
             // 
             // buttonViewerPositionReset
             // 
-            this.buttonViewerPositionReset.Location = new System.Drawing.Point(186, 552);
+            this.buttonViewerPositionReset.Location = new System.Drawing.Point(213, 552);
             this.buttonViewerPositionReset.Name = "buttonViewerPositionReset";
             this.buttonViewerPositionReset.Size = new System.Drawing.Size(218, 23);
             this.buttonViewerPositionReset.TabIndex = 57;
-            this.buttonViewerPositionReset.Text = "薬歴Windowの位置サイズをリセット";
+            this.buttonViewerPositionReset.Text = "薬歴・健診Windowの位置サイズをリセット";
             this.buttonViewerPositionReset.UseVisualStyleBackColor = true;
             this.buttonViewerPositionReset.Click += new System.EventHandler(this.buttonViewerPositionReset_Click);
             // 
@@ -607,6 +603,17 @@
             this.toolTipSetting.SetToolTip(this.checkBoxMinimumStart, "タスクトレイに最小化して起動します");
             this.checkBoxMinimumStart.UseVisualStyleBackColor = true;
             // 
+            // checkBoxAutoStart
+            // 
+            this.checkBoxAutoStart.AutoSize = true;
+            this.checkBoxAutoStart.Location = new System.Drawing.Point(248, 244);
+            this.checkBoxAutoStart.Name = "checkBoxAutoStart";
+            this.checkBoxAutoStart.Size = new System.Drawing.Size(102, 16);
+            this.checkBoxAutoStart.TabIndex = 70;
+            this.checkBoxAutoStart.Text = "自動開始/停止";
+            this.toolTipSetting.SetToolTip(this.checkBoxAutoStart, "起動時に設定値がすべてOKなら、自動で取込動作を開始します");
+            this.checkBoxAutoStart.UseVisualStyleBackColor = true;
+            // 
             // comboBoxRSBID
             // 
             this.comboBoxRSBID.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -615,7 +622,7 @@
             "ID.dat",
             "temp_rs.txt",
             "thept.txt"});
-            this.comboBoxRSBID.Location = new System.Drawing.Point(186, 531);
+            this.comboBoxRSBID.Location = new System.Drawing.Point(213, 531);
             this.comboBoxRSBID.Name = "comboBoxRSBID";
             this.comboBoxRSBID.Size = new System.Drawing.Size(124, 20);
             this.comboBoxRSBID.TabIndex = 61;
@@ -643,7 +650,7 @@
             // comboBoxViewSpan
             // 
             this.comboBoxViewSpan.FormattingEnabled = true;
-            this.comboBoxViewSpan.Location = new System.Drawing.Point(186, 579);
+            this.comboBoxViewSpan.Location = new System.Drawing.Point(213, 579);
             this.comboBoxViewSpan.Name = "comboBoxViewSpan";
             this.comboBoxViewSpan.Size = new System.Drawing.Size(65, 20);
             this.comboBoxViewSpan.TabIndex = 66;
@@ -651,7 +658,7 @@
             // label19
             // 
             this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(257, 582);
+            this.label19.Location = new System.Drawing.Point(284, 582);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(65, 12);
             this.label19.TabIndex = 67;
@@ -675,17 +682,6 @@
             this.checkBoxOmitMyOrg.TabIndex = 69;
             this.checkBoxOmitMyOrg.Text = "⑭ 自施設除外";
             this.checkBoxOmitMyOrg.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxAutoStart
-            // 
-            this.checkBoxAutoStart.AutoSize = true;
-            this.checkBoxAutoStart.Location = new System.Drawing.Point(248, 244);
-            this.checkBoxAutoStart.Name = "checkBoxAutoStart";
-            this.checkBoxAutoStart.Size = new System.Drawing.Size(102, 16);
-            this.checkBoxAutoStart.TabIndex = 70;
-            this.checkBoxAutoStart.Text = "自動開始/停止";
-            this.toolTipSetting.SetToolTip(this.checkBoxAutoStart, "起動時に設定値がすべてOKなら、自動で取込動作を開始します");
-            this.checkBoxAutoStart.UseVisualStyleBackColor = true;
             // 
             // Form2
             // 
@@ -781,7 +777,6 @@
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.CheckBox checkBoxSinryou;
         private System.Windows.Forms.RadioButton radioButtonK1;
-        private System.Windows.Forms.RadioButton radioButtonK3;
         private System.Windows.Forms.TextBox textBoxKensinName;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.RadioButton radioButtonK0;
@@ -808,5 +803,6 @@
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.CheckBox checkBoxOmitMyOrg;
         private System.Windows.Forms.CheckBox checkBoxAutoStart;
+        private System.Windows.Forms.RadioButton radioButtonK3;
     }
 }

@@ -426,8 +426,15 @@ namespace OQSDrug
 
                 if (dataGridViewDH.SelectedCells.Count > 0)
                 {
+                    // 選択されたセルを行・列のインデックスでソート
+                    var sortedCells = dataGridViewDH.SelectedCells
+                        .Cast<DataGridViewCell>()
+                        .OrderBy(cell => cell.RowIndex)
+                        .ThenBy(cell => cell.ColumnIndex)
+                        .ToList();
+
                     List<string> cellValues = new List<string>();
-                    foreach (DataGridViewCell selectedCell in dataGridViewDH.SelectedCells)
+                    foreach (DataGridViewCell selectedCell in sortedCells)
                     {
                         cellValues.Add(selectedCell.Value?.ToString() ?? string.Empty);
                     }
@@ -442,7 +449,7 @@ namespace OQSDrug
                     }
 
                     // リトライを使ってクリップボードにコピー
-                    bool success = (clipboardText.Length > 0) ? await RetryClipboardSetTextAsync(clipboardText) : false;
+                    bool success = (clipboardText.Length > 0) ? await CommonFunctions.RetryClipboardSetTextAsync(clipboardText) : false;
                         
                     if (!success)
                     {
@@ -451,57 +458,7 @@ namespace OQSDrug
                 }
             }
         }
-
-        private async Task<bool> RetryClipboardSetTextAsync(string text)
-        {
-            const int maxRetries = 10;
-            const int delayBetweenRetries = 50; // ミリ秒
-
-            for (int attempts = 0; attempts < maxRetries; attempts++)
-            {
-                try
-                {
-                    // STA スレッドで Clipboard.SetText を実行
-                    await Task.Run(() =>
-                    {
-                        var thread = new Thread(() =>
-                        {
-                            try
-                            {
-                                //Clipboard.SetText(text);
-                                Clipboard.Clear(); // クリア
-                                Clipboard.SetDataObject(text, true); // SetText の代わりに SetDataObject を利用
-                            }
-                            catch (Exception)
-                            {
-                                // 他の予期しない例外をキャッチして再スロー
-                                throw;
-                            }
-                        });
-                        thread.SetApartmentState(ApartmentState.STA);
-                        thread.Start();
-                        thread.Join();
-                    });
-
-                    return true; // 成功
-                }
-                catch (System.Runtime.InteropServices.ExternalException)
-                {
-                    // 他のプロセスがクリップボードを使用している場合
-                    await Task.Delay(delayBetweenRetries); // 少し待機してリトライ
-                }
-                catch (Exception ex)
-                {
-                    // 他の予期せぬ例外
-                    MessageBox.Show($"エラー: {ex.Message}", "クリップボードエラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return false;
-                }
-            }
-
-            return false; // 最大リトライ回数を超えた場合は失敗
-        }
-
-
+        
         // 「薬情検索」メニューのクリック時処理
         private async void SearchMedicineMenuItem_Click(object sender, EventArgs e)
         {
@@ -691,49 +648,15 @@ namespace OQSDrug
 
             comboBoxPtID_SelectedIndexChanged(sender, EventArgs.Empty);
         }
-
-        private void SnapToScreenEdges()
-        {
-            // 現在のスクリーンの作業領域を取得
-            Rectangle workingArea = Screen.FromControl(this).WorkingArea;
-
-            int newX = this.Left;
-            int newY = this.Top;
-
-            // 左端に吸着
-            if (Math.Abs(this.Left - workingArea.Left) <= SnapDistance)
-            {
-                newX = workingArea.Left - SnapCompPixel;
-            }
-            // 右端に吸着
-            else if (Math.Abs(this.Right - workingArea.Right) <= SnapDistance)
-            {
-                newX = workingArea.Right - this.Width + SnapCompPixel;
-            }
-
-            // 上端に吸着
-            if (Math.Abs(this.Top - workingArea.Top) <= SnapDistance)
-            {
-                newY = workingArea.Top;
-            }
-            // 下端に吸着
-            else if (Math.Abs(this.Bottom - workingArea.Bottom) <= SnapDistance)
-            {
-                newY = workingArea.Bottom - this.Height + SnapCompPixel;
-            }
-
-            // 新しい位置を設定
-            this.Location = new Point(newX, newY);
-        }
-
+                
         private void Form3_LocationChanged(object sender, EventArgs e)
         {
-            SnapToScreenEdges();
+            CommonFunctions.SnapToScreenEdges(this, SnapDistance, SnapCompPixel);
         }
 
         private void Form3_SizeChanged(object sender, EventArgs e)
         {
-            SnapToScreenEdges();
+            CommonFunctions.SnapToScreenEdges(this, SnapDistance, SnapCompPixel);
         }
 
         private void radioButton_CheckedChanged(object sender, EventArgs e)
