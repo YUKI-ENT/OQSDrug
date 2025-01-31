@@ -394,5 +394,17 @@ namespace OQSDrug.Properties {
                 this["autoTKK"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool DrugClass {
+            get {
+                return ((bool)(this["DrugClass"]));
+            }
+            set {
+                this["DrugClass"] = value;
+            }
+        }
     }
 }

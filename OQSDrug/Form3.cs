@@ -488,7 +488,7 @@ namespace OQSDrug
                             // formSearchを開く、すでに開いていれば表示変更する
                             if(formSearch == null || formSearch.IsDisposed)
                             {
-                                formSearch = new FormSearch(this);
+                                //formSearch = new FormSearch(this);
                                 formSearch.Show(this);
                             }
 

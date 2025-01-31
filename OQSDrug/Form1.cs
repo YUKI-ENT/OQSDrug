@@ -34,8 +34,13 @@ namespace OQSDrug
 
         public List<string[]> RSBDI = new List<string[]>();
 
+        // Korodata Dictionary
+        public Dictionary<string, string> ReceptToMedisCodeMap = new Dictionary<string, string>();
+
         string DynaTable = "T_資格確認結果表示";
         DataTable dynaTable = new DataTable();
+        
+        DataTable reqResultsTable = new DataTable();
 
         // 最新の特定健診結果を保存しておく
         private static Dictionary<long, string> TKKdate = new Dictionary<long, string>();
@@ -45,6 +50,7 @@ namespace OQSDrug
         //private Timer timer;
         private bool isTimerRunning = false; // タイマーの状態フラグ
         private bool isOQSRunnnig = false;   //取得開始しているか
+        private bool isFormVisible = true;  //最小化
 
         private System.Threading.Timer backgroundTimer; //非同期タイマー
 
@@ -64,8 +70,8 @@ namespace OQSDrug
         private Label[] statusLabels;
         private Label[] statusTexts;
 
-        public Form3 form3Instance = null;
         public FormTKK formTKKInstance = null;
+        public FormDI formDIInstance = null;
 
         // アイコンの配列を用意 (例: 3つのアイコン)
         private Timer animationTimer;
@@ -200,7 +206,7 @@ namespace OQSDrug
         }
 
         // データベースの内容を読み込み、DataGridViewに表示
-        private async Task reloadDataAsync()
+        private async Task reloadDataAsync(bool skipSql = false)
         {
             if (!await WaitForDbUnlock(1000))
             {
@@ -208,39 +214,49 @@ namespace OQSDrug
             }
             else
             {
-                DataDbLock = true;
-
-                AddLog("DataGridViewを更新します");
                 string connectionString = $"Provider={DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
 
-                string sql = "SELECT CategoryName,  PtID, PtName, result, reqDate, reqFile, resDate, resFile, category, ID FROM reqResults ORDER BY reqResults.ID DESC";
+                string sql = "SELECT CategoryName,  PtID, PtName, result, reqDate, reqFile, resDate, resFile, category, ID FROM reqResults WHERE reqDate > ?  ORDER BY reqResults.ID DESC";
 
                 try
                 {
-                    using (OleDbConnection connection = new OleDbConnection(connectionString))
+                    using (DataTable dt = new DataTable())
                     {
-                        // 接続を開く
-                        await connection.OpenAsync();
 
-                        // データを取得してDataTableに格納
-                        using (var command = new OleDbCommand(sql, connection))
+                        if (!skipSql) // 最小化からの復帰時のみskipする
                         {
-                            using (var reader = await command.ExecuteReaderAsync())
-                            using (var dataTable = new DataTable())
+                            using (OleDbConnection connection = new OleDbConnection(connectionString))
                             {
-                                dataTable.Load(reader);
+                                // 接続を開く
+                                await connection.OpenAsync();
 
-                                DataDbLock = false;
-
-                                // DataGridViewに表示
-                                dataGridView1.Invoke(new Action(() =>
+                                // データを取得してDataTableに格納
+                                using (var command = new OleDbCommand(sql, connection))
                                 {
-                                    //UI スレッド
-                                    dataGridView1.DataSource = dataTable;
-                                    ConfigureDataGridView(dataGridView1);
-                                }));
-                                AddLog("reqResultsテーブルを読み込みました");
+                                    command.Parameters.AddWithValue("?", DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd HH:mm:ss"));
+
+                                    DataDbLock = true;
+
+                                    using (var reader = await command.ExecuteReaderAsync())
+                                    {
+                                        dt.Load(reader);
+                                    }
+                                    DataDbLock = false;
+                                }
                             }
+                            reqResultsTable = dt;
+                            AddLog("reqResultsテーブルを読み込みました");
+                        }
+                        if (isFormVisible)
+                        {
+                            // DataGridViewに表示
+                            dataGridView1.Invoke(new Action(() =>
+                            {
+                                //UI スレッド
+                                dataGridView1.DataSource = reqResultsTable;
+                                ConfigureDataGridView(dataGridView1);
+                            }));
+                            AddLog("DataGridViewを更新しました");
                         }
                     }
                 }
@@ -251,6 +267,7 @@ namespace OQSDrug
                 }
                 finally { DataDbLock = false; }
             }
+            
         }
 
 
@@ -285,6 +302,11 @@ namespace OQSDrug
             LoadViewerSettings();
 
             InitNotifyIcon();
+
+            if ((okSettings & (0b0001)) == 1) //OQSDrugData OK
+            {
+                await LoadKoroDataAsync();
+            }
 
             StartTimer();
 
@@ -835,6 +857,11 @@ namespace OQSDrug
             LoadViewerSettings();
 
             InitNotifyIcon();
+
+            if ((okSettings & (0b0001)) == 1) //OQSDrugData OK
+            {
+                await LoadKoroDataAsync();
+            }
 
             RSBdrive = await GetRSBdrive();
             if (RSBdrive != null)
@@ -1617,7 +1644,7 @@ namespace OQSDrug
                 string insertSql = @"INSERT INTO TKK_history (
                                                             PtIDmain, PtName, PtKana, Sex,  EffectiveTime, ItemCode, ItemName,
                                                             DataType, DataValue, Unit, Oid, DataValueName) 
-                                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
                 XmlNodeList TKKresults = xmlDoc.SelectNodes("//SpecificHealthCheckupInfo");
 
@@ -1646,11 +1673,13 @@ namespace OQSDrug
                         {
                             string itemCode = GetNodeValue(info, "ItemCode");
                             string dataValue = GetNodeValue(info, "DataValue");
+                            dataValue = dataValue.Length > 64 ? dataValue.Substring(0,64) : dataValue; 
                             string itemName = GetNodeValue(info, "ItemName");
                             string dataType = GetNodeValue(info, "DataType");
                             string Unit = GetNodeValue(info, "Unit");
                             string Oid = GetNodeValue(info, "Oid");
                             string dataValueName = GetNodeValue(info, "DataValueName");
+                            dataValueName = dataValueName.Length > 64 ? dataValueName.Substring(0, 64) : dataValueName;
 
                             //TKK_history追加
                             using (OleDbCommand insertCommand = new OleDbCommand(insertSql, dbConnection))
@@ -2091,44 +2120,7 @@ namespace OQSDrug
 
         private void buttonViewer_Click(object sender, EventArgs e)
         {
-            // Form3がすでに開いているか確認
-            if (form3Instance == null || form3Instance.IsDisposed)
-            {
-               form3Instance = new Form3(this);
 
-                // 前回の位置とサイズを復元
-                if (Properties.Settings.Default.ViewerBounds != Rectangle.Empty)
-                {
-                    form3Instance.StartPosition = FormStartPosition.Manual;
-                    form3Instance.Bounds = Properties.Settings.Default.ViewerBounds;
-
-                    // マージンと境界線を設定
-                    form3Instance.Padding = new Padding(0);
-                    form3Instance.Margin = new Padding(0);
-                    //form3Instance.FormBorderStyle = FormBorderStyle.None;
-                }
-
-                // TopMost状態を設定
-                form3Instance.TopMost = Properties.Settings.Default.ViewerTopmost;
-
-                // Form3が閉じるときに位置、サイズ、TopMost状態を保存
-                form3Instance.FormClosing += (s, args) =>
-                {
-                    SaveViewerSettings(form3Instance);
-                };
-
-                form3Instance.Show(this);
-            }
-            else
-            {
-                // Form3が開いている場合、LoadDataIntoComboBoxes()を実行
-                Task.Run(async () =>
-                    await form3Instance.LoadDataIntoComboBoxes()
-                );
-                // すでに開いている場合はアクティブにする
-                form3Instance.Activate();
-
-            }
         }
 
         private async void checkBoxAutoview_CheckedChanged(object sender, EventArgs e) //RSB連動遷移
@@ -2291,19 +2283,20 @@ namespace OQSDrug
                 Invoke((Action)(() =>
                 {
                     AddLog($"{ptId}の薬歴を開きます");
-                    buttonViewer_Click(toolStripButtonViewer, EventArgs.Empty);
+                    //buttonViewer_Click(toolStripButtonViewer, EventArgs.Empty);
+                    toolStripButtonDI_Click(toolStripButtonViewer, EventArgs.Empty);
                 }));
             }
             else
             {
                 //薬歴なしの場合はViewerを閉じる
-                if (form3Instance != null && !form3Instance.IsDisposed)
+                if (formDIInstance != null && !formDIInstance.IsDisposed)
                 {
                     // UI スレッドで操作する必要があるため Invoke を使用
-                    form3Instance.Invoke((Action)(() =>
+                    formDIInstance.Invoke((Action)(() =>
                     {
-                        form3Instance.Close(); // Form3 を閉じる
-                        form3Instance = null;
+                        formDIInstance.Close(); // Form3 を閉じる
+                        formDIInstance = null;
                         AddLog($"{ptId}は薬歴がないので薬歴ビュワーを閉じます");
                     }));
                 }
@@ -2422,11 +2415,16 @@ namespace OQSDrug
             Properties.Settings.Default.Save();
         }
 
-        private void SaveViewerSettings(Form3 form)
+        private void SaveViewerSettings(Form form, string key)
         {
+            if (form.WindowState != FormWindowState.Normal || form.WindowState == FormWindowState.Minimized) form.WindowState = FormWindowState.Normal;
+
             // 現在の位置とサイズを保存
-            Properties.Settings.Default.ViewerBounds = form.Bounds;
-            Properties.Settings.Default.Save();
+            if (Properties.Settings.Default.Properties[key] != null) // キーが存在するか確認
+            {
+                Properties.Settings.Default[key] = form.Bounds;
+                Properties.Settings.Default.Save();
+            }
         }
 
         private void ConfigureDataGridView(DataGridView dataGridView)
@@ -2558,7 +2556,7 @@ namespace OQSDrug
 
             contextMenu.Items.Add("メイン表示", Properties.Resources.drugicon, ShowForm); 
             contextMenu.Items.Add(startStopMenuItem); // 動的な項目を追加
-            contextMenu.Items.Add("薬歴表示", Properties.Resources.Text_preview, buttonViewer_Click);
+            contextMenu.Items.Add("薬歴表示", Properties.Resources.Text_preview,toolStripButtonDI_Click);
             contextMenu.Items.Add("健診結果", Properties.Resources.Heart, toolStripButtonTKK_Click);
             contextMenu.Items.Add(new ToolStripSeparator());
             contextMenu.Items.Add("終了", Properties.Resources.Exit, ExitApplication);
@@ -2635,16 +2633,21 @@ namespace OQSDrug
         // バルーン通知をクリックしたときの処理
         private void NotifyIcon_BalloonTipClicked(object sender, EventArgs e)
         {
-            buttonViewer_Click(sender, EventArgs.Empty);
+            //buttonViewer_Click(sender, EventArgs.Empty);
+            toolStripButtonDI_Click(sender, EventArgs.Empty);
         }
 
         // フォームを表示する
-        private void ShowForm(object sender, EventArgs e)
+        private async void ShowForm(object sender, EventArgs e)
         {
+            isFormVisible = true;
+
             this.WindowState = FormWindowState.Normal;
             this.ShowInTaskbar = true;
             this.Show();
             this.Activate();                          // フォームをアクティブ化
+
+            await reloadDataAsync(true);
         }
 
         // アプリケーションを終了する
@@ -2694,6 +2697,8 @@ namespace OQSDrug
             // フォームを非表示にし、タスクバーから削除
             this.Hide();
             this.ShowInTaskbar = false;
+
+            isFormVisible = false;
         }
 
         public async Task<bool> WaitForDbUnlock(int maxWaitms)
@@ -2886,8 +2891,7 @@ namespace OQSDrug
                 // Form3が閉じるときに位置、サイズ、TopMost状態を保存
                 formTKKInstance.FormClosing += (s, args) =>
                 {
-                    Properties.Settings.Default.TKKBounds = formTKKInstance.Bounds;
-                    Properties.Settings.Default.Save();
+                    SaveViewerSettings(formTKKInstance, "TKKBounds");
                 };
 
                 formTKKInstance.Show(this);
@@ -2987,7 +2991,7 @@ namespace OQSDrug
                     using (var command = new OleDbCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("clientName", localMachineName);
-                        command.Parameters.AddWithValue("lastUpdated", DateTime.Now.AddMinutes(-3));
+                        command.Parameters.AddWithValue("lastUpdated", DateTime.Now.AddMinutes(-3).ToString("yyyy-MM-dd HH:mm:ss"));
 
                         using (var reader = await command.ExecuteReaderAsync())
                         {
@@ -3050,6 +3054,47 @@ namespace OQSDrug
             }
         }
 
+        private void toolStripButtonDI_Click(object sender, EventArgs e)
+        {
+            if (formDIInstance == null || formDIInstance.IsDisposed)
+            {
+                formDIInstance = new FormDI(this);
+
+                // 前回の位置とサイズを復元
+                if (Properties.Settings.Default.ViewerBounds != Rectangle.Empty)
+                {
+                    formDIInstance.StartPosition = FormStartPosition.Manual;
+                    formDIInstance.Bounds = Properties.Settings.Default.ViewerBounds;
+
+                    // マージンと境界線を設定
+                    formDIInstance.Padding = new Padding(0);
+                    formDIInstance.Margin = new Padding(0);
+                    //form3Instance.FormBorderStyle = FormBorderStyle.None;
+                }
+
+                // TopMost状態を設定
+                formDIInstance.TopMost = Properties.Settings.Default.ViewerTopmost;
+
+                // Form3が閉じるときに位置、サイズ、TopMost状態を保存
+                formDIInstance.FormClosing += (s, args) =>
+                {
+                    SaveViewerSettings(formDIInstance, "ViewerBounds");
+                };
+
+                formDIInstance.Show(this);
+            }
+            else
+            {
+                // Form3が開いている場合、LoadDataIntoComboBoxes()を実行
+                Task.Run(async () =>
+                    await formDIInstance.LoadDataIntoComboBoxes()
+                );
+                // すでに開いている場合はアクティブにする
+                formDIInstance.Activate();
+
+            }
+        }
+
         // 自分のPC名とタイムスタンプを削除
         public async Task DeleteClientAsync()
         {
@@ -3077,6 +3122,58 @@ namespace OQSDrug
                 MessageBox.Show($"DeleteClientAsyncでエラー{ex.Message}");
             }
         }
+
+        public async Task LoadKoroDataAsync()
+        {
+            try
+            {
+                string KOROpath = Path.Combine(Path.GetDirectoryName(Properties.Settings.Default.OQSDrugData), "KOROdata.mdb");
+
+                if (File.Exists(KOROpath))
+                {
+                    AddLog("KOROdataが見つかりましたので薬品名コードを読み込みます");
+
+                    string connectionKOROdata = $"Provider={DBProvider};Data Source={KOROpath};";
+                    string sql = "SELECT 医薬品コード AS ReceptCode,  薬価基準コード AS MedisCode " +
+                                 " FROM TG医薬品マスター " +
+                                 " WHERE (((薬価基準コード) Is Not Null));";
+                    int count = 0;
+
+                    using (OleDbConnection connection = new OleDbConnection(connectionKOROdata))
+                    {
+                        await connection.OpenAsync();
+
+                        using (OleDbCommand command = new OleDbCommand(sql, connection))
+                        using (OleDbDataReader reader = (OleDbDataReader)await command.ExecuteReaderAsync())
+                        {
+                            // 既存データをクリア
+                            ReceptToMedisCodeMap.Clear();
+
+                            // データを読み込んでDictionaryに設定
+                            while (await reader.ReadAsync())
+                            {
+                                string receptCode = reader["ReceptCode"].ToString();
+                                string medisCode = reader["MedisCode"].ToString();
+
+                                if (!ReceptToMedisCodeMap.ContainsKey(receptCode))
+                                {
+                                    ReceptToMedisCodeMap.Add(receptCode, medisCode);
+                                    count++;
+                                }
+                            }
+                        }
+                    }
+
+                    AddLog($"KOROdataから{count}件のコードを読み込みました");
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog($"Error loading data: {ex.Message}");
+            }
+        }
+
+
     }
 }
 

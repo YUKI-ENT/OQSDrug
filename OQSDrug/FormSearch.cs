@@ -17,14 +17,15 @@ namespace OQSDrug
 {
     public partial class FormSearch : Form
     {
-        private Form3 _parentForm3;
+        //private Form3 _parentForm3;
+        private FormDI _parentForm;
 
         private static string tempHtmlFile =  Path.Combine(Path.GetTempPath(), "tempPostForm.html"); 
 
-        public FormSearch(Form3 parentForm3)
+        public FormSearch(FormDI parentFormDI)
         {
             InitializeComponent();
-            _parentForm3 = parentForm3;
+            _parentForm = parentFormDI;
         }
 
         // フォームのロード時に前回の位置を復元
@@ -115,7 +116,7 @@ namespace OQSDrug
         {
             if(textBoxDrugName.Text.Length > 0)
             {
-                List<Tuple<string[], double>> topResults = await _parentForm3.FuzzySearchAsync(textBoxDrugName.Text, "", _parentForm3.RSBDI, 0.1, 0.4, 0);
+                List<Tuple<string[], double>> topResults = await _parentForm.FuzzySearchAsync(textBoxDrugName.Text, "", _parentForm.RSBDI, 0.1, 0.4, 0);
                 if (topResults.Count > 0)
                 {
                     SetDrugLists(topResults);

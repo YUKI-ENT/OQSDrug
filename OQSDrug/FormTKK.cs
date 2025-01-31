@@ -193,11 +193,11 @@ namespace OQSDrug
 
                 string query = @"
                             TRANSFORM First(TKK_history.[DataValueName]) AS TKKValue
-                            SELECT TKK_history.[ItemCode], TKK_history.[Sex], TKK_history.[ItemName], TKK_history.[Unit]
+                            SELECT LEFT(TKK_history.[ItemCode], 4) AS ItemCode, TKK_history.[Sex], TKK_history.[ItemName], TKK_history.[Unit]
                             FROM TKK_history
                             WHERE PtIDmain = ?  
-                            GROUP BY TKK_history.ItemCode, TKK_history.[ItemName], TKK_history.[Unit], TKK_history.[Sex]
-                            ORDER BY TKK_history.ItemCode, TKK_history.[EffectiveTime] DESC 
+                            GROUP BY LEFT(TKK_history.[ItemCode], 4), TKK_history.[ItemName], TKK_history.[Unit], TKK_history.[Sex]
+                            ORDER BY LEFT(TKK_history.[ItemCode], 4), TKK_history.[EffectiveTime] DESC 
                             PIVOT TKK_history.[EffectiveTime];
                             ";
                 string connectionOQSData = $"Provider={provider};Data Source={Properties.Settings.Default.OQSDrugData};";
@@ -254,6 +254,8 @@ namespace OQSDrug
 
         private void toolStripButtonClose_Click(object sender, EventArgs e)
         {
+            if(this.WindowState == FormWindowState.Maximized || this.WindowState == FormWindowState.Minimized) this.WindowState = FormWindowState.Normal;
+
             this.Close();
         }
 
@@ -323,50 +325,54 @@ namespace OQSDrug
                     {
                         while (reader.Read())
                         {
-                            string itemCode = reader["ItemCode"].ToString();
-                            string itemName = reader["ItemName"].ToString();
-                            string compairType = reader["CompairType"].ToString();
-                            string limit1 = reader["Limit1"].ToString();
-                            string limit2 = reader["Limit2"].ToString();
-                            int? sex = reader["Sex"] == DBNull.Value ? 0 : (int?)Convert.ToInt32(reader["Sex"]);
-
-                            string itemCodeWithSex = "";
-
-                            if (sex == 0) //男女共通
+                            string itemCode = reader["ItemCode"].ToString(); //最初の4文字で識別する
+                            if (itemCode.Length > 3)
                             {
-                                itemCodeWithSex = $"1_{itemCode}";
-                                referenceDict[itemCodeWithSex] = new TKKReference
+                                itemCode = itemCode.Substring(0, 4);
+                                string itemName = reader["ItemName"].ToString();
+                                string compairType = reader["CompairType"].ToString();
+                                string limit1 = reader["Limit1"].ToString();
+                                string limit2 = reader["Limit2"].ToString();
+                                int? sex = reader["Sex"] == DBNull.Value ? 0 : (int?)Convert.ToInt32(reader["Sex"]);
+
+                                string itemCodeWithSex = "";
+
+                                if (sex == 0) //男女共通
                                 {
-                                    ItemCode = itemCode,
-                                    ItemName = itemName,
-                                    CompairType = compairType,
-                                    Limit1 = limit1,
-                                    Limit2 = limit2,
-                                    Sex = sex
-                                };
-                                itemCodeWithSex = $"2_{itemCode}";
-                                referenceDict[itemCodeWithSex] = new TKKReference
+                                    itemCodeWithSex = $"1_{itemCode}";
+                                    referenceDict[itemCodeWithSex] = new TKKReference
+                                    {
+                                        ItemCode = itemCode,
+                                        ItemName = itemName,
+                                        CompairType = compairType,
+                                        Limit1 = limit1,
+                                        Limit2 = limit2,
+                                        Sex = sex
+                                    };
+                                    itemCodeWithSex = $"2_{itemCode}";
+                                    referenceDict[itemCodeWithSex] = new TKKReference
+                                    {
+                                        ItemCode = itemCode,
+                                        ItemName = itemName,
+                                        CompairType = compairType,
+                                        Limit1 = limit1,
+                                        Limit2 = limit2,
+                                        Sex = sex
+                                    };
+                                }
+                                else
                                 {
-                                    ItemCode = itemCode,
-                                    ItemName = itemName,
-                                    CompairType = compairType,
-                                    Limit1 = limit1,
-                                    Limit2 = limit2,
-                                    Sex = sex
-                                };
-                            }
-                            else
-                            {
-                                itemCodeWithSex = $"{sex}_{itemCode}";
-                                referenceDict[itemCodeWithSex] = new TKKReference
-                                {
-                                    ItemCode = itemCode,
-                                    ItemName = itemName,
-                                    CompairType = compairType,
-                                    Limit1 = limit1,
-                                    Limit2 = limit2,
-                                    Sex = sex
-                                };
+                                    itemCodeWithSex = $"{sex}_{itemCode}";
+                                    referenceDict[itemCodeWithSex] = new TKKReference
+                                    {
+                                        ItemCode = itemCode,
+                                        ItemName = itemName,
+                                        CompairType = compairType,
+                                        Limit1 = limit1,
+                                        Limit2 = limit2,
+                                        Sex = sex
+                                    };
+                                }
                             }
                         }
                     }
@@ -382,72 +388,83 @@ namespace OQSDrug
 
         private void FormTKK_LocationChanged(object sender, EventArgs e)
         {
-            CommonFunctions.SnapToScreenEdges(this, SnapDistance, SnapCompPixel);
+            if (this.WindowState == FormWindowState.Normal)
+            {
+                CommonFunctions.SnapToScreenEdges(this, SnapDistance, SnapCompPixel);
+            }
         }
 
         private void FormTKK_MaximumSizeChanged(object sender, EventArgs e)
         {
-            CommonFunctions.SnapToScreenEdges(this, SnapDistance, SnapCompPixel);
+            if (this.WindowState == FormWindowState.Normal)
+            {
+                CommonFunctions.SnapToScreenEdges(this, SnapDistance, SnapCompPixel);
+            }
         }
 
         private void dataGridViewTKK_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             // 非表示列（ItemCode）を利用する
             string itemCode = dataGridViewTKK.Rows[e.RowIndex].Cells["ItemCode"].Value.ToString();
-            int sex = int.TryParse(dataGridViewTKK.Rows[e.RowIndex].Cells["Sex"].Value?.ToString(), out int parsedValue) ? parsedValue : 1;
-
-            string itemCodeWithSex = $"{sex}_{itemCode}";
-
-            // 基準値が存在しない場合は何もしない
-            if (e.Value == null || string.IsNullOrWhiteSpace(e.Value.ToString()) || !referenceDict.ContainsKey(itemCodeWithSex)) return;
-
-            //カラムが3以上
-            if (e.ColumnIndex < 4) return;
-
-            var reference = referenceDict[itemCodeWithSex];
-            string compairType = reference.CompairType;
-            string limit1 = reference.Limit1;
-            string limit2 = reference.Limit2;
-            
-            try
+            if (itemCode.Length > 3)
             {
-                //「含む」
-                if (compairType == "=")
+                itemCode = itemCode.Substring(0, 4);
+                int sex = int.TryParse(dataGridViewTKK.Rows[e.RowIndex].Cells["Sex"].Value?.ToString(), out int parsedValue) ? parsedValue : 1;
+
+                string itemCodeWithSex = $"{sex}_{itemCode}";
+
+                // 基準値が存在しない場合は何もしない
+                if (e.Value == null || string.IsNullOrWhiteSpace(e.Value.ToString()) || !referenceDict.ContainsKey(itemCodeWithSex)) return;
+
+                //カラムが3以上
+                if (e.ColumnIndex < 4) return;
+
+                var reference = referenceDict[itemCodeWithSex];
+                string compairType = reference.CompairType;
+                string limit1 = reference.Limit1;
+                string limit2 = reference.Limit2;
+
+                try
                 {
-                    if (limit1.Length > 0 && e.Value.ToString().Contains(limit1))
+                    //「含む」
+                    if (compairType == "=")
                     {
-                        e.CellStyle.BackColor = WarningColor;
-                    }
-                    else if (limit2.Length > 0 && e.Value.ToString().Contains(limit2))
-                    {
-                        e.CellStyle.BackColor = AlertColor;
-                    }
-                }
-                else
-                {
-                    // セルの値を取得
-                    if (double.TryParse(e.Value?.ToString(), out double cellValue))
-                    {
-                        // 条件に応じた色設定
-                        if (compairType == "<")
+                        if (limit1.Length > 0 && e.Value.ToString().Contains(limit1))
                         {
-                            if (double.TryParse(limit2, out double dlimit2) && cellValue > dlimit2)
-                                e.CellStyle.BackColor = AlertColor;
-                            else if (double.TryParse(limit1, out double dlimit1) && cellValue > dlimit1)
-                                e.CellStyle.BackColor = WarningColor;
+                            e.CellStyle.BackColor = WarningColor;
                         }
-                        else if (compairType == ">")
+                        else if (limit2.Length > 0 && e.Value.ToString().Contains(limit2))
                         {
-                            if (double.TryParse(limit2, out double dlimit2) && cellValue < dlimit2)
-                                e.CellStyle.BackColor = AlertColor;
-                            else if (double.TryParse(limit1, out double dlimit1) && cellValue < dlimit1)
-                                e.CellStyle.BackColor = WarningColor;
+                            e.CellStyle.BackColor = AlertColor;
                         }
                     }
+                    else
+                    {
+                        // セルの値を取得
+                        if (double.TryParse(e.Value?.ToString(), out double cellValue))
+                        {
+                            // 条件に応じた色設定
+                            if (compairType == "<")
+                            {
+                                if (double.TryParse(limit2, out double dlimit2) && cellValue > dlimit2)
+                                    e.CellStyle.BackColor = AlertColor;
+                                else if (double.TryParse(limit1, out double dlimit1) && cellValue > dlimit1)
+                                    e.CellStyle.BackColor = WarningColor;
+                            }
+                            else if (compairType == ">")
+                            {
+                                if (double.TryParse(limit2, out double dlimit2) && cellValue < dlimit2)
+                                    e.CellStyle.BackColor = AlertColor;
+                                else if (double.TryParse(limit1, out double dlimit1) && cellValue < dlimit1)
+                                    e.CellStyle.BackColor = WarningColor;
+                            }
+                        }
+                    }
                 }
-            }
-            catch(Exception ex) {
-                MessageBox.Show($"セルの条件設定でエラーが発生しました。{ex.Message}");
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"セルの条件設定でエラーが発生しました。{ex.Message}");
+                }
             }
         }
 
@@ -524,7 +541,7 @@ namespace OQSDrug
             } 
             catch(Exception ex)
             {
-                MessageBox.Show("コピー操作時にエラーが発生しました。もう一度試してみてください。");
+                MessageBox.Show($"コピー操作時にエラーが発生しました。もう一度試してみてください。{ex.Message}");
             }
         }
     }

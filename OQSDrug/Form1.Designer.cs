@@ -115,7 +115,7 @@
             this.toolStripButtonViewer.Size = new System.Drawing.Size(89, 24);
             this.toolStripButtonViewer.Text = "薬歴表示";
             this.toolStripButtonViewer.ToolTipText = "xml薬歴を表示します";
-            this.toolStripButtonViewer.Click += new System.EventHandler(this.buttonViewer_Click);
+            this.toolStripButtonViewer.Click += new System.EventHandler(this.toolStripButtonDI_Click);
             // 
             // toolStripButtonExit
             // 

@@ -327,9 +327,9 @@ namespace OQSDrug
             if (MessageBox.Show("薬歴フォームを閉じて、位置をリセットします", "", MessageBoxButtons.OKCancel) == DialogResult.OK)
             {
                 // Form1からForm3を取得して閉じる
-                if (form1.form3Instance != null && !form1.form3Instance.IsDisposed)
+                if (form1.formDIInstance != null && !form1.formDIInstance.IsDisposed)
                 {
-                    form1.form3Instance.Close();
+                    form1.formDIInstance.Close();
                 }
                 Properties.Settings.Default.ViewerBounds = new Rectangle(100, 100, 800, 600);
 
