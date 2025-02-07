@@ -63,14 +63,24 @@ namespace OQSDrug
             {
                 case 1:
                     radioButtonD1.Checked = true;
+                    checkBoxSinryou.Checked = false;
+                    break;
+                case 2:
+                    radioButtonD0.Checked = true;
+                    checkBoxSinryou.Checked = false;
                     break;
                 case 3:
                     radioButtonD1.Checked = true;
                     checkBoxSinryou.Checked = true;
                     break;
+                case 4:
+                    radioButtonD0.Checked = true;
+                    checkBoxSinryou.Checked = true;
+                    break;
                 default:
                     // デフォルト動作（例: 何も選択しない）
                     radioButtonD0.Checked = true;
+                    checkBoxSinryou.Checked = false;
                     break;
             }
 
@@ -183,7 +193,7 @@ namespace OQSDrug
 
             //薬剤グループボックス
             // ラジオボタンの選択状況を確認
-            DrugFileCategory = (radioButtonD0.Checked) ? 0 : 1;
+            DrugFileCategory = (radioButtonD0.Checked) ? 2 : 1;
             if (checkBoxSinryou.Checked) DrugFileCategory += 2;
             
             Properties.Settings.Default.DrugFileCategory = DrugFileCategory;

@@ -20,26 +20,23 @@ using System.Xml.Linq;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Configuration;
+using Microsoft.VisualBasic;
+using System.Data.Odbc;
+using System.Threading;
 
 
 namespace OQSDrug
 {
     public partial class Form1 : Form
     {
-        public string DBProvider = "";
         public long tempId = 0;
-        public bool autoRSB = false, forceIdLink = false, autoTKK = false;
-        public bool DataDbLock = false;
+        public bool autoRSB = false, forceIdLink = false, autoTKK = false, autoSR = false;
+        
         public string RSBdrive = "";
-
-        public List<string[]> RSBDI = new List<string[]>();
-
-        // Korodata Dictionary
-        public Dictionary<string, string> ReceptToMedisCodeMap = new Dictionary<string, string>();
 
         string DynaTable = "T_資格確認結果表示";
         DataTable dynaTable = new DataTable();
-        
+
         DataTable reqResultsTable = new DataTable();
 
         // 最新の特定健診結果を保存しておく
@@ -72,9 +69,10 @@ namespace OQSDrug
 
         public FormTKK formTKKInstance = null;
         public FormDI formDIInstance = null;
+        public FormSR formSRInstance = null;
 
         // アイコンの配列を用意 (例: 3つのアイコン)
-        private Timer animationTimer;
+        private System.Windows.Forms.Timer animationTimer;
         private int currentFrame;
         private Icon[] icons;
 
@@ -84,7 +82,7 @@ namespace OQSDrug
             SetupTableLayout();
             //InitializeTimer();
         }
-                
+
         private async Task RunTimerLogicAsync()
         {
             DateTime startTime = DateTime.Now;
@@ -97,7 +95,7 @@ namespace OQSDrug
             //AutoStartStop
             if (Properties.Settings.Default.AutoStart)
             {
-                Invoke(new Action(() =>  StartStop.Checked = (okSettings == 0b1111)));
+                Invoke(new Action(() => StartStop.Checked = (okSettings == 0b1111)));
             }
 
             //取得作業
@@ -112,20 +110,23 @@ namespace OQSDrug
                 if (dynaTable != null)
                 {
                     // 薬剤PDF
-                    if (Properties.Settings.Default.DrugFileCategory > 0)
+                    if (Properties.Settings.Default.DrugFileCategory % 2 == 0) //xml
                     {
                         MakeReq(Properties.Settings.Default.DrugFileCategory + 10, dynaTable);
                     }
-
-                    // 薬剤xmlは常に実行
-                    MakeReq(12, dynaTable);
+                    else
+                    {
+                        MakeReq(Properties.Settings.Default.DrugFileCategory + 1 + 10, dynaTable); //xml
+                        MakeReq(Properties.Settings.Default.DrugFileCategory + 10, dynaTable);  //pdf
+                    }
 
                     // 健診PDF
                     if (Properties.Settings.Default.KensinFileCategory == 1)
                     {
+                        MakeReq(102, dynaTable);
                         MakeReq(101, dynaTable); //固定間隔
                     }
-                    else if(Properties.Settings.Default.KensinFileCategory > 1)
+                    else // xmlのみ、Or 健診日によってPDF日付を変える場合
                     {
                         MakeReq(102, dynaTable); // xmlを先行、取り込み後健診実施日を確定、TKKdateに設定
                     }
@@ -159,7 +160,7 @@ namespace OQSDrug
                 }
 
             }
-            else if((okSettings & 0b0001) == 1)  //OQSDrugData OK
+            else if ((okSettings & 0b0001) == 1)  //OQSDrugData OK
             {
                 //取得停止中はreloadのみ
                 await reloadDataAsync();
@@ -208,14 +209,12 @@ namespace OQSDrug
         // データベースの内容を読み込み、DataGridViewに表示
         private async Task reloadDataAsync(bool skipSql = false)
         {
-            if (!await WaitForDbUnlock(1000))
+            if (!await CommonFunctions.WaitForDbUnlock(1000))
             {
                 AddLog("データベースがロックされていたためreloadDataAsyncをスキップししました");
             }
             else
             {
-                string connectionString = $"Provider={DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
-
                 string sql = "SELECT CategoryName,  PtID, PtName, result, reqDate, reqFile, resDate, resFile, category, ID FROM reqResults WHERE reqDate > ?  ORDER BY reqResults.ID DESC";
 
                 try
@@ -225,7 +224,7 @@ namespace OQSDrug
 
                         if (!skipSql) // 最小化からの復帰時のみskipする
                         {
-                            using (OleDbConnection connection = new OleDbConnection(connectionString))
+                            using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                             {
                                 // 接続を開く
                                 await connection.OpenAsync();
@@ -235,13 +234,13 @@ namespace OQSDrug
                                 {
                                     command.Parameters.AddWithValue("?", DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd HH:mm:ss"));
 
-                                    DataDbLock = true;
+                                    CommonFunctions.DataDbLock = true;
 
                                     using (var reader = await command.ExecuteReaderAsync())
                                     {
                                         dt.Load(reader);
                                     }
-                                    DataDbLock = false;
+                                    CommonFunctions.DataDbLock = false;
                                 }
                             }
                             reqResultsTable = dt;
@@ -265,9 +264,9 @@ namespace OQSDrug
                     // エラー処理
                     AddLog($"エラー: {ex.Message}");
                 }
-                finally { DataDbLock = false; }
+                finally { CommonFunctions.DataDbLock = false; }
             }
-            
+
         }
 
 
@@ -286,9 +285,11 @@ namespace OQSDrug
             form2.ShowDialog(this);
 
             //Form2閉じたあと
+            loadConnectionString();
+
             SetupYZKSindicator();
             SetupTableLayout();
-            
+
             okSettings = await UpdateStatus();
 
             await setStatus();
@@ -327,10 +328,12 @@ namespace OQSDrug
                     isOQSRunnnig = true;
 
                     AddLog($"タイマー処理を開始します。間隔は{Properties.Settings.Default.TimerInterval}秒です");
-                    
+
                 }
                 else
                 {
+                    StartStop.Checked = false ;
+
                     MessageBox.Show("他のPCで取込操作を行っているようです。2箇所以上で取込を行うとデータ競合が起こりますので、取込は1箇所でお願いします。\n" +
                         "薬歴や健診のビュワーとして使うときは、開始ボタンは押さずに利用してください。");
                 }
@@ -342,7 +345,7 @@ namespace OQSDrug
                 StartStop.Text = "開始";
                 StartStop.Image = Properties.Resources.Go;
                 //timer.Stop();
-                
+
                 //StopTimer();
                 isOQSRunnnig = false;
 
@@ -356,12 +359,11 @@ namespace OQSDrug
         {
             int Span = Properties.Settings.Default.YZspan;
             int YZinterval = Properties.Settings.Default.YZinterval, KSinterval = Properties.Settings.Default.KSinterval, Interval;
-            string connectionOQSData = $"Provider={DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
             string dynaPath = Properties.Settings.Default.Datadyna;
             string douiFlag = "", douiDate = "";
             DateTime checkDate;
             bool doReq = true;
-            int reqCategory = 0, fileCategory = 0;
+            int fileCategory = 0; //1:PDF, 2:xml
             string OQSpath = Properties.Settings.Default.OQSFolder;
             string CategoryName = "";
 
@@ -383,8 +385,7 @@ namespace OQSDrug
                     douiFlag = "薬剤情報閲覧同意フラグ";
                     douiDate = "薬剤情報閲覧有効期限";
                     Interval = YZinterval;  // Replace with appropriate interval
-                    reqCategory = 1;
-                    fileCategory = 1;
+                    fileCategory = 1; //1:PDF, 2:xml
                     CategoryName = "薬剤PDF";
                     AddLog("PDF薬剤情報取得用reqファイルを作成します");
                     break;
@@ -392,7 +393,6 @@ namespace OQSDrug
                     douiFlag = "特定検診情報閲覧同意フラグ";
                     douiDate = "特定検診情報閲覧有効期限";
                     Interval = KSinterval;
-                    reqCategory = 2;
                     fileCategory = 1;
                     CategoryName = "健診PDF";
                     AddLog("特定検診PDF情報取得用reqファイルを作成します");
@@ -401,7 +401,6 @@ namespace OQSDrug
                     douiFlag = "特定検診情報閲覧同意フラグ";
                     douiDate = "特定検診情報閲覧有効期限";
                     Interval = KSinterval;
-                    reqCategory = 2;
                     fileCategory = 2;
                     CategoryName = "健診xml";
                     AddLog("特定検診xml情報取得用reqファイルを作成します");
@@ -410,7 +409,6 @@ namespace OQSDrug
                     douiFlag = "薬剤情報閲覧同意フラグ";
                     douiDate = "薬剤情報閲覧有効期限";
                     Interval = YZinterval;  // Replace with appropriate interval
-                    reqCategory = 3;
                     fileCategory = 2;
                     CategoryName = "薬剤xml";
                     AddLog("xml薬剤情報取得用reqファイルを作成します");
@@ -419,10 +417,17 @@ namespace OQSDrug
                     douiFlag = "薬剤情報閲覧同意フラグ";
                     douiDate = "薬剤情報閲覧有効期限";
                     Interval = YZinterval;  // Replace with appropriate interval
-                    reqCategory = 4;
                     fileCategory = 1;
                     CategoryName = "薬剤診療PDF";
                     AddLog("PDF薬剤診療情報取得用reqファイルを作成します");
+                    break;
+                case 14:
+                    douiFlag = "薬剤情報閲覧同意フラグ";
+                    douiDate = "薬剤情報閲覧有効期限";
+                    Interval = YZinterval;  // Replace with appropriate interval
+                    fileCategory = 2;
+                    CategoryName = "薬剤診療xml";
+                    AddLog("xml薬剤診療情報取得用reqファイルを作成します");
                     break;
                 default:
                     AddLog("Invalid category");
@@ -430,9 +435,9 @@ namespace OQSDrug
             }
 
             checkDate = fileCategory == 1 ? DateTime.Now.AddMonths(-Interval) : DateTime.Now.AddHours(-6); // xmlの場合は取得間隔6時間
-            if(category  == 102) checkDate = DateTime.Now.AddDays(-1); //特定健診xmlは1日1回
+            if (category == 102) checkDate = DateTime.Now.AddDays(-1); //特定健診xmlは1日1回
 
-            if(targetId > 0 ) checkDate = DateTime.Now; //強制受信
+            if (targetId > 0) checkDate = DateTime.Now; //強制受信
 
             try
             {
@@ -448,7 +453,7 @@ namespace OQSDrug
                         AddLog($"{ptName}さんのカルテ番号が空のため取得を試みます");
                         ptId = Name2ID(ptName, DouiRow["生年月日西暦"].ToString(), dynaTable);
 
-                        if(ptId == 0 && targetId > 0) ptId = targetId;
+                        if (ptId == 0 && targetId > 0) ptId = targetId;
 
                         AddLog($"カルテ番号{ptId}を取得しました。処理を継続します");
                     }
@@ -465,16 +470,16 @@ namespace OQSDrug
                         }
                         else
                         {   // 同意有効
-                            if (!await WaitForDbUnlock(1000))
+                            if (!await CommonFunctions.WaitForDbUnlock(1000))
                             {
                                 AddLog("データベースがロックされています。Makereq処理をスキップします");
                             }
                             else
                             {
-                                DataDbLock = true;
+                                CommonFunctions.DataDbLock = true;
                                 try
                                 {
-                                    using (OleDbConnection connData = new OleDbConnection(connectionOQSData))
+                                    using (OleDbConnection connData = new OleDbConnection(CommonFunctions.connectionOQSdata))
                                     {
                                         await connData.OpenAsync();
 
@@ -498,20 +503,20 @@ namespace OQSDrug
                                                     {
                                                         doReq = true;
                                                         resultId = reqReader["ID"];
-                                                        AddLog($"{ptId}:{ptName}さんのxmlを作成します（更新）");
+                                                        AddLog($"{ptId}:{ptName}さんの{CategoryName}reqを作成します（更新）");
                                                     }
                                                     else
                                                     {
-                                                        AddLog($"{ptId}:{ptName}さん再取得期間外なのでスキップします");
+                                                        AddLog($"{ptId}:{ptName}さんの{CategoryName}は再取得期間外なのでスキップします");
                                                     }
                                                 }
                                                 else
                                                 {
-                                                    AddLog($"{ptId}:{ptName}さんのxmlを作成します（新規）");
+                                                    AddLog($"{ptId}:{ptName}さんの{CategoryName}reqを作成します（新規）");
                                                     doReq = true;
                                                 }
 
-                                                DataDbLock = false;
+                                                CommonFunctions.DataDbLock = false;
 
                                                 if (doReq)
                                                 {
@@ -531,7 +536,7 @@ namespace OQSDrug
                                                     if (!string.IsNullOrEmpty(reqXml))
                                                     {
                                                         // Save or update reqResults table
-                                                        AddLog($"{ptId}:{ptName}さんのXML生成成功");
+                                                        AddLog($"{ptId}:{ptName}さんの{CategoryName}req生成成功");
                                                     }
                                                 }
                                             } //Reader
@@ -548,7 +553,7 @@ namespace OQSDrug
                                                         updateCmd.Parameters.AddWithValue("?", resultId);
                                                         await updateCmd.ExecuteNonQueryAsync();
 
-                                                        AddLog($"{ptId}:{ptName}さんのxml作成に成功しました (更新)");
+                                                        AddLog($"{ptId}:{ptName}さんの取得結果更新しました");
                                                         //reqReadyFlag = true;
                                                     }
                                                 }
@@ -565,7 +570,7 @@ namespace OQSDrug
                                                         insertCmd.Parameters.AddWithValue("?", CategoryName);
                                                         await insertCmd.ExecuteNonQueryAsync();
 
-                                                        AddLog($"{ptId}:{ptName}さんのxml作成に成功しました (新規追加)");
+                                                        AddLog($"{ptId}:{ptName}さん所得結果作成しました (新規追加)");
                                                         //reqReadyFlag = true;
                                                     }
                                                 }
@@ -577,7 +582,7 @@ namespace OQSDrug
                                 {
                                     AddLog($"Makereqでエラー：{ex.ToString()}");
                                 }
-                                finally { DataDbLock = false; }
+                                finally { CommonFunctions.DataDbLock = false; }
                             }
                         }
                     }
@@ -592,9 +597,9 @@ namespace OQSDrug
 
         private async Task<DataTable> LoadDataFromDatabaseAsync(string dynaPath)
         {
-            string connectionString = $"Provider={DBProvider};Data Source={dynaPath};Mode=Read;Persist Security Info=False;";
+            string connectionString = $"Provider={CommonFunctions.DBProvider};Data Source={dynaPath};Mode=Read;Persist Security Info=False;";
             string query = "SELECT * FROM " + Properties.Settings.Default.DynaTable + ";";
-            
+
             DataTable dataTable = new DataTable();
 
             try
@@ -612,7 +617,7 @@ namespace OQSDrug
                     }
                 }
 
-                AddLog("ダイナミクスの"+ Properties.Settings.Default.DynaTable +"の取り込みが完了しました");
+                AddLog("ダイナミクスの" + Properties.Settings.Default.DynaTable + "の取り込みが完了しました");
             }
             catch (Exception ex)
             {
@@ -638,7 +643,7 @@ namespace OQSDrug
                 }
 
                 // 接続文字列を作成
-                string connectionString = $"Provider={DBProvider};Data Source={dbPath};";
+                string connectionString = $"Provider={CommonFunctions.DBProvider};Data Source={dbPath};";
 
                 try
                 {
@@ -685,7 +690,7 @@ namespace OQSDrug
 
             //DynaTable
             DynaTable = (Properties.Settings.Default.Datadyna.IndexOf("datadyna.mdb", StringComparison.OrdinalIgnoreCase) >= 0) ? "T_資格確認結果表示" : "WKO資格確認結果表示";
- 
+
             //設定初期値の確認
             if (Properties.Settings.Default.TimerInterval <= 0)
             {
@@ -784,19 +789,19 @@ namespace OQSDrug
                 {
                     if (availableProviders.Contains(provider))
                     {
-                        AddLog($"DBプロバイダ: {DBProvider}が見つかりました");
+                        AddLog($"DBプロバイダ: {provider}が見つかりました");
                         toolStripComboBoxDBProviders.Items.Add(provider);
-                        if (DBProvider.Length == 0)
+                        if (CommonFunctions.DBProvider.Length == 0)
                         {
-                            DBProvider = provider;
-                            AddLog($"使用するプロバイダ: {DBProvider}");
+                            CommonFunctions.DBProvider = provider;
+                            AddLog($"使用するプロバイダ: {CommonFunctions.DBProvider}");
                             toolStripComboBoxDBProviders.SelectedIndex = toolStripComboBoxDBProviders.Items.IndexOf(provider);
                         }
                     }
                 }
 
                 // 適切なプロバイダが見つからなかった場合
-                if (DBProvider.Length == 0)
+                if (CommonFunctions.DBProvider.Length == 0)
                 {
                     AddLog("適切なOLE DBプロバイダが見つかりませんでした。");
                 }
@@ -831,6 +836,7 @@ namespace OQSDrug
 
             //MessageBox.Show( getOLEProviders());
             InitializeDBProvider();
+            loadConnectionString();
 
             SetupYZKSindicator();
 
@@ -843,13 +849,20 @@ namespace OQSDrug
 
             autoRSB = Properties.Settings.Default.autoRSB;
             autoTKK = Properties.Settings.Default.autoTKK;
+            autoSR = Properties.Settings.Default.autoSR;
+            
             checkBoxAutoview.CheckedChanged -= checkBoxAutoview_CheckedChanged;
-            checkBoxAutoTKK.CheckedChanged  -= checkBoxAutoview_CheckedChanged;
+            checkBoxAutoTKK.CheckedChanged -= checkBoxAutoview_CheckedChanged;
+            checkBoxAutoSR.CheckedChanged -= checkBoxAutoview_CheckedChanged;
+
             checkBoxAutoview.Checked = autoRSB;
             checkBoxAutoTKK.Checked = autoTKK;
+            checkBoxAutoSR.Checked = autoSR;
+
             checkBoxAutoview.CheckedChanged += checkBoxAutoview_CheckedChanged;
-            checkBoxAutoTKK.CheckedChanged  += checkBoxAutoview_CheckedChanged;
-            
+            checkBoxAutoTKK.CheckedChanged += checkBoxAutoview_CheckedChanged;
+            checkBoxAutoSR.CheckedChanged += checkBoxAutoview_CheckedChanged;
+
             checkBoxAutoview_CheckedChanged(sender, EventArgs.Empty); //初回実行してFileWatcherを起動させる
 
             checkBoxAutoStart.Checked = Properties.Settings.Default.AutoStart;
@@ -888,7 +901,7 @@ namespace OQSDrug
 
                 // TKK_history table:
                 string TKKtable = "TKK_history";
-                if(await CheckDatabaseAsync(Properties.Settings.Default.OQSDrugData, TKKtable) != "OK")
+                if (await CheckDatabaseAsync(Properties.Settings.Default.OQSDrugData, TKKtable) != "OK")
                 {
                     AddLog($"{TKKtable}がないので、作成します");
                     string sql = $@"CREATE TABLE {TKKtable} (
@@ -906,7 +919,7 @@ namespace OQSDrug
                                         PtKana TEXT(64) NULL,
                                         Sex INTEGER
                                     )";
-                    if(await CreateTableAsync(Properties.Settings.Default.OQSDrugData, sql))
+                    if (await CreateTableAsync(Properties.Settings.Default.OQSDrugData, sql))
                     {
                         AddLog($"{TKKtable}を作成しました");
                     }
@@ -918,7 +931,7 @@ namespace OQSDrug
 
                 // TKK_reference table:
                 string TKKreference = "TKK_reference";
-                
+
                 if (await CheckDatabaseAsync(Properties.Settings.Default.OQSDrugData, TKKreference) != "OK")
                 {
                     AddLog($"{TKKreference}がないので、作成します");
@@ -967,18 +980,53 @@ namespace OQSDrug
                         AddLog($"{exclusiveTable}の作成に失敗しました");
                     }
                 }
-                
+
+                // Sinryo table:
+                string SinryoTable = "sinryo_history";
+
+                if (await CheckDatabaseAsync(Properties.Settings.Default.OQSDrugData, SinryoTable) != "OK")
+                {
+                    AddLog($"{SinryoTable}がないので、作成します");
+                    string sql = $@"CREATE TABLE {SinryoTable} (
+                                        id AUTOINCREMENT PRIMARY KEY,
+                                        PtID LONG,
+                                        PtIDmain LONG,
+                                        PtName TEXT(255),
+                                        PtKana TEXT(255),
+                                        Birth TEXT(10),
+                                        Sex INT,
+                                        MeTrDiHCd TEXT(12) NULL,
+                                        MeTrDiHNm TEXT(255) NULL,
+                                        MeTrMonth TEXT(10) NULL,
+                                        DiDate TEXT(10) NULL,
+                                        SinInfN TEXT(255) NULL,
+                                        SinInfCd TEXT(12) NULL,
+                                        MeTrIdCl TEXT(12) NULL,
+                                        Qua1 SINGLE,
+                                        Times LONG,
+                                        Unit TEXT(50) NULL,
+                                        ReceiveDate TEXT(10) NULL
+                                    )";
+                    if (await CreateTableAsync(Properties.Settings.Default.OQSDrugData, sql))
+                    {
+                        AddLog($"{SinryoTable}を作成しました");
+                    }
+                    else
+                    {
+                        AddLog($"{SinryoTable}の作成に失敗しました");
+                    }
+                }
 
                 await reloadDataAsync();
             }
 
             this.StartStop.Enabled = (okSettings == 0b1111);
-            
+
         }
 
         private async Task<bool> setInitialReferenceAsync(string databasePath)
         {
-            string connectionString = $"Provider={DBProvider};Data Source={databasePath};";
+            string connectionString = $"Provider={CommonFunctions.DBProvider};Data Source={databasePath};";
             bool result = false;
 
             // 初期データ
@@ -1000,8 +1048,8 @@ namespace OQSDrug
             new { ItemCode = "8A065000002391901", ItemName = "eGFR", CompairType = ">", Limit1 = "60", Limit2 = "45", IncludeValue = "" , Sex= 0},
             new { ItemCode = "3D010000001927201", ItemName = "空腹時血糖", CompairType = "<", Limit1 = "100", Limit2 = "126", IncludeValue = "" , Sex= 0},
             new { ItemCode = "3D046000001920402", ItemName = "HbA1c（ＮＧＳＰ値）", CompairType = "<", Limit1 = "5.6", Limit2 = "6.5", IncludeValue = "" , Sex= 0},
-            new { ItemCode = "1A020000000190111", ItemName = "尿糖", CompairType = "=", Limit1 = "", Limit2 = "", IncludeValue = "(-)" , Sex= 0},
-            new { ItemCode = "1A010000000190111", ItemName = "尿蛋白", CompairType = "=", Limit1 = "", Limit2 = "", IncludeValue = "(-)" , Sex= 0},
+            new { ItemCode = "1A020000000190111", ItemName = "尿糖", CompairType = "=", Limit1 = "+-", Limit2 = "+", IncludeValue = "(-)" , Sex= 0},
+            new { ItemCode = "1A010000000190111", ItemName = "尿蛋白", CompairType = "=", Limit1 = "+-", Limit2 = "+", IncludeValue = "(-)" , Sex= 0},
             //new { ItemCode = "2A040000001930102", ItemName = "ヘマトクリット値", CompairType = "", Limit1 = "", Limit2 = "", IncludeValue = "" , Sex= 0},
             new { ItemCode = "2A030000001930101", ItemName = "血色素量(ヘモグロビン値)", CompairType = ">", Limit1 = "12.0", Limit2 = "13.0", IncludeValue = "" , Sex= 1},
             new { ItemCode = "2A030000001930101", ItemName = "血色素量(ヘモグロビン値)", CompairType = ">", Limit1 = "11.0", Limit2 = "12.0", IncludeValue = "" , Sex= 2}
@@ -1046,7 +1094,7 @@ namespace OQSDrug
 
         private async Task<bool> CreateTableAsync(string databasePath, string createTableQuery)
         {
-            string connectionString = $"Provider={DBProvider};Data Source={databasePath};";
+            string connectionString = $"Provider={CommonFunctions.DBProvider};Data Source={databasePath};";
             bool result = false;
 
             using (var connection = new OleDbConnection(connectionString))
@@ -1070,7 +1118,7 @@ namespace OQSDrug
             return result;
         }
 
-        private async void  AddLog(string message)
+        private async void AddLog(string message)
         {
             if (listViewLog.InvokeRequired)
             {
@@ -1113,8 +1161,8 @@ namespace OQSDrug
             string Log1 = Path.Combine(OQSFolder, "OQSDrug1.log");
             string Log2 = Path.Combine(OQSFolder, "OQSDrug2.log");
 
-            if(File.Exists(Log2)) File.Delete(Log2);
-            if(File.Exists(Log1)) File.Move(Log1, Log2);
+            if (File.Exists(Log2)) File.Delete(Log2);
+            if (File.Exists(Log1)) File.Move(Log1, Log2);
             if (File.Exists(LogFile)) File.Move(LogFile, Log1);
 
         }
@@ -1214,8 +1262,8 @@ namespace OQSDrug
         private void buttonExit_Click(object sender, EventArgs e)
         {
             if (MessageBox.Show("終了しますか？", "終了", MessageBoxButtons.OKCancel) == DialogResult.OK)
-            {   
-                if(animationTimer.Enabled)
+            {
+                if (animationTimer.Enabled)
                 {
                     animationTimer.Stop();
                     animationTimer.Dispose();
@@ -1234,9 +1282,9 @@ namespace OQSDrug
 
         private void toolStripComboBoxDBProviders_SelectedIndexChanged(object sender, EventArgs e)
         {
-            DBProvider = toolStripComboBoxDBProviders.Text;
+            CommonFunctions.DBProvider = toolStripComboBoxDBProviders.Text;
 
-            AddLog($"データベースプロバイダーを{DBProvider}に変更しました");
+            AddLog($"データベースプロバイダーを{CommonFunctions.DBProvider}に変更しました");
         }
 
         private void SetupYZKSindicator() //xmlは常に取得
@@ -1263,9 +1311,21 @@ namespace OQSDrug
                     buttonYZPDF.ForeColor = activeText;
 
                     break;
+                case 2:
+                    buttonYZPDF.BackColor = SystemColors.Control;
+                    buttonYZPDF.ForeColor = SystemColors.ControlText;
+                    buttonSR.BackColor = SystemColors.Control;
+                    buttonSR.ForeColor = SystemColors.ControlText;
+                    break;
                 case 3:
                     buttonYZPDF.BackColor = acticePDF;
                     buttonYZPDF.ForeColor = activeText;
+                    buttonSR.BackColor = activeYZ;
+                    buttonSR.ForeColor = activeText;
+                    break;
+                case 4:
+                    buttonYZPDF.BackColor = SystemColors.Control;
+                    buttonYZPDF.ForeColor = SystemColors.ControlText;
                     buttonSR.BackColor = activeYZ;
                     buttonSR.ForeColor = activeText;
                     break;
@@ -1384,7 +1444,6 @@ namespace OQSDrug
 
         private async Task<bool> ProcessResAsync()
         {
-            string connectionOQSData = $"Provider={DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
             bool AllDataProcessed = true;
 
             try
@@ -1404,13 +1463,13 @@ namespace OQSDrug
                 // ファイル一覧を取得
                 string[] fileList = Directory.GetFiles(resFolder);
 
-                if (!await WaitForDbUnlock(1000))
+                if (!await CommonFunctions.WaitForDbUnlock(1000))
                 {
                     AddLog("データベースがロックされています。ProcessResAsyncをスキップします");
                 }
                 else
                 {
-                    using (OleDbConnection connection = new OleDbConnection(connectionOQSData))
+                    using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                     {
                         bool RSBreloadFlag = false;
 
@@ -1485,19 +1544,22 @@ namespace OQSDrug
                                                     {
                                                         messageContent = await ProcessTKKAsync(PtID, xmlDoc, connection); //TKKdateがsetされているはず
 
-                                                        if (TKKdate.TryGetValue(PtID, out string lastTKKdate))
+                                                        if (Properties.Settings.Default.KensinFileCategory > 0)
                                                         {
-                                                            string lastReceived = await getLastReceivedDate(connection, PtID, 101);
-                                                            if (lastTKKdate.CompareTo(lastReceived) > 0)
+                                                            if (TKKdate.TryGetValue(PtID, out string lastTKKdate))
                                                             {
-                                                                AddLog("新しい健診結果が見つかりましたのでPDFを要求します");
-                                                                MakeReq(101, dynaTable, PtID);
-                                                                AllDataProcessed = false;
+                                                                string lastReceived = await getLastReceivedDate(connection, PtID, 101);
+                                                                if (lastTKKdate.CompareTo(lastReceived) > 0)
+                                                                {
+                                                                    AddLog("新しい健診結果が見つかりましたのでPDFを要求します");
+                                                                    MakeReq(101, dynaTable, PtID);
+                                                                    AllDataProcessed = false;
+                                                                }
                                                             }
-                                                        }
-                                                        else
-                                                        {
-                                                            AddLog("健診xmlは読み込みましたが、最新健診実施日を読み込めませんでした");
+                                                            else
+                                                            {
+                                                                AddLog("健診xmlは読み込みましたが、最新健診実施日を読み込めませんでした");
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -1550,9 +1612,9 @@ namespace OQSDrug
                                         updateCommand.Parameters.AddWithValue("@result", messageContent ?? string.Empty);
                                         updateCommand.Parameters.AddWithValue("@ID", resultId);
 
-                                        DataDbLock = true;
+                                        CommonFunctions.DataDbLock = true;
                                         await updateCommand.ExecuteNonQueryAsync();
-                                        DataDbLock = false;
+                                        CommonFunctions.DataDbLock = false;
 
                                     }
                                     isProcessed = true;
@@ -1582,7 +1644,7 @@ namespace OQSDrug
             catch (Exception ex)
             {
                 AddLog($"ProcessResAsync処理中にエラーが発生しました: {ex.Message}");
-                DataDbLock = false;
+                CommonFunctions.DataDbLock = false;
                 return false;
             }
         }
@@ -1611,8 +1673,8 @@ namespace OQSDrug
             catch (Exception ex)
             {
                 AddLog($"getLastReceivedDateでエラーが発生しました{ex.Message}");
-                return returnDate ;
-            }            
+                return returnDate;
+            }
         }
 
 
@@ -1626,7 +1688,7 @@ namespace OQSDrug
             {
                 // PtIDの枝番を除外
                 long ptIDMain = ptID / 10;
-                
+
                 // Xmlヘッダー情報の取得
                 XmlNode headerNode = xmlDoc.SelectSingleNode("/XmlMsg/MessageHeader/QualificationsInfo");
                 if (headerNode == null)
@@ -1651,7 +1713,7 @@ namespace OQSDrug
                 foreach (XmlNode TKKresult in TKKresults)
                 {
                     string effectiveTime = GetNodeValue(TKKresult, "EffectiveTime");
-                    if(effectiveTime.CompareTo(lastTKKdate) > 0) lastTKKdate = effectiveTime;
+                    if (effectiveTime.CompareTo(lastTKKdate) > 0) lastTKKdate = effectiveTime;
 
                     //既登録か
                     string sql = "SELECT COUNT(*) FROM TKK_history WHERE PtIDmain = ? AND EffectiveTime = ?";
@@ -1673,7 +1735,7 @@ namespace OQSDrug
                         {
                             string itemCode = GetNodeValue(info, "ItemCode");
                             string dataValue = GetNodeValue(info, "DataValue");
-                            dataValue = dataValue.Length > 64 ? dataValue.Substring(0,64) : dataValue; 
+                            dataValue = dataValue.Length > 64 ? dataValue.Substring(0, 64) : dataValue;
                             string itemName = GetNodeValue(info, "ItemName");
                             string dataType = GetNodeValue(info, "DataType");
                             string Unit = GetNodeValue(info, "Unit");
@@ -1696,10 +1758,10 @@ namespace OQSDrug
                                 insertCommand.Parameters.AddWithValue("?", Unit);
                                 insertCommand.Parameters.AddWithValue("?", Oid);
                                 insertCommand.Parameters.AddWithValue("?", dataValueName);
-                                
-                                DataDbLock = true;
+
+                                CommonFunctions.DataDbLock = true;
                                 await insertCommand.ExecuteNonQueryAsync();
-                                DataDbLock = false;
+                                CommonFunctions.DataDbLock = false;
                             }
                             recordCount++;
                         }
@@ -1726,8 +1788,6 @@ namespace OQSDrug
 
         private async Task<string> ProcessDrugInfoAsync(long ptID, XmlDocument xmlDoc)
         {
-            string connectionOQSData = $"Provider={DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
-
             var elementMappings = new Dictionary<string, List<string>>
             {
                 { "MonthInf", new List<string> { "MeTrMonthInf", "CzDiMonthInf", "ShPrMonthInf" } },
@@ -1759,11 +1819,11 @@ namespace OQSDrug
                 "/XmlMsg/MessageBody/ShPrInf/ShPrMonthInf",
                 "/XmlMsg/MessageBody/CzDiInf/CzDiMonthInf"
             };
-            
+
             try
             {
                 // データベース接続
-                using (OleDbConnection dbConnection = new OleDbConnection(connectionOQSData))
+                using (OleDbConnection dbConnection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                 {
                     await dbConnection.OpenAsync();
 
@@ -1781,8 +1841,11 @@ namespace OQSDrug
                     string ptName = GetNodeValue(headerNode, "Name");
                     string ptKana = GetNodeValue(headerNode, "KanaName");
                     string ptBirth = GetNodeValue(headerNode, "Birth");
+                    int ptSex = (int)NzConvert(GetNodeValue(headerNode, "AdmGendCode"));
 
+                    
                     int recordCount = 0;
+                    int sinryoCount = 0;
 
                     string insertSql = @"INSERT INTO drug_history (
                                                             Source, PtID, PtIDmain, ReceiveDate, PtName, PtKana, Birth, diOrg, MeTrDiHCd,
@@ -1817,16 +1880,24 @@ namespace OQSDrug
                                     Source = 0;
                                     break;
                             }
-                            int diOrg = (int)NzConvert(GetNodeValue(monthInfNode, GetMatchingNodeName(monthInfNode, elementMappings, "Org")));
+
+                            int diOrg = (int)NzConvert(GetNodeValue(monthInfNode, GetMatchingNodeName(monthInfNode, elementMappings, "Org")),-1);
                             string meTrDiHCd = GetNodeValue(monthInfNode, GetMatchingNodeName(monthInfNode, elementMappings, "DiHCd"));
                             string prlsHCd = GetNodeValue(monthInfNode, GetMatchingNodeName(monthInfNode, elementMappings, "HCd"));
                             string meTrDiHNm = GetNodeValue(monthInfNode, GetMatchingNodeName(monthInfNode, elementMappings, "DiHNm"));
                             string meTrMonth = GetNodeValue(monthInfNode, GetMatchingNodeName(monthInfNode, elementMappings, "Month"));
                             string prlsHNm = GetNodeValue(monthInfNode, GetMatchingNodeName(monthInfNode, elementMappings, "HNm"));
-                            int prIsOrg = (int)NzConvert(GetNodeValue(monthInfNode, GetMatchingNodeName(monthInfNode, elementMappings, "IsOrg")));
-                            int inOut = (int)NzConvert(GetNodeValue(monthInfNode, GetMatchingNodeName(monthInfNode, elementMappings, "Cl")));
+                            int prIsOrg = (int)NzConvert(GetNodeValue(monthInfNode, GetMatchingNodeName(monthInfNode, elementMappings, "IsOrg")),-1);
+                            int inOut = (int)NzConvert(GetNodeValue(monthInfNode, GetMatchingNodeName(monthInfNode, elementMappings, "Cl")), -1);
 
                             string MIcode = GetMedicalInstitutionCode(meTrDiHCd, prlsHCd); //医科歯科のコード
+
+                            //診療情報付加のxmlでは何故かDiOrgとprIsOrgが抜けているのでprIsOegだけでも作成 ひどい仕様だわ
+                            if(prIsOrg == -1)
+                            {
+                                prIsOrg = (MIcode == Properties.Settings.Default.MCode) ? 1 : 2;
+                            }
+
 
                             XmlNodeList dateInfList = monthInfNode.SelectNodes(GetMatchingNodeName(monthInfNode, elementMappings, "DateInf"));
                             foreach (XmlNode dateInfNode in dateInfList)
@@ -1834,9 +1905,9 @@ namespace OQSDrug
                                 string diDate = GetNodeValue(dateInfNode, GetMatchingNodeName(dateInfNode, elementMappings, "DiDate"));
                                 string prDate = GetNodeValue(dateInfNode, GetMatchingNodeName(dateInfNode, elementMappings, "PrDate"));
 
-                                //既登録か
+                                //薬剤
                                 string sql = "SELECT ID, Source, Revised FROM drug_history WHERE PtIDmain = ? AND (MeTrDiHCd = ? OR  PrlsHCd = ?) AND DiDate = ?";
-
+                                
                                 using (OleDbCommand checkCommand = new OleDbCommand(sql, dbConnection))
                                 {
                                     checkCommand.Parameters.AddWithValue("?", ptIDMain);
@@ -1852,7 +1923,7 @@ namespace OQSDrug
                                         {
                                             //既存レコードあり
                                             int resultId = reader.GetInt32(reader.GetOrdinal("ID"));
-                                            int resultSource = reader.GetInt32(reader.GetOrdinal("Source"));
+                                            int resultSource = reader.IsDBNull(reader.GetOrdinal("Source")) ? 9 : reader.GetInt32(reader.GetOrdinal("Source"));
 
                                             // 既存の電処or調剤由来のデータならRevised=1とする
                                             if (resultSource > Source)
@@ -1878,52 +1949,76 @@ namespace OQSDrug
                                         {
                                             //薬歴取込
                                             XmlNodeList drugInfList = dateInfNode.SelectNodes(GetMatchingNodeName(dateInfNode, elementMappings, "DrugInf"));
-                                            foreach (XmlNode drugInfNode in drugInfList)
+                                            if (drugInfList.Count > 0)
                                             {
-                                                string drugCode = GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "DrugC"));
-                                                float quantity = NzConvert(GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "Qua1")));
-                                                string usage = GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "UsageN"));
-                                                int times = (int)NzConvert(GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "Times")));
-                                                string ingredient = GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "IngreN"));
-                                                int meTrIdCl = (int)NzConvert(GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "UsageCl")));
-                                                string unit = GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "Unit"));
-                                                string drugName = GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "DrugN"));
-
-
-                                                using (OleDbCommand insertCommand = new OleDbCommand(insertSql, dbConnection))
+                                                foreach (XmlNode drugInfNode in drugInfList)
                                                 {
-                                                    insertCommand.Parameters.AddWithValue("@Source", Source);
-                                                    insertCommand.Parameters.AddWithValue("@PtID", ptID);
-                                                    insertCommand.Parameters.AddWithValue("@PtIDmain", ptIDMain);
-                                                    insertCommand.Parameters.AddWithValue("@ReceiveDate", receiveDate);
-                                                    insertCommand.Parameters.AddWithValue("@PtName", ptName);
-                                                    insertCommand.Parameters.AddWithValue("@PtKana", ptKana);
-                                                    insertCommand.Parameters.AddWithValue("@Birth", ptBirth);
-                                                    insertCommand.Parameters.AddWithValue("@diOrg", diOrg);
-                                                    insertCommand.Parameters.AddWithValue("@MeTrDiHCd", meTrDiHCd);
-                                                    insertCommand.Parameters.AddWithValue("@prlsHCd", prlsHCd);
-                                                    insertCommand.Parameters.AddWithValue("@MeTrDiHNm", meTrDiHNm);
-                                                    insertCommand.Parameters.AddWithValue("@MeTrMonth", meTrMonth);
-                                                    insertCommand.Parameters.AddWithValue("@prlsHNm", prlsHNm);
-                                                    insertCommand.Parameters.AddWithValue("@prIsOrg", prIsOrg);
-                                                    insertCommand.Parameters.AddWithValue("@InOut", inOut);
-                                                    insertCommand.Parameters.AddWithValue("@DiDate", diDate);
-                                                    insertCommand.Parameters.AddWithValue("@PrDate", prDate);
-                                                    insertCommand.Parameters.AddWithValue("@DrugC", drugCode);
-                                                    insertCommand.Parameters.AddWithValue("@Qua1", quantity);
-                                                    insertCommand.Parameters.AddWithValue("@UsageN", usage);
-                                                    insertCommand.Parameters.AddWithValue("@Times", times);
-                                                    insertCommand.Parameters.AddWithValue("@IngreN", ingredient);
-                                                    insertCommand.Parameters.AddWithValue("@MeTrIdCl", meTrIdCl);
-                                                    insertCommand.Parameters.AddWithValue("@Unit", unit);
-                                                    insertCommand.Parameters.AddWithValue("@DrugN", drugName);
+                                                    string drugCode = GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "DrugC"));
+                                                    float quantity = NzConvert(GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "Qua1")));
+                                                    string usage = GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "UsageN"));
+                                                    int times = (int)NzConvert(GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "Times")));
+                                                    string ingredient = GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "IngreN"));
+                                                    int meTrIdCl = (int)NzConvert(GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "UsageCl")));
+                                                    string unit = GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "Unit"));
+                                                    string drugName = GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "DrugN"));
 
-                                                    await insertCommand.ExecuteNonQueryAsync();
+
+                                                    using (OleDbCommand insertCommand = new OleDbCommand(insertSql, dbConnection))
+                                                    {
+                                                        insertCommand.Parameters.AddWithValue("@Source", Source);
+                                                        insertCommand.Parameters.AddWithValue("@PtID", ptID);
+                                                        insertCommand.Parameters.AddWithValue("@PtIDmain", ptIDMain);
+                                                        insertCommand.Parameters.AddWithValue("@ReceiveDate", receiveDate);
+                                                        insertCommand.Parameters.AddWithValue("@PtName", ptName);
+                                                        insertCommand.Parameters.AddWithValue("@PtKana", ptKana);
+                                                        insertCommand.Parameters.AddWithValue("@Birth", ptBirth);
+                                                        insertCommand.Parameters.AddWithValue("@diOrg", diOrg);
+                                                        insertCommand.Parameters.AddWithValue("@MeTrDiHCd", meTrDiHCd);
+                                                        insertCommand.Parameters.AddWithValue("@prlsHCd", prlsHCd);
+                                                        insertCommand.Parameters.AddWithValue("@MeTrDiHNm", meTrDiHNm);
+                                                        insertCommand.Parameters.AddWithValue("@MeTrMonth", meTrMonth);
+                                                        insertCommand.Parameters.AddWithValue("@prlsHNm", prlsHNm);
+                                                        insertCommand.Parameters.AddWithValue("@prIsOrg", prIsOrg);
+                                                        insertCommand.Parameters.AddWithValue("@InOut", inOut);
+                                                        insertCommand.Parameters.AddWithValue("@DiDate", diDate);
+                                                        insertCommand.Parameters.AddWithValue("@PrDate", prDate);
+                                                        insertCommand.Parameters.AddWithValue("@DrugC", drugCode);
+                                                        insertCommand.Parameters.AddWithValue("@Qua1", quantity);
+                                                        insertCommand.Parameters.AddWithValue("@UsageN", usage);
+                                                        insertCommand.Parameters.AddWithValue("@Times", times);
+                                                        insertCommand.Parameters.AddWithValue("@IngreN", ingredient);
+                                                        insertCommand.Parameters.AddWithValue("@MeTrIdCl", meTrIdCl);
+                                                        insertCommand.Parameters.AddWithValue("@Unit", unit);
+                                                        insertCommand.Parameters.AddWithValue("@DrugN", drugName);
+
+                                                        await insertCommand.ExecuteNonQueryAsync();
+                                                    }
+                                                    recordCount++;
                                                 }
-                                                recordCount++;
                                             }
                                         }
                                     }
+                                }
+
+                                //診療情報
+                                XmlNode meTrInfsNode = dateInfNode.SelectSingleNode("MeTrInfs");
+                                if (meTrInfsNode != null)
+                                {
+                                    var ptData = new
+                                    {
+                                        Id = ptID,
+                                        Idmain = ptIDMain,
+                                        Name = ptName,
+                                        Kana = ptKana,
+                                        Birth = ptBirth,
+                                        Sex = ptSex,
+                                        MeTrDiHCd = meTrDiHCd,
+                                        MeTrDiHNm = meTrDiHNm,
+                                        MeTrMonth = meTrMonth,
+                                        DiDate = diDate
+                                    };
+
+                                    sinryoCount +=  await ProcessSinryoInfoAsync(dbConnection, meTrInfsNode, ptData);
                                 }
                             }
                         }
@@ -1932,7 +2027,7 @@ namespace OQSDrug
                     {
                         ShowNotification($"{ptIDMain}", $"{ptName}さんの薬歴{recordCount}件取得");
                     }
-                    return $"成功：xml薬歴から{recordCount}件のレコードを読み込みました";
+                    return $"成功：xml薬歴から{recordCount}件,診療情報{sinryoCount}件のレコードを読み込みました";
                 }
             }
             catch (Exception ex)
@@ -1940,6 +2035,78 @@ namespace OQSDrug
                 return "エラー：" + ex.Message;
             }
         }
+
+        private async Task<int> ProcessSinryoInfoAsync(OleDbConnection conn, XmlNode meTrInfsNode, dynamic ptData)
+        {
+            int count = 0;
+
+            string insertSql = @"INSERT INTO sinryo_history (
+                                   PtID, PtIDmain, PtName, PtKana, Birth, Sex, MeTrDiHCd,
+                                   MeTrDiHNm, MeTrMonth,DiDate, SinInfN, SinInfCd, MeTrIdCl, Qua1, Times, Unit, ReceiveDate
+                                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            string checkSql = @"SELECT COUNT(*) FROM sinryo_history WHERE PtIDmain = ? AND DiDate = ?;"; // 同一患者同一日なら取り込み済みとする
+
+            try
+            {
+                foreach (XmlNode meTrInf in meTrInfsNode.SelectNodes("MeTrInf"))
+                {
+                    // 既存データのチェック
+                    using (OleDbCommand checkCommand = new OleDbCommand(checkSql, conn))
+                    {
+                        checkCommand.Parameters.AddWithValue("?", ptData.Idmain);
+                        checkCommand.Parameters.AddWithValue("?", ptData.DiDate);
+
+                        int recordCount = (int)await checkCommand.ExecuteScalarAsync();
+                        if (recordCount > 0)
+                        {
+                            continue; // 既にデータが存在する場合はスキップ
+                        }
+                    }
+
+                    string SinInfN = GetNodeValue(meTrInf, "SinInfN");
+                    string SinInfCd = GetNodeValue(meTrInf, "SinInfCd");
+                    int times = (int)NzConvert(GetNodeValue(meTrInf, "Times"));
+                    string MeTrIdCl = GetNodeValue(meTrInf, "MeTrIdCl");
+                    string Unit = GetNodeValue(meTrInf, "Unit");
+                    float qua1 = NzConvert(GetNodeValue(meTrInf, "Qua1"));
+                    string meTrIdCl = GetNodeValue(meTrInf, "MeTrIdCl");
+                    string receiveDate = DateTime.Now.ToString("yyyyMMdd");
+
+                    // 新規データの挿入
+                    using (OleDbCommand insertCommand = new OleDbCommand(insertSql, conn))
+                    {
+                        insertCommand.Parameters.AddWithValue("@PtID", ptData.Id);
+                        insertCommand.Parameters.AddWithValue("@PtIDmain", ptData.Idmain);
+                        insertCommand.Parameters.AddWithValue("@PtName", ptData.Name);
+                        insertCommand.Parameters.AddWithValue("@PtKana", ptData.Kana);
+                        insertCommand.Parameters.AddWithValue("@Birth", ptData.Birth);
+                        insertCommand.Parameters.AddWithValue("@Sex", ptData.Sex);
+                        insertCommand.Parameters.AddWithValue("@MeTrDiHCd", ptData.MeTrDiHCd);
+                        insertCommand.Parameters.AddWithValue("@MeTrDiHNm", ptData.MeTrDiHNm);
+                        insertCommand.Parameters.AddWithValue("@MeTrMonth", ptData.MeTrMonth);
+                        insertCommand.Parameters.AddWithValue("@DiDate", ptData.DiDate);
+                        insertCommand.Parameters.AddWithValue("@SinInfN", SinInfN);
+                        insertCommand.Parameters.AddWithValue("@SinInfCd", SinInfCd);
+                        insertCommand.Parameters.AddWithValue("@MeTrIdCl", meTrIdCl);
+                        insertCommand.Parameters.AddWithValue("@Qua1", qua1);
+                        insertCommand.Parameters.AddWithValue("@Times", times);
+                        insertCommand.Parameters.AddWithValue("@Unit", Unit);
+                        insertCommand.Parameters.AddWithValue("@ReceiveDate", receiveDate);
+
+                        await insertCommand.ExecuteNonQueryAsync();
+                        count++;
+                    }
+                }
+                return count;
+            }
+            catch (Exception ex)
+            {
+                AddLog($"ProcessSinryoAsyncでエラーが発生しました：{ex.Message}");
+                return count;
+            }
+        }
+    
+        
 
         private string GetMedicalInstitutionCode(string meTrDiHCd, string prlsHCd)
         {
@@ -1998,7 +2165,7 @@ namespace OQSDrug
         public async Task<bool> AddFieldIfNotExists(string databasePath, string tableName, string fieldName, string fieldFormat)
         {
             // 接続文字列の設定
-            string connectionString = $"Provider={DBProvider};Data Source={databasePath};";
+            string connectionString = $"Provider={CommonFunctions.DBProvider};Data Source={databasePath};";
 
             try
             {
@@ -2052,11 +2219,9 @@ namespace OQSDrug
 
         private async Task<bool> RemainResTask() //resを受け取っていないレコードを検索
         {
-            string connectionOQSData = $"Provider={DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
-
             try
             {
-                using (OleDbConnection connection = new OleDbConnection(connectionOQSData))
+                using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                 {
                     await connection.OpenAsync();
 
@@ -2118,22 +2283,19 @@ namespace OQSDrug
             return maxPtID;
         }
 
-        private void buttonViewer_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private async void checkBoxAutoview_CheckedChanged(object sender, EventArgs e) //RSB連動遷移
         {
             autoRSB = checkBoxAutoview.Checked;
             autoTKK = checkBoxAutoTKK.Checked;
+            autoSR = checkBoxAutoSR.Checked;
 
             Properties.Settings.Default.autoRSB = autoRSB;
             Properties.Settings.Default.autoTKK = autoTKK;
+            Properties.Settings.Default.autoSR = autoSR;
 
             Properties.Settings.Default.Save();
 
-            if (autoRSB || autoTKK)
+            if (autoRSB || autoTKK || autoSR)
             {
                 InitializeFileWatcher();
 
@@ -2262,6 +2424,9 @@ namespace OQSDrug
                     if(autoRSB)  await OpenDrugHistory(tempId,false);
 
                     if(autoTKK)  await OpenTKKHistory(tempId,false);
+
+                    if(autoSR)   await OpenSinryoHistory(tempId,false);
+                   
                 }
                 else
                 {
@@ -2339,15 +2504,46 @@ namespace OQSDrug
             }
         }
 
+        private async Task OpenSinryoHistory(long ptId, bool messagePopup = false)
+        {
+            if (await existHistory(ptId, "sinryo_history"))
+            {
+                tempId = ptId;
+                // UIスレッドで操作
+                Invoke((Action)(() =>
+                {
+                    AddLog($"{ptId}の診療情報を開きます");
+                    //buttonViewer_Click(toolStripButtonViewer, EventArgs.Empty);
+                    toolStripButtonSinryo_Click(toolStripButtonSinryo, EventArgs.Empty);
+                }));
+            }
+            else
+            {
+                //なしの場合はViewerを閉じる
+                if (formSRInstance != null && !formSRInstance.IsDisposed)
+                {
+                    // UI スレッドで操作する必要があるため Invoke を使用
+                    formSRInstance.Invoke((Action)(() =>
+                    {
+                        formSRInstance.Close(); // 閉じる
+                        formSRInstance = null;
+                        AddLog($"{ptId}は診療情報履歴がないのでビュワーを閉じます");
+                    }));
+                }
+                if (messagePopup)
+                {
+                    MessageBox.Show($"{ptId}の診療情報履歴はありません");
+                }
+            }
+        }
+
         private async Task<bool> existHistory(long PtIDmain, string tableName)
         {
-            string connectionOQSData = $"Provider={DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
-
             try
             {
-                if (await WaitForDbUnlock(1000))
+                if (await CommonFunctions.WaitForDbUnlock(1000))
                 {
-                    using (OleDbConnection connection = new OleDbConnection(connectionOQSData))
+                    using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                     {
                         await connection.OpenAsync();
 
@@ -2358,13 +2554,13 @@ namespace OQSDrug
                             // パラメータを追加
                             command.Parameters.AddWithValue("?", PtIDmain);
 
-                            DataDbLock = true;
+                            CommonFunctions.DataDbLock = true;
 
                             // レコードのカウントを取得
                             int count = (int)await command.ExecuteScalarAsync();
 
                             // レコードが1つ以上存在するか確認
-                            DataDbLock = false;
+                            CommonFunctions.DataDbLock = false;
                             return count > 0;
                         }
                     }
@@ -2383,7 +2579,7 @@ namespace OQSDrug
             }
             finally
             {
-                DataDbLock = false;
+                CommonFunctions.DataDbLock = false;
             }
         }
 
@@ -2483,7 +2679,8 @@ namespace OQSDrug
 
                 // コンテキストメニューを表示（必要なら設定）
                 ContextMenu contextMenu = new ContextMenu();
-                contextMenu.MenuItems.Add(new MenuItem("行を削除", async (s, args) => await DeleteRow(e.RowIndex)));
+                contextMenu.MenuItems.Add(new MenuItem("再取得", async (s, args) => await DeleteRow(e.RowIndex)));
+
                 contextMenu.Show(dataGridView1, dataGridView1.PointToClient(Cursor.Position));
             }
         }
@@ -2492,7 +2689,7 @@ namespace OQSDrug
         {
             if (rowIndex >= 0 && rowIndex < dataGridView1.Rows.Count)
             {
-                if(MessageBox.Show("この取得履歴を削除しますか？\n 削除すると再取得間隔がリセットされますが、取得済データは消えません","削除の確認",MessageBoxButtons.OKCancel) == DialogResult.OK)
+                if(MessageBox.Show("この取得履歴を削除し再取得しますか？\n 削除すると再取得間隔がリセットされますが、取得済データは消えません","再取得の確認",MessageBoxButtons.OKCancel) == DialogResult.OK)
                 {
                     // IDフィールドの値を取得 
                     object idValue = dataGridView1.Rows[rowIndex].Cells["ID"].Value;
@@ -2511,8 +2708,7 @@ namespace OQSDrug
         {
             try
             {
-                string connectionOQSData = $"Provider={DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
-                using (var connection = new OleDbConnection(connectionOQSData))
+                using (var connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                 {
                     await connection.OpenAsync();
                     string query = "DELETE FROM reqResults WHERE ID = ?";
@@ -2556,8 +2752,10 @@ namespace OQSDrug
 
             contextMenu.Items.Add("メイン表示", Properties.Resources.drugicon, ShowForm); 
             contextMenu.Items.Add(startStopMenuItem); // 動的な項目を追加
-            contextMenu.Items.Add("薬歴表示", Properties.Resources.Text_preview,toolStripButtonDI_Click);
-            contextMenu.Items.Add("健診結果", Properties.Resources.Heart, toolStripButtonTKK_Click);
+            contextMenu.Items.Add(new ToolStripSeparator());
+            contextMenu.Items.Add("薬歴", Properties.Resources.Text_preview,toolStripButtonDI_Click);
+            contextMenu.Items.Add("診療情報", Properties.Resources.Equipment, toolStripButtonSinryo_Click);
+            contextMenu.Items.Add("健診", Properties.Resources.Heart, toolStripButtonTKK_Click);
             contextMenu.Items.Add(new ToolStripSeparator());
             contextMenu.Items.Add("終了", Properties.Resources.Exit, ExitApplication);
 
@@ -2579,7 +2777,7 @@ namespace OQSDrug
             };
 
             // タイマーを初期化
-            animationTimer = new Timer
+            animationTimer = new System.Windows.Forms.Timer
             {
                 Interval = 200 // 200msごとに切り替え
             };
@@ -2700,25 +2898,7 @@ namespace OQSDrug
 
             isFormVisible = false;
         }
-
-        public async Task<bool> WaitForDbUnlock(int maxWaitms)
-        {
-            int interval = 10;
-            int retry = maxWaitms / interval;
-            for(int i = 0; i < retry; i++) 
-            {
-                    if (DataDbLock)
-                    {
-                        await Task.Delay(interval);
-                    }
-                    else
-                    {
-                        return true;
-                    }
-            }
-            return false;               
-        }
-
+               
         private async void buttonReload_Click(object sender, EventArgs e)
         {
             await Task.Run(async ()=>  await reloadDataAsync());
@@ -2825,7 +3005,7 @@ namespace OQSDrug
                     var columns = line.Split(',');
                     if (columns.Length > 7) // 必要なカラム数が存在するか確認
                     {
-                        RSBDI.Add(new string[] { columns[0], columns[3], columns[7], columns[5] }); // 0:商品名、1:一般名、2:コード、3：先発
+                        CommonFunctions.RSBDI.Add(new string[] { columns[0], columns[3], columns[7], columns[5] }); // 0:商品名、1:一般名、2:コード、3：先発
                         count++;
                     }
                 }
@@ -2975,12 +3155,10 @@ namespace OQSDrug
         // 排他 チェック関数
         public async Task<bool> IsAccessAllowedAsync()
         {
-            string connectionOQSData = $"Provider={DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
-
             string localMachineName = Environment.MachineName;
             try
             {
-                using (var connection = new OleDbConnection(connectionOQSData))
+                using (var connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                 {
                     await connection.OpenAsync();
                     string query = @"
@@ -3014,12 +3192,10 @@ namespace OQSDrug
         // 自分のPC名とタイムスタンプを更新
         public async Task UpdateClientAsync()
         {
-            string connectionOQSData = $"Provider={DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
-
             string localMachineName = Environment.MachineName;
             try
             {
-                using (var connection = new OleDbConnection(connectionOQSData))
+                using (var connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                 {
                     await connection.OpenAsync();
                     string updateQuery = $@"
@@ -3098,12 +3274,10 @@ namespace OQSDrug
         // 自分のPC名とタイムスタンプを削除
         public async Task DeleteClientAsync()
         {
-            string connectionOQSData = $"Provider={DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
-
             string localMachineName = Environment.MachineName;
             try
             {
-                using (var connection = new OleDbConnection(connectionOQSData))
+                using (var connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                 {
                     await connection.OpenAsync();
                     string updateQuery = $@"
@@ -3123,6 +3297,91 @@ namespace OQSDrug
             }
         }
 
+        private async void toolStripButtonDebug_Click(object sender, EventArgs e)
+        {
+            if (long.TryParse(toolStripTextBoxDebug.Text, out long ptId))
+            {
+                OpenFileDialog op = new OpenFileDialog();
+                op.Title = "xmlファイルの読込";
+                op.FileName = "*.xml";
+                //op.InitialDirectory = System.Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                op.Filter = "xmlファイル(*.xml)|*.xml|すべてのファイル(*.*)|*.*";
+                op.FilterIndex = 1;
+                op.RestoreDirectory = true;
+                op.CheckFileExists = false;
+                op.CheckPathExists = true;
+
+                if (op.ShowDialog(this) == DialogResult.OK)
+                {
+                    string settingsFilePath = op.FileName;
+
+                    var xmlDoc = new XmlDocument();
+
+                    xmlDoc.Load(settingsFilePath);
+
+                    MessageBox.Show(await ProcessDrugInfoAsync(ptId, xmlDoc));
+                }
+
+            }
+            else
+            {
+                MessageBox.Show("ID(枝番付)を入力してから実行してください");
+            }
+
+            
+        }
+
+        private void toolStripVersion_DoubleClick(object sender, EventArgs e)
+        {
+            toolStripComboBoxDBProviders.Visible = !toolStripComboBoxDBProviders.Visible;
+            toolStripButtonDebug.Visible = !toolStripButtonDebug.Visible;
+            toolStripSeparatorDebug1.Visible = !toolStripSeparatorDebug1.Visible;
+            toolStripSeparatorDebug2.Visible = !toolStripSeparatorDebug2.Visible;
+            toolStripTextBoxDebug.Visible = !toolStripTextBoxDebug.Visible;
+        }
+
+        public void toolStripButtonSinryo_Click(object sender, EventArgs e)
+        {
+            // FormSRがすでに開いているか確認
+            if (formSRInstance == null || formSRInstance.IsDisposed)
+            {
+                formSRInstance = new FormSR(this);
+
+                // 前回の位置とサイズを復元
+                if (Properties.Settings.Default.SRBounds != Rectangle.Empty)
+                {
+                    formSRInstance.StartPosition = FormStartPosition.Manual;
+                    formSRInstance.Bounds = Properties.Settings.Default.SRBounds;
+
+                    // マージンと境界線を設定
+                    formSRInstance.Padding = new Padding(0);
+                    formSRInstance.Margin = new Padding(0);
+                    //form3Instance.FormBorderStyle = FormBorderStyle.None;
+                }
+
+                // TopMost状態を設定
+                formSRInstance.TopMost = Properties.Settings.Default.ViewerTopmost;
+
+                // Form3が閉じるときに位置、サイズ、TopMost状態を保存
+                formSRInstance.FormClosing += (s, args) =>
+                {
+                    SaveViewerSettings(formSRInstance, "SRBounds");
+                };
+
+                formSRInstance.Show(this);
+            }
+            else
+            {
+                // FormTKKが開いている場合、LoadDataIntoComboBoxes()を実行
+                Task.Run(async () =>
+                    await formSRInstance.LoadDataIntoComboBoxes()
+                );
+                // すでに開いている場合はアクティブにする
+                formSRInstance.Activate();
+
+            }
+        }
+
         public async Task LoadKoroDataAsync()
         {
             try
@@ -3133,7 +3392,7 @@ namespace OQSDrug
                 {
                     AddLog("KOROdataが見つかりましたので薬品名コードを読み込みます");
 
-                    string connectionKOROdata = $"Provider={DBProvider};Data Source={KOROpath};";
+                    string connectionKOROdata = $"Provider={CommonFunctions.DBProvider};Data Source={KOROpath};";
                     string sql = "SELECT 医薬品コード AS ReceptCode,  薬価基準コード AS MedisCode " +
                                  " FROM TG医薬品マスター " +
                                  " WHERE (((薬価基準コード) Is Not Null));";
@@ -3147,7 +3406,7 @@ namespace OQSDrug
                         using (OleDbDataReader reader = (OleDbDataReader)await command.ExecuteReaderAsync())
                         {
                             // 既存データをクリア
-                            ReceptToMedisCodeMap.Clear();
+                            CommonFunctions.ReceptToMedisCodeMap.Clear();
 
                             // データを読み込んでDictionaryに設定
                             while (await reader.ReadAsync())
@@ -3155,9 +3414,9 @@ namespace OQSDrug
                                 string receptCode = reader["ReceptCode"].ToString();
                                 string medisCode = reader["MedisCode"].ToString();
 
-                                if (!ReceptToMedisCodeMap.ContainsKey(receptCode))
+                                if (!CommonFunctions.ReceptToMedisCodeMap.ContainsKey(receptCode))
                                 {
-                                    ReceptToMedisCodeMap.Add(receptCode, medisCode);
+                                    CommonFunctions.ReceptToMedisCodeMap.Add(receptCode, medisCode);
                                     count++;
                                 }
                             }
@@ -3173,7 +3432,10 @@ namespace OQSDrug
             }
         }
 
-
+        private void loadConnectionString()
+        {
+            CommonFunctions.connectionOQSdata = $"Provider={CommonFunctions.DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
+        }
     }
 }
 

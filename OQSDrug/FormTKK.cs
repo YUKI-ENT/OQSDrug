@@ -33,7 +33,7 @@ namespace OQSDrug
             InitializeComponent();
 
             _parentForm = parentForm;
-            provider = _parentForm.DBProvider;
+            provider = CommonFunctions.DBProvider;
         }
 
         public class PtItem
@@ -60,7 +60,7 @@ namespace OQSDrug
 
         public async Task LoadToolStripComboBox()
         {
-            if (await _parentForm.WaitForDbUnlock(2000))
+            if (await CommonFunctions.WaitForDbUnlock(2000))
             {
                 ptData = new List<(long PtID, string PtName)>();
 
@@ -70,9 +70,7 @@ namespace OQSDrug
                             GROUP BY PtIDmain, PtName
                             ORDER BY Max(id) DESC;";
 
-                string connectionOQSData = $"Provider={provider};Data Source={Properties.Settings.Default.OQSDrugData};";
-
-                using (OleDbConnection connection = new OleDbConnection(connectionOQSData))
+                using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                 {
                     try
                     {
@@ -80,7 +78,7 @@ namespace OQSDrug
                         await connection.OpenAsync();
 
                         // コマンドを作成
-                        _parentForm.DataDbLock = true;
+                        CommonFunctions.DataDbLock = true;
                         using (OleDbCommand command = new OleDbCommand(query, connection))
                         {
                             // データを取得
@@ -98,7 +96,7 @@ namespace OQSDrug
                                 }
                             }
                         }
-                        _parentForm.DataDbLock = false;
+                        CommonFunctions.DataDbLock = false;
 
                         Invoke(new Action(() =>
                         {
@@ -146,7 +144,7 @@ namespace OQSDrug
                     }
                     finally
                     {
-                        _parentForm.DataDbLock = false;
+                        CommonFunctions.DataDbLock = false;
                     }
                 }
             }
@@ -187,9 +185,9 @@ namespace OQSDrug
 
         private async Task ShowTKKData(long ptID)
         {
-            if (await _parentForm.WaitForDbUnlock(2000))
+            if (await CommonFunctions.WaitForDbUnlock(2000))
             {
-                _parentForm.DataDbLock = true;
+                CommonFunctions.DataDbLock = true;
 
                 string query = @"
                             TRANSFORM First(TKK_history.[DataValueName]) AS TKKValue
@@ -200,11 +198,9 @@ namespace OQSDrug
                             ORDER BY LEFT(TKK_history.[ItemCode], 4), TKK_history.[EffectiveTime] DESC 
                             PIVOT TKK_history.[EffectiveTime];
                             ";
-                string connectionOQSData = $"Provider={provider};Data Source={Properties.Settings.Default.OQSDrugData};";
-
                 try
                 {
-                    using (OleDbConnection connection = new OleDbConnection(connectionOQSData))
+                    using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                     {
                         // 接続を開く
                         await connection.OpenAsync();
@@ -215,12 +211,12 @@ namespace OQSDrug
                         {
                             command.Parameters.AddWithValue("?", ptID);
 
-                            _parentForm.DataDbLock = true;
+                            CommonFunctions.DataDbLock = true;
                             using (var reader = await command.ExecuteReaderAsync())
                             {
                                 dataTable.Load(reader);
 
-                                _parentForm.DataDbLock = false;
+                                CommonFunctions.DataDbLock = false;
                             }
 
                             dataGridViewTKK.Invoke(new Action(() =>
@@ -243,7 +239,7 @@ namespace OQSDrug
                 }
                 finally
                 {
-                    _parentForm.DataDbLock = false;
+                    CommonFunctions.DataDbLock = false;
                 }
             }
             else
@@ -312,11 +308,10 @@ namespace OQSDrug
         private async Task<Dictionary<string, TKKReference>> LoadTKKReference()
         {
             var referenceDict = new Dictionary<string, TKKReference>();
-            string connectionOQSData = $"Provider={provider};Data Source={Properties.Settings.Default.OQSDrugData};";
-
+            
             try
             {
-                using (OleDbConnection connection = new OleDbConnection(connectionOQSData))
+                using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                 {
                     await connection.OpenAsync();
                     string query = "SELECT ItemCode, ItemName, CompairType, Limit1, Limit2, Sex FROM TKK_reference";
@@ -437,6 +432,7 @@ namespace OQSDrug
                         {
                             e.CellStyle.BackColor = AlertColor;
                         }
+                        
                     }
                     else
                     {

@@ -40,7 +40,12 @@
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonSettings = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonTKK = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonSinryo = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparatorDebug1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripComboBoxDBProviders = new System.Windows.Forms.ToolStripComboBox();
+            this.toolStripSeparatorDebug2 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripTextBoxDebug = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripButtonDebug = new System.Windows.Forms.ToolStripButton();
             this.listViewLog = new System.Windows.Forms.ListView();
             this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
@@ -48,6 +53,7 @@
             this.StartStop = new System.Windows.Forms.CheckBox();
             this.checkBoxAutoStart = new System.Windows.Forms.CheckBox();
             this.checkBoxAutoTKK = new System.Windows.Forms.CheckBox();
+            this.checkBoxAutoSR = new System.Windows.Forms.CheckBox();
             this.buttonYZ = new System.Windows.Forms.Button();
             this.buttonSR = new System.Windows.Forms.Button();
             this.buttonYZPDF = new System.Windows.Forms.Button();
@@ -96,7 +102,12 @@
             this.toolStripSeparator2,
             this.toolStripButtonSettings,
             this.toolStripButtonTKK,
-            this.toolStripComboBoxDBProviders});
+            this.toolStripButtonSinryo,
+            this.toolStripSeparatorDebug1,
+            this.toolStripComboBoxDBProviders,
+            this.toolStripSeparatorDebug2,
+            this.toolStripTextBoxDebug,
+            this.toolStripButtonDebug});
             this.toolStripVersion.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.toolStripVersion.Location = new System.Drawing.Point(0, 0);
             this.toolStripVersion.Name = "toolStripVersion";
@@ -105,6 +116,7 @@
             this.toolStripVersion.Stretch = true;
             this.toolStripVersion.TabIndex = 3;
             this.toolStripVersion.Text = "toolStrip1";
+            this.toolStripVersion.DoubleClick += new System.EventHandler(this.toolStripVersion_DoubleClick);
             // 
             // toolStripButtonViewer
             // 
@@ -112,8 +124,8 @@
             this.toolStripButtonViewer.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonViewer.Image")));
             this.toolStripButtonViewer.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonViewer.Name = "toolStripButtonViewer";
-            this.toolStripButtonViewer.Size = new System.Drawing.Size(89, 24);
-            this.toolStripButtonViewer.Text = "薬歴表示";
+            this.toolStripButtonViewer.Size = new System.Drawing.Size(59, 24);
+            this.toolStripButtonViewer.Text = "薬歴";
             this.toolStripButtonViewer.ToolTipText = "xml薬歴を表示します";
             this.toolStripButtonViewer.Click += new System.EventHandler(this.toolStripButtonDI_Click);
             // 
@@ -177,9 +189,24 @@
             this.toolStripButtonTKK.Image = global::OQSDrug.Properties.Resources.Heart;
             this.toolStripButtonTKK.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonTKK.Name = "toolStripButtonTKK";
-            this.toolStripButtonTKK.Size = new System.Drawing.Size(89, 24);
-            this.toolStripButtonTKK.Text = "健診結果";
+            this.toolStripButtonTKK.Size = new System.Drawing.Size(59, 24);
+            this.toolStripButtonTKK.Text = "健診";
             this.toolStripButtonTKK.Click += new System.EventHandler(this.toolStripButtonTKK_Click);
+            // 
+            // toolStripButtonSinryo
+            // 
+            this.toolStripButtonSinryo.Image = global::OQSDrug.Properties.Resources.Equipment;
+            this.toolStripButtonSinryo.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonSinryo.Name = "toolStripButtonSinryo";
+            this.toolStripButtonSinryo.Size = new System.Drawing.Size(89, 24);
+            this.toolStripButtonSinryo.Text = "診療手術";
+            this.toolStripButtonSinryo.Click += new System.EventHandler(this.toolStripButtonSinryo_Click);
+            // 
+            // toolStripSeparatorDebug1
+            // 
+            this.toolStripSeparatorDebug1.Name = "toolStripSeparatorDebug1";
+            this.toolStripSeparatorDebug1.Size = new System.Drawing.Size(6, 27);
+            this.toolStripSeparatorDebug1.Visible = false;
             // 
             // toolStripComboBoxDBProviders
             // 
@@ -187,6 +214,31 @@
             this.toolStripComboBoxDBProviders.Size = new System.Drawing.Size(180, 27);
             this.toolStripComboBoxDBProviders.Visible = false;
             this.toolStripComboBoxDBProviders.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxDBProviders_SelectedIndexChanged);
+            // 
+            // toolStripSeparatorDebug2
+            // 
+            this.toolStripSeparatorDebug2.Name = "toolStripSeparatorDebug2";
+            this.toolStripSeparatorDebug2.Size = new System.Drawing.Size(6, 27);
+            this.toolStripSeparatorDebug2.Visible = false;
+            // 
+            // toolStripTextBoxDebug
+            // 
+            this.toolStripTextBoxDebug.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
+            this.toolStripTextBoxDebug.Name = "toolStripTextBoxDebug";
+            this.toolStripTextBoxDebug.Size = new System.Drawing.Size(100, 27);
+            this.toolStripTextBoxDebug.ToolTipText = "PtIDwithBranch";
+            this.toolStripTextBoxDebug.Visible = false;
+            // 
+            // toolStripButtonDebug
+            // 
+            this.toolStripButtonDebug.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripButtonDebug.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonDebug.Image")));
+            this.toolStripButtonDebug.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonDebug.Name = "toolStripButtonDebug";
+            this.toolStripButtonDebug.Size = new System.Drawing.Size(58, 24);
+            this.toolStripButtonDebug.Text = "Debug";
+            this.toolStripButtonDebug.Visible = false;
+            this.toolStripButtonDebug.Click += new System.EventHandler(this.toolStripButtonDebug_Click);
             // 
             // listViewLog
             // 
@@ -228,11 +280,12 @@
             // 
             // checkBoxAutoview
             // 
+            this.checkBoxAutoview.Appearance = System.Windows.Forms.Appearance.Button;
             this.checkBoxAutoview.Font = new System.Drawing.Font("Meiryo UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.checkBoxAutoview.Image = global::OQSDrug.Properties.Resources.Text_preview;
             this.checkBoxAutoview.Location = new System.Drawing.Point(6, 16);
             this.checkBoxAutoview.Name = "checkBoxAutoview";
-            this.checkBoxAutoview.Size = new System.Drawing.Size(90, 33);
+            this.checkBoxAutoview.Size = new System.Drawing.Size(84, 33);
             this.checkBoxAutoview.TabIndex = 27;
             this.checkBoxAutoview.Text = "薬歴";
             this.checkBoxAutoview.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
@@ -275,17 +328,33 @@
             // 
             // checkBoxAutoTKK
             // 
+            this.checkBoxAutoTKK.Appearance = System.Windows.Forms.Appearance.Button;
             this.checkBoxAutoTKK.Font = new System.Drawing.Font("Meiryo UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.checkBoxAutoTKK.Image = global::OQSDrug.Properties.Resources.Heart;
-            this.checkBoxAutoTKK.Location = new System.Drawing.Point(102, 16);
+            this.checkBoxAutoTKK.Location = new System.Drawing.Point(96, 16);
             this.checkBoxAutoTKK.Name = "checkBoxAutoTKK";
-            this.checkBoxAutoTKK.Size = new System.Drawing.Size(81, 33);
+            this.checkBoxAutoTKK.Size = new System.Drawing.Size(84, 33);
             this.checkBoxAutoTKK.TabIndex = 28;
             this.checkBoxAutoTKK.Text = "健診";
             this.checkBoxAutoTKK.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
-            this.toolTip1.SetToolTip(this.checkBoxAutoTKK, "RSBaseと連動して薬歴が存在すれば自動で表示します");
+            this.toolTip1.SetToolTip(this.checkBoxAutoTKK, "RSBaseと連動して特定健診履歴が存在すれば自動で表示します");
             this.checkBoxAutoTKK.UseVisualStyleBackColor = true;
             this.checkBoxAutoTKK.CheckedChanged += new System.EventHandler(this.checkBoxAutoview_CheckedChanged);
+            // 
+            // checkBoxAutoSR
+            // 
+            this.checkBoxAutoSR.Appearance = System.Windows.Forms.Appearance.Button;
+            this.checkBoxAutoSR.Font = new System.Drawing.Font("Meiryo UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.checkBoxAutoSR.Image = global::OQSDrug.Properties.Resources.Equipment;
+            this.checkBoxAutoSR.Location = new System.Drawing.Point(186, 16);
+            this.checkBoxAutoSR.Name = "checkBoxAutoSR";
+            this.checkBoxAutoSR.Size = new System.Drawing.Size(84, 33);
+            this.checkBoxAutoSR.TabIndex = 29;
+            this.checkBoxAutoSR.Text = "診療";
+            this.checkBoxAutoSR.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.toolTip1.SetToolTip(this.checkBoxAutoSR, "RSBaseと連動して診療手術情報が存在すれば自動で表示します");
+            this.checkBoxAutoSR.UseVisualStyleBackColor = true;
+            this.checkBoxAutoSR.CheckedChanged += new System.EventHandler(this.checkBoxAutoview_CheckedChanged);
             // 
             // buttonYZ
             // 
@@ -360,7 +429,7 @@
             // notifyIcon1
             // 
             this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
-            this.notifyIcon1.Text = "右クリックでメニュー、\r\nダブルクリックで表示非表示切替";
+            this.notifyIcon1.Text = "OQSDrug\r\n右クリックでメニュー表示\r\nダブルクリックで表示非表示切替";
             this.notifyIcon1.Visible = true;
             this.notifyIcon1.DoubleClick += new System.EventHandler(this.notifyIcon1_DoubleClick);
             // 
@@ -378,12 +447,13 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.checkBoxAutoSR);
             this.groupBox1.Controls.Add(this.checkBoxAutoTKK);
             this.groupBox1.Controls.Add(this.checkBoxAutoview);
             this.groupBox1.Font = new System.Drawing.Font("Meiryo UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.groupBox1.Location = new System.Drawing.Point(422, 30);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(189, 49);
+            this.groupBox1.Size = new System.Drawing.Size(276, 51);
             this.groupBox1.TabIndex = 30;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "RSBase連動";
@@ -452,6 +522,12 @@
         private System.Windows.Forms.ToolStripButton toolStripButtonTKK;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.CheckBox checkBoxAutoTKK;
+        private System.Windows.Forms.ToolStripButton toolStripButtonDebug;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparatorDebug1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparatorDebug2;
+        private System.Windows.Forms.ToolStripTextBox toolStripTextBoxDebug;
+        private System.Windows.Forms.ToolStripButton toolStripButtonSinryo;
+        private System.Windows.Forms.CheckBox checkBoxAutoSR;
     }
 }
 

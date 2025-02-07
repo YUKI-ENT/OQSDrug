@@ -23,40 +23,30 @@ namespace OQSDrug
         private int SnapCompPixel = 8;  //余白補正
 
         private Form1 _parentForm;
-        private string provider;
+        public string provider;
 
         private Color[] RowColors = { Color.WhiteSmoke, Color.White };
 
-        public List<string[]> RSBDI = new List<string[]>();
         private List<(long PtID, string PtName)> ptData = new List<(long PtID, string PtName)>();
 
         private DataTable DrugHistoryData = new DataTable();
-        private Dictionary<string, string> ReceptToMedisCodeMap = new Dictionary<string, string>();
-
+        
         private int ShowSpan = Properties.Settings.Default.ViewerSpan;
         private FormSearch formSearch = null;
-
-        private string connectionOQSData = string.Empty;
-
-
+                
         public FormDI(Form1 parentForm)
         {
             InitializeComponent();
 
             _parentForm = parentForm;
-            provider = _parentForm.DBProvider;
-
-            RSBDI = _parentForm.RSBDI;
-            ReceptToMedisCodeMap = _parentForm.ReceptToMedisCodeMap;
-
-            connectionOQSData = $"Provider={provider};Data Source={Properties.Settings.Default.OQSDrugData};";
-
+            provider = CommonFunctions.DBProvider;
+                        
             toolStrip1.Renderer = new CustomToolStripRenderer(); // カスタム描画を適用
         }
 
         public async Task LoadDataIntoComboBoxes()
         {
-            if (await _parentForm.WaitForDbUnlock(2000))
+            if (await CommonFunctions.WaitForDbUnlock(2000))
             {
                 ptData = new List<(long PtID, string PtName)>();
 
@@ -65,13 +55,13 @@ namespace OQSDrug
                             GROUP BY PtIDmain, PtName
                             ORDER BY Max(id) DESC;";
 
-                using (OleDbConnection connection = new OleDbConnection(connectionOQSData))
+                using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                 {
                     try
                     {
                         await connection.OpenAsync();
 
-                        _parentForm.DataDbLock = true;
+                        CommonFunctions.DataDbLock = true;
 
                         // コマンドを作成
                         using (OleDbCommand command = new OleDbCommand(query, connection))
@@ -94,7 +84,7 @@ namespace OQSDrug
                             }
                         }
 
-                        _parentForm.DataDbLock = false;
+                        CommonFunctions.DataDbLock = false;
 
                         toolStrip1.Invoke(new Action(() =>
                         {
@@ -142,7 +132,7 @@ namespace OQSDrug
                     }
                     finally
                     {
-                        _parentForm.DataDbLock = false;
+                        CommonFunctions.DataDbLock = false;
                     }
                 }
             }
@@ -159,7 +149,7 @@ namespace OQSDrug
             SettoolStripButtonSpanEvent();
 
             toolStripButtonClass.Checked = Properties.Settings.Default.DrugClass;
-            toolStripButtonClass.Enabled = (ReceptToMedisCodeMap.Count > 0);
+            toolStripButtonClass.Enabled = (CommonFunctions.ReceptToMedisCodeMap.Count > 0);
 
             InitializeContextMenu();
 
@@ -191,6 +181,9 @@ namespace OQSDrug
                     // 選択された PtID を取得
                     long ptID = selectedPt.PtID;
 
+                    //tempIDを設定
+                    _parentForm.tempId = ptID;
+
                     // sender が toolstripButton かどうかを判定
                     if (!(sender is ToolStripButton stripButton))
                     {
@@ -213,7 +206,7 @@ namespace OQSDrug
 
         private async Task ShowDrugData(long PtID)
         {
-            if (await _parentForm.WaitForDbUnlock(2000))
+            if (await CommonFunctions.WaitForDbUnlock(2000))
             {   
                 string query = @"
                             TRANSFORM Sum(SubQuery.Times) AS Times
@@ -270,7 +263,7 @@ namespace OQSDrug
                 {
                     int colorIndex = 0, i = 0;
 
-                    using (OleDbConnection connection = new OleDbConnection(connectionOQSData))
+                    using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                     {
                         // 接続を開く
                         await connection.OpenAsync();
@@ -281,14 +274,14 @@ namespace OQSDrug
 
                             command.Parameters.AddWithValue("?", PtID);
 
-                            _parentForm.DataDbLock = true;
+                            CommonFunctions.DataDbLock = true;
 
                             using (var reader = await command.ExecuteReaderAsync())
                             using (var dataTable = new DataTable())
                             {
                                 dataTable.Load(reader);
 
-                                _parentForm.DataDbLock = false;
+                                CommonFunctions.DataDbLock = false;
 
                                 // KOROdataからmedisCode
                                 if (!dataTable.Columns.Contains("medisCode"))
@@ -321,7 +314,7 @@ namespace OQSDrug
                                     
 
                                     string receptCode = row["DrugC"] == DBNull.Value ? "" : row["DrugC"].ToString();
-                                    if (ReceptToMedisCodeMap.TryGetValue(receptCode, out string medisCode))
+                                    if (CommonFunctions.ReceptToMedisCodeMap.TryGetValue(receptCode, out string medisCode))
                                     {
                                         row["medisCode"] = medisCode;
                                     }
@@ -374,7 +367,7 @@ namespace OQSDrug
                 }
                 finally
                 {
-                    _parentForm.DataDbLock = false;
+                    CommonFunctions.DataDbLock = false;
                 }
             }
             else
@@ -641,11 +634,6 @@ namespace OQSDrug
                 {
                     List<string[]> results = new List<string[]>();
 
-                    if (RSBDI.Count == 0)
-                    {
-                        RSBDI = _parentForm.RSBDI;
-                    }
-
                     // 選択されたセルの中で最後のセルを取得
                     DataGridViewCell lastSelectedCell = dataGridViewFixed.SelectedCells[dataGridViewFixed.SelectedCells.Count - 1];
 
@@ -654,7 +642,7 @@ namespace OQSDrug
 
                     if (drugName.Length > 0)
                     {
-                        List<Tuple<string[], double>> topResults = await FuzzySearchAsync(drugName, IngreN, RSBDI, 0.2);
+                        List<Tuple<string[], double>> topResults = await FuzzySearchAsync(drugName, IngreN, CommonFunctions.RSBDI, 0.2);
 
                         if (topResults.Count > 0)
                         {
@@ -819,11 +807,6 @@ namespace OQSDrug
             Properties.Settings.Default.Sum = toolStripButtonSum.Checked;
             Properties.Settings.Default.Save();
 
-            if (toolStripButtonSum.Checked)
-            {
-
-            }
-
             toolStripComboBoxPt_SelectedIndexChanged(sender, EventArgs.Empty);
         }
 
@@ -911,6 +894,12 @@ namespace OQSDrug
         private void dataGridViewDH_Resize(object sender, EventArgs e)
         {
             AdjustFixedHeight();
+        }
+
+        private void toolStripButtonSinryo_Click(object sender, EventArgs e)
+        {
+            _parentForm.forceIdLink = true;
+            _parentForm.toolStripButtonSinryo_Click(sender, e);
         }
     }
 }

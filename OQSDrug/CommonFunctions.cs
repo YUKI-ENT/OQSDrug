@@ -12,6 +12,16 @@ namespace OQSDrug
 {
     public static class CommonFunctions
     {
+        // グローバル変数の定義
+        public static string DBProvider = "";
+        public static string connectionOQSdata = "";
+        public static bool DataDbLock = false;
+
+        public static List<string[]> RSBDI = new List<string[]>();
+        // Korodata Dictionary
+        public static Dictionary<string, string> ReceptToMedisCodeMap = new Dictionary<string, string>();
+
+
         public static void SnapToScreenEdges(Form form, int snapDistance, int snapCompPixel)
         {
             Rectangle workingArea = Screen.FromControl(form).WorkingArea;
@@ -88,6 +98,24 @@ namespace OQSDrug
             }
 
             return false; // 最大リトライ回数を超えた場合は失敗
+        }
+
+        public static async Task<bool> WaitForDbUnlock(int maxWaitms)
+        {
+            int interval = 10;
+            int retry = maxWaitms / interval;
+            for (int i = 0; i < retry; i++)
+            {
+                if (DataDbLock)
+                {
+                    await Task.Delay(interval);
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 

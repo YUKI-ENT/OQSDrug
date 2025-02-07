@@ -406,5 +406,29 @@ namespace OQSDrug.Properties {
                 this["DrugClass"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0, 0, 0")]
+        public global::System.Drawing.Rectangle SRBounds {
+            get {
+                return ((global::System.Drawing.Rectangle)(this["SRBounds"]));
+            }
+            set {
+                this["SRBounds"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool autoSR {
+            get {
+                return ((bool)(this["autoSR"]));
+            }
+            set {
+                this["autoSR"] = value;
+            }
+        }
     }
 }
