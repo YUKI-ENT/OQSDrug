@@ -21,6 +21,20 @@ namespace OQSDrug
         // Korodata Dictionary
         public static Dictionary<string, string> ReceptToMedisCodeMap = new Dictionary<string, string>();
 
+        // 基準値を格納する辞書
+        public static Dictionary<string, TKKReference> TKKreferenceDict = new Dictionary<string, TKKReference>();
+
+        // 基準値を格納するクラス
+        public class TKKReference
+        {
+            public string ItemCode { get; set; }
+            public string ItemName { get; set; }
+            public string CompairType { get; set; }
+            public string Limit1 { get; set; }
+            public string Limit2 { get; set; }
+            public int? Sex { get; set; }
+        }
+
 
         public static void SnapToScreenEdges(Form form, int snapDistance, int snapCompPixel)
         {
@@ -116,6 +130,83 @@ namespace OQSDrug
                 }
             }
             return false;
+        }
+
+        // 基準値を取得して辞書に格納
+        public static async Task<Dictionary<string, TKKReference>> LoadTKKReference()
+        {
+            var dict = new Dictionary<string, TKKReference>();
+
+            try
+            {
+                using (OleDbConnection connection = new OleDbConnection(connectionOQSdata))
+                {
+                    await connection.OpenAsync();
+                    string query = "SELECT ItemCode, ItemName, CompairType, Limit1, Limit2, Sex FROM TKK_reference";
+                    using (var command = new OleDbCommand(query, connection))
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (reader.Read())
+                        {
+                            string itemCode = reader["ItemCode"].ToString();
+                            if (itemCode.Length > 3)
+                            {
+                                itemCode = itemCode.Substring(0, 4);
+                                string itemName = reader["ItemName"].ToString();
+                                string compairType = reader["CompairType"].ToString();
+                                string limit1 = reader["Limit1"].ToString();
+                                string limit2 = reader["Limit2"].ToString();
+                                int? sex = reader["Sex"] == DBNull.Value ? 0 : (int?)Convert.ToInt32(reader["Sex"]);
+
+                                string itemCodeWithSex;
+
+                                if (sex == 0) // 男女共通
+                                {
+                                    itemCodeWithSex = $"1_{itemCode}";
+                                    dict[itemCodeWithSex] = new TKKReference
+                                    {
+                                        ItemCode = itemCode,
+                                        ItemName = itemName,
+                                        CompairType = compairType,
+                                        Limit1 = limit1,
+                                        Limit2 = limit2,
+                                        Sex = sex
+                                    };
+                                    itemCodeWithSex = $"2_{itemCode}";
+                                    dict[itemCodeWithSex] = new TKKReference
+                                    {
+                                        ItemCode = itemCode,
+                                        ItemName = itemName,
+                                        CompairType = compairType,
+                                        Limit1 = limit1,
+                                        Limit2 = limit2,
+                                        Sex = sex
+                                    };
+                                }
+                                else
+                                {
+                                    itemCodeWithSex = $"{sex}_{itemCode}";
+                                    dict[itemCodeWithSex] = new TKKReference
+                                    {
+                                        ItemCode = itemCode,
+                                        ItemName = itemName,
+                                        CompairType = compairType,
+                                        Limit1 = limit1,
+                                        Limit2 = limit2,
+                                        Sex = sex
+                                    };
+                                }
+                            }
+                        }
+                    }
+                }
+                return dict;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return new Dictionary<string, TKKReference>();
+            }
         }
     }
 

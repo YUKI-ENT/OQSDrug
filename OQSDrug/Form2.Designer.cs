@@ -547,9 +547,9 @@
             this.label14.AutoSize = true;
             this.label14.Location = new System.Drawing.Point(43, 534);
             this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(125, 12);
+            this.label14.Size = new System.Drawing.Size(148, 12);
             this.label14.TabIndex = 55;
-            this.label14.Text = "⑪ RSBase ID連携方式";
+            this.label14.Text = "⑪ ダイナ/RSBase 連携方式";
             this.toolTipSetting.SetToolTip(this.label14, "RSBaseのID連携を設定すると\r\nカルテ遷移に連動して自動で薬歴ビュワーを起動します");
             // 
             // checkBoxTopmost
@@ -621,7 +621,9 @@
             this.comboBoxRSBID.Items.AddRange(new object[] {
             "ID.dat",
             "temp_rs.txt",
-            "thept.txt"});
+            "thept.txt",
+            "ダイナC:\\DynaID",
+            "ダイナD:\\DynaID"});
             this.comboBoxRSBID.Location = new System.Drawing.Point(213, 531);
             this.comboBoxRSBID.Name = "comboBoxRSBID";
             this.comboBoxRSBID.Size = new System.Drawing.Size(124, 20);

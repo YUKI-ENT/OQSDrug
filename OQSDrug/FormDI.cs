@@ -26,6 +26,7 @@ namespace OQSDrug
         public string provider;
 
         private Color[] RowColors = { Color.WhiteSmoke, Color.White };
+        private int[] fixedColumnWidth = {120, 268, 60 };
 
         private List<(long PtID, string PtName)> ptData = new List<(long PtID, string PtName)>();
 
@@ -453,14 +454,14 @@ namespace OQSDrug
                 {
                     if (i == 0)
                     {
-                        dataGridView.Columns[i].Width = 120;
+                        dataGridView.Columns[i].Width = fixedColumnWidth[i];
                         dataGridView.Columns[i].DefaultCellStyle.Font = new Font("Meiryo UI", 8);
                     }
-                    else if (i == 1) dataGridView.Columns[i].Width = dataGridView.Width - 180;
+                    else if (i == 1) dataGridView.Columns[i].Width = fixedColumnWidth[i];
                     else if (i == 2)
                     {
                         dataGridView.Columns[i].Frozen = true;
-                        dataGridView.Columns[i].Width = 60;
+                        dataGridView.Columns[i].Width = fixedColumnWidth[i];
                     } 
                     else if (i > 2) dataGridView.Columns[i].Visible = false;
                 }
@@ -900,6 +901,28 @@ namespace OQSDrug
         {
             _parentForm.forceIdLink = true;
             _parentForm.toolStripButtonSinryo_Click(sender, e);
+        }
+
+        private void dataGridViewFixed_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
+        {
+            dataGridViewFixed.ColumnWidthChanged -= dataGridViewFixed_ColumnWidthChanged;
+
+            int colIndex = e.Column.Index;
+            if (colIndex < 2) // 最後の列ではない場合
+            {
+                var currentCol = dataGridViewFixed.Columns[colIndex];
+                var nextCol = dataGridViewFixed.Columns[colIndex + 1];
+                
+                int totalWidth = fixedColumnWidth[colIndex] + fixedColumnWidth[colIndex + 1];
+
+                nextCol.Width = totalWidth - currentCol.Width;
+
+            }
+            else
+            {
+                dataGridViewFixed.Columns[colIndex].Width = fixedColumnWidth[colIndex];
+            }
+            dataGridViewFixed.ColumnWidthChanged += dataGridViewFixed_ColumnWidthChanged;
         }
     }
 }

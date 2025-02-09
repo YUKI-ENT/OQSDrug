@@ -26,8 +26,7 @@ namespace OQSDrug
 
         private List<(long PtID, string PtName)> ptData = new List<(long PtID, string PtName)>();
 
-        private Dictionary<string, TKKReference> referenceDict = new Dictionary<string, TKKReference>();
-
+       
         public FormTKK(Form1 parentForm)
         {
             InitializeComponent();
@@ -47,17 +46,7 @@ namespace OQSDrug
             }
         }
 
-        // 基準値を格納するクラス
-        public class TKKReference
-        {
-            public string ItemCode { get; set; }
-            public string ItemName { get; set; }
-            public string CompairType { get; set; }
-            public string Limit1 { get; set; }
-            public string Limit2 { get; set; }
-            public int? Sex { get; set; }
-        }
-
+        
         public async Task LoadToolStripComboBox()
         {
             if (await CommonFunctions.WaitForDbUnlock(2000))
@@ -159,8 +148,6 @@ namespace OQSDrug
         {
             InitializeContextMenu();
 
-            referenceDict = await LoadTKKReference();
-            
             await LoadToolStripComboBox();
         }
 
@@ -304,83 +291,6 @@ namespace OQSDrug
 
         }
 
-        // 基準値を取得して辞書に格納
-        private async Task<Dictionary<string, TKKReference>> LoadTKKReference()
-        {
-            var referenceDict = new Dictionary<string, TKKReference>();
-            
-            try
-            {
-                using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
-                {
-                    await connection.OpenAsync();
-                    string query = "SELECT ItemCode, ItemName, CompairType, Limit1, Limit2, Sex FROM TKK_reference";
-                    using (var command = new OleDbCommand(query, connection))
-                    using (var reader = await command.ExecuteReaderAsync())
-                    {
-                        while (reader.Read())
-                        {
-                            string itemCode = reader["ItemCode"].ToString(); //最初の4文字で識別する
-                            if (itemCode.Length > 3)
-                            {
-                                itemCode = itemCode.Substring(0, 4);
-                                string itemName = reader["ItemName"].ToString();
-                                string compairType = reader["CompairType"].ToString();
-                                string limit1 = reader["Limit1"].ToString();
-                                string limit2 = reader["Limit2"].ToString();
-                                int? sex = reader["Sex"] == DBNull.Value ? 0 : (int?)Convert.ToInt32(reader["Sex"]);
-
-                                string itemCodeWithSex = "";
-
-                                if (sex == 0) //男女共通
-                                {
-                                    itemCodeWithSex = $"1_{itemCode}";
-                                    referenceDict[itemCodeWithSex] = new TKKReference
-                                    {
-                                        ItemCode = itemCode,
-                                        ItemName = itemName,
-                                        CompairType = compairType,
-                                        Limit1 = limit1,
-                                        Limit2 = limit2,
-                                        Sex = sex
-                                    };
-                                    itemCodeWithSex = $"2_{itemCode}";
-                                    referenceDict[itemCodeWithSex] = new TKKReference
-                                    {
-                                        ItemCode = itemCode,
-                                        ItemName = itemName,
-                                        CompairType = compairType,
-                                        Limit1 = limit1,
-                                        Limit2 = limit2,
-                                        Sex = sex
-                                    };
-                                }
-                                else
-                                {
-                                    itemCodeWithSex = $"{sex}_{itemCode}";
-                                    referenceDict[itemCodeWithSex] = new TKKReference
-                                    {
-                                        ItemCode = itemCode,
-                                        ItemName = itemName,
-                                        CompairType = compairType,
-                                        Limit1 = limit1,
-                                        Limit2 = limit2,
-                                        Sex = sex
-                                    };
-                                }
-                            }
-                        }
-                    }
-                }
-                return referenceDict;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-                return null;
-            }
-        }
-
         private void FormTKK_LocationChanged(object sender, EventArgs e)
         {
             if (this.WindowState == FormWindowState.Normal)
@@ -409,12 +319,12 @@ namespace OQSDrug
                 string itemCodeWithSex = $"{sex}_{itemCode}";
 
                 // 基準値が存在しない場合は何もしない
-                if (e.Value == null || string.IsNullOrWhiteSpace(e.Value.ToString()) || !referenceDict.ContainsKey(itemCodeWithSex)) return;
+                if (e.Value == null || string.IsNullOrWhiteSpace(e.Value.ToString()) || !CommonFunctions.TKKreferenceDict.ContainsKey(itemCodeWithSex)) return;
 
                 //カラムが3以上
                 if (e.ColumnIndex < 4) return;
 
-                var reference = referenceDict[itemCodeWithSex];
+                var reference = CommonFunctions.TKKreferenceDict[itemCodeWithSex];
                 string compairType = reference.CompairType;
                 string limit1 = reference.Limit1;
                 string limit2 = reference.Limit2;

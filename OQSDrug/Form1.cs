@@ -90,7 +90,7 @@ namespace OQSDrug
 
             // Status check
             okSettings = await UpdateStatus();
-            this.StartStop.Enabled = (okSettings == 0b1111);
+            Invoke(new Action(() => this.StartStop.Enabled = (okSettings == 0b1111)));
 
             //AutoStartStop
             if (Properties.Settings.Default.AutoStart)
@@ -285,29 +285,8 @@ namespace OQSDrug
             form2.ShowDialog(this);
 
             //Form2閉じたあと
-            loadConnectionString();
 
-            SetupYZKSindicator();
-            SetupTableLayout();
-
-            okSettings = await UpdateStatus();
-
-            await setStatus();
-
-            //autoRSB = Properties.Settings.Default.autoRSB;
-            //checkBoxAutoview.Checked = autoRSB;
-            checkBoxAutoview_CheckedChanged(sender, EventArgs.Empty);
-
-            checkBoxAutoStart.Checked = Properties.Settings.Default.AutoStart;
-
-            LoadViewerSettings();
-
-            InitNotifyIcon();
-
-            if ((okSettings & (0b0001)) == 1) //OQSDrugData OK
-            {
-                await LoadKoroDataAsync();
-            }
+            initializeForm();
 
             StartTimer();
 
@@ -812,7 +791,7 @@ namespace OQSDrug
             }
         }
 
-        private async void Form1_Load(object sender, EventArgs e)
+        private void Form1_Load(object sender, EventArgs e)
         {
             // 前バージョンからのUpgradeを実行していないときは、Upgradeを実施する
             if (Properties.Settings.Default.IsUpgrade == false)
@@ -834,6 +813,14 @@ namespace OQSDrug
 
             PrepareLogFiles();
 
+            initializeForm();
+
+            // Timer start
+            StartTimer();
+        }
+
+        private async void initializeForm()
+        {
             //MessageBox.Show( getOLEProviders());
             InitializeDBProvider();
             loadConnectionString();
@@ -850,7 +837,7 @@ namespace OQSDrug
             autoRSB = Properties.Settings.Default.autoRSB;
             autoTKK = Properties.Settings.Default.autoTKK;
             autoSR = Properties.Settings.Default.autoSR;
-            
+
             checkBoxAutoview.CheckedChanged -= checkBoxAutoview_CheckedChanged;
             checkBoxAutoTKK.CheckedChanged -= checkBoxAutoview_CheckedChanged;
             checkBoxAutoSR.CheckedChanged -= checkBoxAutoview_CheckedChanged;
@@ -863,7 +850,7 @@ namespace OQSDrug
             checkBoxAutoTKK.CheckedChanged += checkBoxAutoview_CheckedChanged;
             checkBoxAutoSR.CheckedChanged += checkBoxAutoview_CheckedChanged;
 
-            checkBoxAutoview_CheckedChanged(sender, EventArgs.Empty); //初回実行してFileWatcherを起動させる
+            checkBoxAutoview_CheckedChanged(this, EventArgs.Empty); //初回実行してFileWatcherを起動させる
 
             checkBoxAutoStart.Checked = Properties.Settings.Default.AutoStart;
 
@@ -873,6 +860,10 @@ namespace OQSDrug
 
             if ((okSettings & (0b0001)) == 1) //OQSDrugData OK
             {
+                AddLog("特定健診基準値データを読み込みます");
+                CommonFunctions.TKKreferenceDict = await CommonFunctions.LoadTKKReference();
+                AddLog($"{CommonFunctions.TKKreferenceDict.Count}件のデータを読み込みました");
+
                 await LoadKoroDataAsync();
             }
 
@@ -882,8 +873,6 @@ namespace OQSDrug
                 await LoadRSBDIAsync(RSBdrive + @"\Users\rsn\public_html\drug_RSB.dat");
             }
 
-            // Timer start
-            StartTimer();
         }
 
         private async Task setStatus()
@@ -2300,9 +2289,17 @@ namespace OQSDrug
                 InitializeFileWatcher();
 
                 //初回読み込み
-                if (File.Exists(idFile))
+                if (idStyle < 3 && File.Exists(idFile))
                 {
                     await ReadIdAsync(idFile,idStyle);
+                } 
+                else if(idStyle == 3)
+                {
+                    string latestIdFile = KeepLatestFile(idFile);
+                    if (latestIdFile.Length > 0)
+                    {
+                        await ReadIdAsync(latestIdFile, idStyle);
+                    }
                 }
                 
             } else
@@ -2337,6 +2334,14 @@ namespace OQSDrug
                     idFile = @"C:\common\thept.txt";
                     idStyle = 2;
                     break;
+                case 3:
+                    idFile = @"C:\DynaID";
+                    idStyle = 3;
+                    break;
+                case 4:
+                    idFile = @"D:\DynaID";
+                    idStyle = 3;
+                    break;
             }
 
             // FileSystemWatcherを作成し、監視対象のディレクトリとファイルを指定
@@ -2345,23 +2350,43 @@ namespace OQSDrug
             //fileWatcher.Filter = Path.GetFileName(idFile);     // ファイル名でフィルタリング
             //fileWatcher.NotifyFilter = NotifyFilters.LastWrite; // 最終書き込み変更を監視
 
-            string idPath = Path.GetDirectoryName(idFile);
+            string idPath = (idStyle < 3) ? Path.GetDirectoryName(idFile) : idFile;
             if (!Directory.Exists(idPath))
             {
-                MessageBox.Show($"{idPath}が存在しません。RSBaseがインストールされ、ID連携の設定を確認してください。","RSBaseID連携エラー");
-                return;
+                try
+                {
+                    Directory.CreateDirectory(idPath);
+                    AddLog($"{idPath}が見つからなかったので作成しました");
+                }
+                catch(Exception ex)
+                {
+                    MessageBox.Show($"RSBase ID連携フォルダ{idPath}が存在しません。ID連携の設定を確認してください。", "ID連携エラー");
+                    return;
+                }
             }
-            
+
             try
             {
-                fileWatcher = new FileSystemWatcher
+                if (idStyle == 3) //ダイナ他社連携
                 {
-                    Path = idPath,   // ディレクトリを監視
-                    Filter = Path.GetFileName(idFile),     // ファイル名でフィルタリング
-                    NotifyFilter = NotifyFilters.LastWrite, // | NotifyFilters.CreationTime, // 必要な通知フィルタを設定
-                    EnableRaisingEvents = true             // 監視を有効化
-                };
-
+                    fileWatcher = new FileSystemWatcher
+                    {
+                        Path = idFile,
+                        Filter = "dyna*.txt", // 拡張子がTXTのすべてのファイル
+                        NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite, // ファイル作成・更新を検知
+                        EnableRaisingEvents = true             // 監視を有効化
+                    };
+                }
+                else
+                {
+                    fileWatcher = new FileSystemWatcher
+                    {
+                        Path = idPath,   // ディレクトリを監視
+                        Filter = Path.GetFileName(idFile),     // ファイル名でフィルタリング
+                        NotifyFilter = NotifyFilters.LastWrite, // | NotifyFilters.CreationTime, // 必要な通知フィルタを設定
+                        EnableRaisingEvents = true             // 監視を有効化
+                    };
+                }
 
                 // 監視イベントハンドラを設定
                 fileWatcher.Changed += FileWatcher_Changed;
@@ -2378,17 +2403,19 @@ namespace OQSDrug
         // ファイルが変更されたときに呼ばれるイベントハンドラ
         private async void FileWatcher_Changed(object sender, FileSystemEventArgs e)
         {
-            if (!idChageCalled && e.FullPath == idFile)
+            if (!idChageCalled)
             {
                 idChageCalled = true; //二重起動を避ける
 
                 await Task.Delay(fileReadDelayms); // 読み込み遅延
 
-                // ファイル内容の読み取り
-                await ReadIdAsync(e.FullPath, idStyle);
+                if ((idStyle < 3 && e.FullPath == idFile) || (idStyle == 3 && e.FullPath.StartsWith(idFile, StringComparison.OrdinalIgnoreCase)))
+                {
+                    // ファイル内容の読み取り
+                    await ReadIdAsync(e.FullPath, idStyle);
 
-                await reloadDataAsync();
-
+                    await reloadDataAsync();
+                }
                 idChageCalled = false;
             }
         }
@@ -2408,12 +2435,20 @@ namespace OQSDrug
                     }
                 });
 
-                //thept.txtは内容が違う
-                if (style == 2)
+                if (style == 3)
                 {
-                    fileContent = fileContent.Split(',')[1];
+                    //ダイナ
+                    fileContent = fileContent.Split(',')[0];
                 }
-                AddLog($"RSB連携ファイルの変更を検知。内容：{fileContent}");
+                else
+                {
+                    //thept.txtは内容が違う
+                    if (style == 2)
+                    {
+                        fileContent = fileContent.Split(',')[1];
+                    }
+                }
+                AddLog($"ダイナ/RSB連携ファイルの変更を検知。内容：{fileContent}");
 
                 // 数値に変換を試みる
                 if (long.TryParse(fileContent, out long idValue))
@@ -2432,10 +2467,62 @@ namespace OQSDrug
                 {
                     AddLog("RSB連携ファイルの内容が数値に変換できませんでした。");
                 }
+
+                //ダイナの場合は削除する
+                if (style == 3)
+                {
+                    File.Delete(filePath);
+                    AddLog($"{filePath}を削除しました");
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"FileWatcherエラー: {ex.Message}");
+            }
+        }
+
+        private string KeepLatestFile(string folderName) //最新のファイルのみ残してあとはすべて削除する
+        {
+            try
+            {
+                // 指定フォルダの全ファイルを取得
+                var files = new DirectoryInfo(folderName).GetFiles();
+
+                if (files.Length == 0)
+                {
+                    Console.WriteLine("フォルダ内にファイルがありません。");
+                    return string.Empty;
+                }
+
+                // 更新日時が最新のファイルを取得
+                var newestFile = files.OrderByDescending(f => f.LastWriteTime).First();
+
+                Console.WriteLine($"残すファイル: {newestFile.FullName}");
+
+                // 最新のファイル以外を削除
+                foreach (var file in files)
+                {
+                    if (file.FullName != newestFile.FullName)
+                    {
+                        try
+                        {
+                            file.Delete();
+                            Console.WriteLine($"削除: {file.Name}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"削除失敗: {file.Name}, エラー: {ex.Message}");
+                        }
+                    }
+                }
+
+                // 最新のファイルのフルパスを返す
+                return newestFile.FullName;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"エラー: {ex.Message}");
+                return string.Empty;
             }
         }
 

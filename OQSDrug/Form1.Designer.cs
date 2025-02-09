@@ -210,6 +210,7 @@
             // 
             // toolStripComboBoxDBProviders
             // 
+            this.toolStripComboBoxDBProviders.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.toolStripComboBoxDBProviders.Name = "toolStripComboBoxDBProviders";
             this.toolStripComboBoxDBProviders.Size = new System.Drawing.Size(180, 27);
             this.toolStripComboBoxDBProviders.Visible = false;
@@ -223,7 +224,6 @@
             // 
             // toolStripTextBoxDebug
             // 
-            this.toolStripTextBoxDebug.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
             this.toolStripTextBoxDebug.Name = "toolStripTextBoxDebug";
             this.toolStripTextBoxDebug.Size = new System.Drawing.Size(100, 27);
             this.toolStripTextBoxDebug.ToolTipText = "PtIDwithBranch";
