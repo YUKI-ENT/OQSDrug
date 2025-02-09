@@ -4,8 +4,7 @@
 
 紹介動画
 
-[![紹介動画](https://img.youtube.com/vi/vewT-Vm346o/0.jpg)](https://youtu.be/vewT-Vm346o)
-
+[![紹介動画](https://img.youtube.com/vi/RAddbMqDUIo/0.jpg)](https://youtu.be/RAddbMqDUIo)
 
 電子カルテ「ダイナミクス」では、閲覧同意がある方の薬剤情報や健診情報をPDF形式で取得可能ですがxml形式には対応してないため、耳鼻科小児科など処方回数が多くなると薬歴が見にくくなります。
 本ソフトウェア **OQSDrug** を使用することで、次のような利点があります：
