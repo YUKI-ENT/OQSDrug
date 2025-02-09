@@ -19,7 +19,8 @@
   ![oqsdrug4](https://github.com/user-attachments/assets/fc92e45c-42fa-453f-94ff-ef45789aca44)
 
 - 薬歴は薬効分類で色分け表示可能
-- 選択してコピーし電カル等へのペースト、RSBaseがあれば薬情連動表示も可能
+- 薬剤や健診結果を選択してコピーし電カル等へのペースト可能
+- ダイナミクスやRSBaseのカルテ遷移を検知して、連動表示/非表示可能
   ![oqsdrug53](https://github.com/user-attachments/assets/45798881-3699-4e76-ba95-55c0000c1b87)
 
  
@@ -104,6 +105,7 @@
        xmlの薬歴、健診は標準で必ず取得します。<br>
   ⑩ 指定するとタスクトレイに最小化した状態で起動します<br>
   ⑪ `RSBase連動`は、ID.dat, temp_rs.txt、thept.txt方式に対応しますが、**thept.txtが一番安定している**ようです。RSBaseの`(52)  c:\common\thept.txt (&& c:\ID_temp.txt)にIDを出力 `をyesにしてください。<br>
+     また、ダイナミクスの他社連携を利用してのID連携も可能です。[参照](https://github.com/YUKI-ENT/OQSDrug/releases/tag/v1.25.2.8) <br>
   ⑫ `薬歴を最前面で表示`をチェックすると、薬歴ウインドウが最前面で表示されるようになります<br>
   ⑫ ビュワー表示時の初期期間を設定します<br>
   
