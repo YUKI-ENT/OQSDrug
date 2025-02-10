@@ -104,7 +104,7 @@
        xmlの薬歴、健診は標準で必ず取得します。<br>
   ⑩ 指定するとタスクトレイに最小化した状態で起動します<br>
   ⑪ `RSBase連動`は、ID.dat, temp_rs.txt、thept.txt方式に対応しますが、**thept.txtが一番安定している**ようです。RSBaseの`(52)  c:\common\thept.txt (&& c:\ID_temp.txt)にIDを出力 `をyesにしてください。<br>
-     また、ダイナミクスの他社連携を利用してのID連携も可能です。[参照](https://github.com/YUKI-ENT/OQSDrug/releases/tag/v1.25.2.8) <br>
+     また、ダイナミクスの他社連携を利用してのID連携も可能です。[参照](https://github.com/YUKI-ENT/OQSDrug/releases/tag/v1.25.2.10) <br>
   ⑫ `薬歴を最前面で表示`をチェックすると、薬歴ウインドウが最前面で表示されるようになります<br>
   ⑫ ビュワー表示時の初期期間を設定します<br>
   
