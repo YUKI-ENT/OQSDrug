@@ -640,10 +640,11 @@ namespace OQSDrug
 
                     string drugName = lastSelectedCell.Value?.ToString();
                     string IngreN = dataGridViewFixed.Rows[lastSelectedCell.RowIndex].Cells["IngreN"].Value?.ToString();
+                    string YJcode = dataGridViewFixed.Rows[lastSelectedCell.RowIndex].Cells["MedisCode"].Value?.ToString();
 
                     if (drugName.Length > 0)
                     {
-                        List<Tuple<string[], double>> topResults = await FuzzySearchAsync(drugName, IngreN, CommonFunctions.RSBDI, 0.2);
+                        List<Tuple<string[], double>> topResults = await FuzzySearchAsync(drugName, IngreN, YJcode, CommonFunctions.RSBDI, 0.2);
 
                         if (topResults.Count > 0)
                         {
@@ -672,7 +673,7 @@ namespace OQSDrug
         }
 
         // リストRSBDIのカラム1,2を対象にあいまい検索を行い、上位10件を返すメソッド
-        public async Task<List<Tuple<string[], double>>> FuzzySearchAsync(string drugName, string ingreN, List<string[]> DI, double cutoffThreshold = 0.4, double bonusForOriginator = 0.4, double penaltyForMissingIngreN = 0.5)
+        public async Task<List<Tuple<string[], double>>> FuzzySearchAsync(string drugName, string ingreN, string YJcode, List<string[]> DI, double cutoffThreshold = 0.4, double bonusForOriginator = 0.4, double penaltyForMissingIngreN = 0.5)
         {
             //double bonusForOriginator = 0.4;        // "先発" の場合のボーナス
             //double penaltyForMissingIngreN = 0.5;   // 一般名が含まれない場合のペナルティ
@@ -685,68 +686,91 @@ namespace OQSDrug
             //数字アルファベットは除去しておく
             //string drugNameNoDigit = RemoveDigits(drugName);
 
-            if (ingreN == null || ingreN == "") ingreN = processedDrugName;
+            if (string.IsNullOrEmpty(ingreN)) ingreN = processedDrugName;
 
-            // 各レコードに対してN-gram類似度を計算（非同期処理）
-            var tasks = DI.Select(record => Task.Run(() =>
+            string yjPrefix = YJcode.Length >= 9 ? YJcode.Substring(0, 9) : YJcode;
+
+            var exactMatchList = new List<Tuple<string[], double>>();
+            var prefixMatchList = new List<Tuple<string[], double>>();
+            var fuzzyMatchTasks = new List<Task<Tuple<string[], double>>>();
+
+            foreach (var record in DI)
             {
-                string column1 = record[0]; // 1列目
-                string column2 = record[1]; // 2列目
-                string column4 = record[3]; // 4列目（"先発" の確認に使用）
+                string column1 = record[0];  // 1列目（薬品名）
+                string column2 = record[1];  // 2列目（成分名）
+                string column3 = record[2];  // 3列目（YJコード）
+                string column4 = record[3];  // 4列目（"先発" の確認）
 
-                double similarityColumn1 = CalculateNGramSimilarity(processedDrugName, column1);
-                double similarityColumn2 = CalculateNGramSimilarity(ingreN, column2);
-
-                // 編集距離を考慮したスコア
-                double editDistanceScore = 1.0 - (double)CalculateLevenshteinDistance(processedDrugName, column1)
-                                           / Math.Max(processedDrugName.Length, column1.Length);
-
-                // 最終的なスコア（加重平均）
-                double similarity = weightColumn1 * Math.Max(similarityColumn1, editDistanceScore) +
-                                    weightColumn2 * similarityColumn2;
-
-                bool exact = false;
-                // 完全一致の特別スコア
-                if (drugName == column1)
+                if (!string.IsNullOrEmpty(YJcode))
                 {
-                    similarity = 1.0;
-                    exact = true;
-                }
-                else if (ingreN == column1)
-                {
-                    similarity = 0.9;
-                    exact = true;
+                    // YJコード完全一致
+                    if (column3 == YJcode)
+                    {
+                        exactMatchList.Add(new Tuple<string[], double>(record, 1.0));
+                        continue;
+                    }
+                    // YJコード上位9桁一致
+                    if (column3.Length >= 9 && column3.Substring(0, 9) == yjPrefix)
+                    {
+                        prefixMatchList.Add(new Tuple<string[], double>(record, 0.9));
+                        continue;
+                    }
                 }
 
-                // "先発" のボーナス
-                if (similarity > cutoffThreshold && column4 == "先発")
+                // あいまい検索の処理を非同期タスクで並列実行
+                fuzzyMatchTasks.Add(Task.Run(() =>
                 {
-                    similarity += bonusForOriginator;
-                }
+                    double similarityColumn1 = CalculateNGramSimilarity(processedDrugName, column1);
+                    double similarityColumn2 = CalculateNGramSimilarity(ingreN, column2);
 
-                // 一般名が含まれない場合のペナルティ
-                if (!exact && !column2.Contains(ingreN) && !ingreN.Contains(column2))
-                {
-                    similarity -= penaltyForMissingIngreN;
-                }
+                    double editDistanceScore = 1.0 - (double)CalculateLevenshteinDistance(processedDrugName, column1)
+                                               / Math.Max(processedDrugName.Length, column1.Length);
 
-                // 類似度の下限を 0 に制限
-                similarity = Math.Max(0, similarity);
+                    double similarity = weightColumn1 * Math.Max(similarityColumn1, editDistanceScore) +
+                                        weightColumn2 * similarityColumn2;
 
-                return new Tuple<string[], double>(record, similarity);  // レコードと類似度のタプルを返す
-            }));
+                    bool exact = false;
+                    if (drugName == column1)
+                    {
+                        similarity = 1.0;
+                        exact = true;
+                    }
+                    else if (ingreN == column1)
+                    {
+                        similarity = 0.9;
+                        exact = true;
+                    }
 
-            // 全タスクの完了を待つ
-            var results = await Task.WhenAll(tasks);
+                    if (similarity > cutoffThreshold && column4 == "先発")
+                    {
+                        similarity += bonusForOriginator;
+                    }
 
-            // 類似度の降順で並び替え、カットオフ値以上のものだけフィルタリング
-            var filteredResults = results
-                .Where(r => r.Item2 >= cutoffThreshold)  // 類似度がカットオフ値以上のものを選択
-                .OrderByDescending(r => r.Item2)  // 類似度の降順で並べ替え
-                .Take(20)  // 上位10件を取得
+                    if (!exact && !column2.Contains(ingreN) && !ingreN.Contains(column2))
+                    {
+                        similarity -= penaltyForMissingIngreN;
+                    }
+
+                    similarity = Math.Max(0, similarity);
+
+                    return new Tuple<string[], double>(record, similarity);
+                }));
+            }
+
+            // あいまい検索のタスク完了を待つ
+            var fuzzyResults = await Task.WhenAll(fuzzyMatchTasks);
+
+            // 類似度でフィルタリング
+            var filteredFuzzyResults = fuzzyResults
+                .Where(r => r.Item2 >= cutoffThreshold)
+                .OrderByDescending(r => r.Item2)
                 .ToList();
 
-            return filteredResults;
+            // 結果を統合（完全一致 → 9桁一致 → あいまい検索）
+            var finalResults = exactMatchList.Concat(prefixMatchList).Concat(filteredFuzzyResults).Take(20).ToList();
+
+
+            return finalResults;
         }
 
         private string RemoveCampany(string drugName)
@@ -923,6 +947,22 @@ namespace OQSDrug
                 dataGridViewFixed.Columns[colIndex].Width = fixedColumnWidth[colIndex];
             }
             dataGridViewFixed.ColumnWidthChanged += dataGridViewFixed_ColumnWidthChanged;
+        }
+
+        private void dataGridViewFixed_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            // e.ColumnIndex が有効な値であることを確認
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            {
+                // DataGridViewの列名を取得
+                string columnName = dataGridViewFixed.Columns[e.ColumnIndex].Name;
+
+                // 列名が "DrugN" だった場合に関数を実行
+                if (columnName == "DrugN")
+                {
+                    SearchMedicineMenuItem_Click(sender, e);
+                }
+            }
         }
     }
 }

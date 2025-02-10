@@ -289,7 +289,7 @@
             this.checkBoxAutoview.TabIndex = 27;
             this.checkBoxAutoview.Text = "薬歴";
             this.checkBoxAutoview.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
-            this.toolTip1.SetToolTip(this.checkBoxAutoview, "RSBaseと連動して薬歴が存在すれば自動で表示します");
+            this.toolTip1.SetToolTip(this.checkBoxAutoview, "RSBase/ダイナと連動して薬歴が存在すれば自動で表示します");
             this.checkBoxAutoview.UseVisualStyleBackColor = true;
             this.checkBoxAutoview.CheckedChanged += new System.EventHandler(this.checkBoxAutoview_CheckedChanged);
             // 
@@ -337,7 +337,7 @@
             this.checkBoxAutoTKK.TabIndex = 28;
             this.checkBoxAutoTKK.Text = "健診";
             this.checkBoxAutoTKK.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
-            this.toolTip1.SetToolTip(this.checkBoxAutoTKK, "RSBaseと連動して特定健診履歴が存在すれば自動で表示します");
+            this.toolTip1.SetToolTip(this.checkBoxAutoTKK, "特定健診履歴を連動表示します");
             this.checkBoxAutoTKK.UseVisualStyleBackColor = true;
             this.checkBoxAutoTKK.CheckedChanged += new System.EventHandler(this.checkBoxAutoview_CheckedChanged);
             // 
@@ -352,7 +352,7 @@
             this.checkBoxAutoSR.TabIndex = 29;
             this.checkBoxAutoSR.Text = "診療";
             this.checkBoxAutoSR.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
-            this.toolTip1.SetToolTip(this.checkBoxAutoSR, "RSBaseと連動して診療手術情報が存在すれば自動で表示します");
+            this.toolTip1.SetToolTip(this.checkBoxAutoSR, "診療手術情報を連動表示します");
             this.checkBoxAutoSR.UseVisualStyleBackColor = true;
             this.checkBoxAutoSR.CheckedChanged += new System.EventHandler(this.checkBoxAutoview_CheckedChanged);
             // 
@@ -456,7 +456,7 @@
             this.groupBox1.Size = new System.Drawing.Size(276, 51);
             this.groupBox1.TabIndex = 30;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "RSBase連動";
+            this.groupBox1.Text = "ID連携";
             // 
             // Form1
             // 

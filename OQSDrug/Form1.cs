@@ -270,7 +270,7 @@ namespace OQSDrug
         }
 
 
-        private async void toolStripButtonSettings_Click(object sender, EventArgs e)
+        private void toolStripButtonSettings_Click(object sender, EventArgs e)
         {
             //動作中の場合は停止する
             if (isTimerRunning)
@@ -2360,7 +2360,7 @@ namespace OQSDrug
                 }
                 catch(Exception ex)
                 {
-                    MessageBox.Show($"RSBase ID連携フォルダ{idPath}が存在しません。ID連携の設定を確認してください。", "ID連携エラー");
+                    MessageBox.Show($"RSBase ID連携フォルダ{idPath}が存在しません。ID連携の設定を確認してください。{ex.Message}", "ID連携エラー");
                     return;
                 }
             }
@@ -3088,11 +3088,11 @@ namespace OQSDrug
                 int count = 0;
                 while ((line = await reader.ReadLineAsync()) != null)
                 {
-                    // カンマ区切りで分割し、指定カラム(0, 3, 7)のみ取得
+                    // カンマ区切りで分割し、指定カラム(0, 3, 8)のみ取得
                     var columns = line.Split(',');
                     if (columns.Length > 7) // 必要なカラム数が存在するか確認
                     {
-                        CommonFunctions.RSBDI.Add(new string[] { columns[0], columns[3], columns[7], columns[5] }); // 0:商品名、1:一般名、2:コード、3：先発
+                        CommonFunctions.RSBDI.Add(new string[] { columns[0], columns[3], columns[8], columns[5] }); // 0:商品名、1:一般名、2:コード、3：先発
                         count++;
                     }
                 }

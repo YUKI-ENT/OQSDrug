@@ -286,6 +286,7 @@
             this.dataGridViewFixed.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.dataGridViewFixed.Size = new System.Drawing.Size(448, 580);
             this.dataGridViewFixed.TabIndex = 4;
+            this.dataGridViewFixed.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewFixed_CellDoubleClick);
             this.dataGridViewFixed.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dataGridViewFixed_ColumnWidthChanged);
             this.dataGridViewFixed.Scroll += new System.Windows.Forms.ScrollEventHandler(this.dataGridViewFixed_Scroll);
             // 
