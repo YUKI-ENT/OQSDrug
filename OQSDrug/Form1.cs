@@ -32,7 +32,7 @@ namespace OQSDrug
         public long tempId = 0;
         public bool autoRSB = false, forceIdLink = false, autoTKK = false, autoSR = false;
         
-        public string RSBdrive = "";
+        public string RSBdrive = string.Empty;
 
         string DynaTable = "T_資格確認結果表示";
         DataTable dynaTable = new DataTable();
@@ -868,7 +868,7 @@ namespace OQSDrug
             }
 
             RSBdrive = await GetRSBdrive();
-            if (RSBdrive != null)
+            if (!string.IsNullOrEmpty(RSBdrive))
             {
                 await LoadRSBDIAsync(RSBdrive + @"\Users\rsn\public_html\drug_RSB.dat");
             }

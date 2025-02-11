@@ -576,7 +576,7 @@ namespace OQSDrug
             // メニューアイテムを追加
             contextMenuStrip.Items.Add(copyFullMenuItem);
             contextMenuStrip.Items.Add(copyHalfMenuItem);
-            if (_parentForm.RSBdrive != null)
+            if (!string.IsNullOrEmpty(_parentForm.RSBdrive))
             {
                 contextMenuStrip.Items.Add(searchMedicineMenuItem);
             }
@@ -951,16 +951,23 @@ namespace OQSDrug
 
         private void dataGridViewFixed_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            // e.ColumnIndex が有効な値であることを確認
-            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            if (string.IsNullOrEmpty(_parentForm.RSBdrive))
             {
-                // DataGridViewの列名を取得
-                string columnName = dataGridViewFixed.Columns[e.ColumnIndex].Name;
-
-                // 列名が "DrugN" だった場合に関数を実行
-                if (columnName == "DrugN")
+                MessageBox.Show("RSBaseが検出できなかったので薬情検索はできません");
+            }
+            else
+            {
+                // e.ColumnIndex が有効な値であることを確認
+                if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
                 {
-                    SearchMedicineMenuItem_Click(sender, e);
+                    // DataGridViewの列名を取得
+                    string columnName = dataGridViewFixed.Columns[e.ColumnIndex].Name;
+
+                    // 列名が "DrugN" だった場合に関数を実行
+                    if (columnName == "DrugN")
+                    {
+                        SearchMedicineMenuItem_Click(sender, e);
+                    }
                 }
             }
         }
