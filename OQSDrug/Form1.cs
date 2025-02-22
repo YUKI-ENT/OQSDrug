@@ -99,73 +99,79 @@ namespace OQSDrug
             }
 
             //取得作業
-            if (isOQSRunnnig && okSettings == 0b1111)
+            if (isOQSRunnnig)
             {
-                await UpdateClientAsync();
-
-                // Datadynaのデータ取得
-                dynaTable.Clear();
-                dynaTable = await LoadDataFromDatabaseAsync(Properties.Settings.Default.Datadyna);
-
-                if (dynaTable != null)
-                {
-                    // 薬剤PDF
-                    if (Properties.Settings.Default.DrugFileCategory % 2 == 0) //xml
-                    {
-                        MakeReq(Properties.Settings.Default.DrugFileCategory + 10, dynaTable);
-                    }
-                    else
-                    {
-                        MakeReq(Properties.Settings.Default.DrugFileCategory + 1 + 10, dynaTable); //xml
-                        MakeReq(Properties.Settings.Default.DrugFileCategory + 10, dynaTable);  //pdf
-                    }
-
-                    // 健診PDF
-                    if (Properties.Settings.Default.KensinFileCategory == 1)
-                    {
-                        MakeReq(102, dynaTable);
-                        MakeReq(101, dynaTable); //固定間隔
-                    }
-                    else // xmlのみ、Or 健診日によってPDF日付を変える場合
-                    {
-                        MakeReq(102, dynaTable); // xmlを先行、取り込み後健診実施日を確定、TKKdateに設定
-                    }
+                if (okSettings != 0b1111)
+                {   // Running->NG->Stop
+                    Invoke(new Action(() => StartStop.Checked = false));
                 }
-                await reloadDataAsync();
-
-                // Resフォルダの処理
-                bool processCompleted = false;
-                bool isRemainRes = true;
-
-                // 5秒ごとにProcessResAsyncを呼び出し
-                while ((!processCompleted || isRemainRes) && isOQSRunnnig)
+                else
                 {
-                    await Task.Delay(5000);
+                    await UpdateClientAsync();
 
-                    if (!isTimerRunning || !isOQSRunnnig) break;
+                    // Datadynaのデータ取得
+                    dynaTable.Clear();
+                    dynaTable = await LoadDataFromDatabaseAsync(Properties.Settings.Default.Datadyna);
 
-                    processCompleted = await ProcessResAsync();
-                    if (processCompleted) AddLog("すべてのresファイルを処理しました");
-
-                    isRemainRes = await RemainResTask();
-
-                    if (isRemainRes && (DateTime.Now - startTime).TotalSeconds > (Properties.Settings.Default.TimerInterval - 5))
+                    if (dynaTable != null)
                     {
-                        processCompleted = true;
-                        isRemainRes = false;
-                        AddLog("時間内に処理が終了しませんでしたので、タイマー処理を中止します");
-                    }
+                        // 薬剤PDF
+                        if (Properties.Settings.Default.DrugFileCategory % 2 == 0) //xml
+                        {
+                            MakeReq(Properties.Settings.Default.DrugFileCategory + 10, dynaTable);
+                        }
+                        else
+                        {
+                            MakeReq((Properties.Settings.Default.DrugFileCategory % 10) + 1 + 10, dynaTable); //xml
+                            MakeReq((Properties.Settings.Default.DrugFileCategory % 10) + 10, dynaTable);  //pdf
+                        }
 
+                        // 健診PDF
+                        
+                        if (Properties.Settings.Default.KensinFileCategory == 1)
+                        {
+                            MakeReq(102, dynaTable);
+                            MakeReq(101, dynaTable); //固定間隔
+                        }
+                        else // xmlのみ、Or 健診日によってPDF日付を変える場合
+                        {
+                            MakeReq(102, dynaTable); // xmlを先行、取り込み後健診実施日を確定、TKKdateに設定, ProcessResAsyncで再度MakeReq
+                        }
+                    }
                     await reloadDataAsync();
-                }
 
+                    // Resフォルダの処理
+                    bool processCompleted = false;
+                    bool isRemainRes = true;
+
+                    // 5秒ごとにProcessResAsyncを呼び出し
+                    while ((!processCompleted || isRemainRes) && isOQSRunnnig)
+                    {
+                        await Task.Delay(5000);
+
+                        if (!isTimerRunning || !isOQSRunnnig) break;
+
+                        processCompleted = await ProcessResAsync();
+                        if (processCompleted) AddLog("すべてのresファイルを処理しました");
+
+                        isRemainRes = await RemainResTask();
+
+                        if (isRemainRes && (DateTime.Now - startTime).TotalSeconds > (Properties.Settings.Default.TimerInterval - 5))
+                        {
+                            processCompleted = true;
+                            isRemainRes = false;
+                            AddLog("時間内に処理が終了しませんでしたので、タイマー処理を中止します");
+                        }
+
+                        await reloadDataAsync();
+                    }
+                }
             }
             else if ((okSettings & 0b0001) == 1)  //OQSDrugData OK
             {
                 //取得停止中はreloadのみ
                 await reloadDataAsync();
             }
-
             AddLog($"タイマーイベント終了");
         }
 
@@ -276,7 +282,9 @@ namespace OQSDrug
             if (isTimerRunning)
             {
                 Invoke(new Action(() => MessageBox.Show("一旦タイマー動作を停止します")));
+                
                 StartStop.Checked = false;
+                
                 StopTimer();
             }
 
@@ -302,6 +310,7 @@ namespace OQSDrug
                     //開始
                     StartStop.Text = "停止";
                     StartStop.Image = Properties.Resources.Stop;
+                    animationTimer?.Start();
 
                     //StartTimer();
                     isOQSRunnnig = true;
@@ -315,6 +324,9 @@ namespace OQSDrug
 
                     MessageBox.Show("他のPCで取込操作を行っているようです。2箇所以上で取込を行うとデータ競合が起こりますので、取込は1箇所でお願いします。\n" +
                         "薬歴や健診のビュワーとして使うときは、開始ボタンは押さずに利用してください。");
+
+                    animationTimer?.Stop();
+                    notifyIcon1.Icon = Properties.Resources.drug1;
                 }
                 //初回実行
                 //await Task.Run(() => Timer_Tick(timer, EventArgs.Empty));
@@ -324,6 +336,8 @@ namespace OQSDrug
                 StartStop.Text = "開始";
                 StartStop.Image = Properties.Resources.Go;
                 //timer.Stop();
+                animationTimer?.Stop();
+                notifyIcon1.Icon = Properties.Resources.drug1;
 
                 //StopTimer();
                 isOQSRunnnig = false;
@@ -663,6 +677,30 @@ namespace OQSDrug
             });
         }
 
+        //RSBaseの妥当性チェック：PDF保存先が確保されているか
+        private async Task<string> CheckRSBaseSetting()
+        {
+            int Yz = Properties.Settings.Default.DrugFileCategory;
+            int Ks = Properties.Settings.Default.KensinFileCategory;
+            string returnString = "";
+
+            //検査登録のみの場合、gazouフォルダの有無
+            if(Yz % 2 != 0 || Ks > 0) //PDF
+            {
+                if(Yz > 10 || Ks == 4) //SideShow PDF
+                {
+                    returnString = (await CheckDirectoryExistsAsync(Properties.Settings.Default.RSBServerFolder)) == "OK" ? "" : "Server " ;
+                }
+
+                if (Yz < 10 || Ks < 4) //検査登録
+                {
+                    returnString += (await CheckDirectoryExistsAsync(Properties.Settings.Default.RSBgazouFolder)) == "OK" ? "" : "Gazou";
+                }
+            }
+            
+            return (returnString == "") ? "OK" : $"NG:{returnString}";
+        }
+
         private async Task<byte> UpdateStatus() //GasouF|OQSF|dyna|Data 
         {
             byte resultCode = 0;
@@ -684,7 +722,7 @@ namespace OQSDrug
                 CheckDatabaseAsync(Properties.Settings.Default.OQSDrugData, "reqResults"),
                 CheckDatabaseAsync(Properties.Settings.Default.Datadyna, DynaTable),
                 CheckDirectoryExistsAsync(Properties.Settings.Default.OQSFolder),
-                CheckDirectoryExistsAsync(Properties.Settings.Default.RSBgazouFolder)
+                CheckRSBaseSetting()
             };
 
             // 各タスクのインデックスと結果を保持するための辞書
@@ -718,7 +756,7 @@ namespace OQSDrug
                         }
                         else
                         {
-                            statusTexts[index].Text = "NG";
+                            statusTexts[index].Text = result;
                             statusTexts[index].ForeColor = Color.Red;
 
                             AddLog(statusLabels[index].Text + ":" + result);
@@ -812,6 +850,8 @@ namespace OQSDrug
             }
 
             PrepareLogFiles();
+
+            InitAnimationTimer();
 
             initializeForm();
 
@@ -1205,10 +1245,10 @@ namespace OQSDrug
         {
             // 状態表示の項目
             string[] items = {
-            "OQSDrug_data.mdb",
+            "OQSDrug_data",
             "ダイナミクス",
             "OQSフォルダ",
-            "Gazouフォルダ"
+            "RSBase"
         };
 
             statusLabels = new Label[items.Length];
@@ -1318,6 +1358,17 @@ namespace OQSDrug
                     buttonSR.BackColor = activeYZ;
                     buttonSR.ForeColor = activeText;
                     break;
+                case 11:
+                    buttonYZPDF.BackColor = acticePDF;
+                    buttonYZPDF.ForeColor = activeText;
+
+                    break;
+                case 13:
+                    buttonYZPDF.BackColor = acticePDF;
+                    buttonYZPDF.ForeColor = activeText;
+                    buttonSR.BackColor = activeYZ;
+                    buttonSR.ForeColor = activeText;
+                    break;
                 default:
                     buttonYZPDF.BackColor = SystemColors.Control;
                     buttonYZPDF.ForeColor = SystemColors.ControlText;
@@ -1328,15 +1379,14 @@ namespace OQSDrug
             buttonKS.BackColor = activeKS;
             switch (Properties.Settings.Default.KensinFileCategory) //
             {
-                case 1:
-                case 2:
-                case 3:
-                    buttonKSPDF.BackColor = acticePDF;
+                case 0:
+                    buttonKS.BackColor = activeKS;
+                    buttonKSPDF.BackColor = SystemColors.Control;
                     buttonKSXML.BackColor = activeXML;
                     break;
                 default:
                     buttonKS.BackColor = activeKS;
-                    buttonKSPDF.BackColor = SystemColors.Control;
+                    buttonKSPDF.BackColor = acticePDF;
                     buttonKSXML.BackColor = activeXML;
                     break;
             }
@@ -1461,6 +1511,7 @@ namespace OQSDrug
                     using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                     {
                         bool RSBreloadFlag = false;
+                        bool RSBXMLreloadFlag = false;
 
                         await connection.OpenAsync();
 
@@ -1551,6 +1602,12 @@ namespace OQSDrug
                                                             }
                                                         }
                                                     }
+
+                                                    if(Properties.Settings.Default.KeepXml && Properties.Settings.Default.RSBXml)
+                                                    {
+                                                        RSBXMLreloadFlag = true;
+                                                        AddLog("RSBaseのxmlreloadフラグをセットしました");
+                                                    }
                                                 }
                                                 else
                                                 { //エラーファイル
@@ -1572,7 +1629,7 @@ namespace OQSDrug
                                             break;
 
                                         case ".pdf":
-                                            int ReadCategory = (int)Math.Floor(Math.Log10(Math.Abs(Category)));
+                                            int ReadCategory = (int)Math.Floor(Math.Log10(Math.Abs(Category))); //1: 薬剤、2:健診
 
                                             string rsbDate = DateTime.Now.ToString("yyyy_MM_dd");
                                             //健診 健診日で登録
@@ -1581,14 +1638,28 @@ namespace OQSDrug
                                                 rsbDate = $"{value.Substring(0, 4)}_{value.Substring(4, 2)}_{value.Substring(6, 2)}";
                                             }
 
-                                            string targetFileName = $"{PtID / 10}~01~{rsbDate}~{RSBname[ReadCategory]}~RSB.pdf";
-                                            string rsbFilePath = Path.Combine(gazouFolder, targetFileName);
 
-                                            System.IO.File.Move(file, rsbFilePath);
-                                            messageContent = "成功";
-                                            AddLog($"{PtID}:{PtName} PDFファイルが見つかりgazouフォルダに移動しました: {rsbFilePath}");
-                                            resFilePath = rsbFilePath;
-                                            RSBreloadFlag = true;
+                                            if ((ReadCategory == 1 && Properties.Settings.Default.DrugFileCategory < 10) || (ReadCategory == 2 && Properties.Settings.Default.KensinFileCategory < 4))
+                                            { //検査として登録
+                                                string targetFileName = $"{PtID / 10}~01~{rsbDate}~{RSBname[ReadCategory]}~RSB.pdf";
+                                                string rsbFilePath = Path.Combine(gazouFolder, targetFileName);
+
+                                                System.IO.File.Move(file, rsbFilePath);
+                                                messageContent = "成功";
+                                                AddLog($"{PtID}:{PtName} PDFファイルが見つかりgazouフォルダに移動しました: {rsbFilePath}");
+                                                resFilePath = rsbFilePath;
+                                                RSBreloadFlag = true;
+                                            }
+                                            else //SideShow登録
+                                            {
+                                                string RSBcategory = (ReadCategory == 1) ? "薬歴data"  : "健診data";
+                                                string mynumberFoler = Path.Combine(Properties.Settings.Default.RSBServerFolder, "myNumber");
+                                                
+                                                await MoveFileToPatientFolder(mynumberFoler, (int)(PtID / 10), file, rsbDate, RSBcategory);
+
+                                                AddLog($"PDFファイルが {mynumberFoler} に移動されました。");
+                                            }
+
                                             break;
                                     }
 
@@ -1625,6 +1696,16 @@ namespace OQSDrug
                                 UseShellExecute = true
                             });
                         }
+
+                        if (RSBXMLreloadFlag)
+                        {
+                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = Properties.Settings.Default.RSBXmlURL,
+                                UseShellExecute = true
+                            });
+                            AddLog($"RSBase XML reload URL{Properties.Settings.Default.RSBXmlURL}をコールしました");
+                        }
                     }
                 }
                 AddLog("ProcessResAsyncを終了します");
@@ -1635,6 +1716,55 @@ namespace OQSDrug
                 AddLog($"ProcessResAsync処理中にエラーが発生しました: {ex.Message}");
                 CommonFunctions.DataDbLock = false;
                 return false;
+            }
+        }
+
+        private async Task MoveFileToPatientFolder(string baseDir, long ptIDmain, string sourceFilePath, string rsbDate, string rsbCategory)
+        {
+            try
+            {
+                // PtIDmain の 1の位を取得
+                int lastDigit = (int)(ptIDmain % 10);
+
+                // サブフォルダのパス
+                string subFolder = Path.Combine(baseDir, lastDigit.ToString());
+                string patientFolder = Path.Combine(subFolder, ptIDmain.ToString());
+
+                // フォルダを非同期で作成（存在しない場合のみ）
+                if (!Directory.Exists(baseDir))
+                {
+                    Directory.CreateDirectory(baseDir);
+                }
+                if (!Directory.Exists(subFolder))
+                {
+                    Directory.CreateDirectory(subFolder);
+                }
+                if (!Directory.Exists(patientFolder))
+                {
+                    Directory.CreateDirectory(patientFolder);
+                }
+
+                // ファイル名のベース部分
+                string fileBaseName = $"{rsbDate}_{ptIDmain}_";
+                string fileExtension = ".pdf";
+
+                // XX の部分を決定（50 から開始し、存在しないファイル名を探す）
+                int fileIndex = 50;
+                string destinationFilePath;
+                do
+                {
+                    string fileName = $"{fileBaseName}{fileIndex}_{rsbCategory}{fileExtension}";
+                    destinationFilePath = Path.Combine(patientFolder, fileName);
+                    fileIndex++;
+                } while (File.Exists(destinationFilePath));
+
+                // ファイルを非同期で移動
+                await Task.Run(() => File.Move(sourceFilePath, destinationFilePath));
+
+            }
+            catch (Exception ex)
+            {
+                AddLog($"CopyFiletoPatientFolderでエラー: {ex.Message}");
             }
         }
 
@@ -2534,10 +2664,10 @@ namespace OQSDrug
                 // UIスレッドで操作
                 Invoke((Action)(() =>
                 {
-                    AddLog($"{ptId}の薬歴を開きます");
                     //buttonViewer_Click(toolStripButtonViewer, EventArgs.Empty);
                     toolStripButtonDI_Click(toolStripButtonViewer, EventArgs.Empty);
                 }));
+                AddLog($"{ptId}の薬歴を開きます");
             }
             else
             {
@@ -2549,8 +2679,8 @@ namespace OQSDrug
                     {
                         formDIInstance.Close(); // Form3 を閉じる
                         formDIInstance = null;
-                        AddLog($"{ptId}は薬歴がないので薬歴ビュワーを閉じます");
                     }));
+                    AddLog($"{ptId}は薬歴がないので薬歴ビュワーを閉じます");
                 }
                 if (messagePopup)
                 {
@@ -2567,9 +2697,9 @@ namespace OQSDrug
                 // UIスレッドで操作
                 Invoke((Action)(() =>
                 {
-                    AddLog($"{ptId}の健診結果を開きます");
                     toolStripButtonTKK_Click(toolStripButtonViewer, EventArgs.Empty);
                 }));
+                AddLog($"{ptId}の健診結果を開きます");
             }
             else
             {
@@ -2581,8 +2711,8 @@ namespace OQSDrug
                     {
                         formTKKInstance.Close(); // Form3 を閉じる
                         formTKKInstance = null;
-                        AddLog($"{ptId}は健診歴がないので健診ビュワーを閉じます");
                     }));
+                    AddLog($"{ptId}は健診歴がないので健診ビュワーを閉じます");
                 }
                 if (messagePopup)
                 {
@@ -2599,10 +2729,9 @@ namespace OQSDrug
                 // UIスレッドで操作
                 Invoke((Action)(() =>
                 {
-                    AddLog($"{ptId}の診療情報を開きます");
-                    //buttonViewer_Click(toolStripButtonViewer, EventArgs.Empty);
                     toolStripButtonSinryo_Click(toolStripButtonSinryo, EventArgs.Empty);
                 }));
+                AddLog($"{ptId}の診療情報を開きます");
             }
             else
             {
@@ -2614,8 +2743,8 @@ namespace OQSDrug
                     {
                         formSRInstance.Close(); // 閉じる
                         formSRInstance = null;
-                        AddLog($"{ptId}は診療情報履歴がないのでビュワーを閉じます");
                     }));
+                    AddLog($"{ptId}は診療情報履歴がないのでビュワーを閉じます");
                 }
                 if (messagePopup)
                 {
@@ -2628,7 +2757,7 @@ namespace OQSDrug
         {
             try
             {
-                if (await CommonFunctions.WaitForDbUnlock(1000))
+                if (await CommonFunctions.WaitForDbUnlock(2000))
                 {
                     using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                     {
@@ -2814,6 +2943,25 @@ namespace OQSDrug
             }
         }
 
+        private void InitAnimationTimer()
+        {
+            // アイコンの配列を用意
+            icons = new Icon[]
+            {
+                Properties.Resources.drug1,
+                Properties.Resources.drug2,
+                Properties.Resources.drug3,
+                Properties.Resources.drug4
+            };
+
+            // タイマーを初期化
+            animationTimer = new System.Windows.Forms.Timer
+            {
+                Interval = 200 // 200msごとに切り替え
+            };
+            animationTimer.Tick += AnimationTimer_Tick;
+        }
+
         private void InitNotifyIcon()
         {
             // コンテキストメニューを設定
@@ -2854,21 +3002,6 @@ namespace OQSDrug
             // チェックボックスの状態変更時にもメニューを更新
             StartStop.CheckedChanged += (s, e) => UpdateStartStopMenuItem(startStopMenuItem);
 
-            // アイコンの配列を用意
-            icons = new Icon[]
-            {
-                Properties.Resources.drug1,
-                Properties.Resources.drug2,
-                Properties.Resources.drug3,
-                Properties.Resources.drug4
-            };
-
-            // タイマーを初期化
-            animationTimer = new System.Windows.Forms.Timer
-            {
-                Interval = 200 // 200msごとに切り替え
-            };
-            animationTimer.Tick += AnimationTimer_Tick;
         }
 
         private void UpdateStartStopMenuItem(ToolStripMenuItem menuItem)
@@ -2877,7 +3010,7 @@ namespace OQSDrug
             {
                 menuItem.Text = "停止";
                 menuItem.Image = Properties.Resources.Stop;
-                animationTimer?.Start();
+                //animationTimer?.Start();
 
                 menuItem.Enabled = (okSettings == 0b1111);
             }
@@ -2885,8 +3018,8 @@ namespace OQSDrug
             {
                 menuItem.Text = "開始";
                 menuItem.Image = Properties.Resources.Go;
-                animationTimer?.Stop();
-                notifyIcon1.Icon = Properties.Resources.drug1;
+                //animationTimer?.Stop();
+                //notifyIcon1.Icon = Properties.Resources.drug1;
                 
                 menuItem.Enabled = (okSettings == 0b1111);
             }
@@ -2962,8 +3095,10 @@ namespace OQSDrug
             currentFrame = (currentFrame + 1) % icons.Length; // フレームを更新
         }
 
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        private async void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
+            await DeleteClientAsync();
+
             // クリーンアップ
             //timer?.Stop();
             //timer?.Dispose();
@@ -2995,18 +3130,6 @@ namespace OQSDrug
         {
             // 残りの幅を "Log" 列に割り当て
             listViewLog.Columns[1].Width = -2;
-        }
-
-        private void dataGridView1_CellMouseEnter(object sender, DataGridViewCellEventArgs e)
-        {
-               // ツールチップのテキストを設定（例えばセルの値を表示）
-                toolTip1.SetToolTip(dataGridView1, "行選択、右クリックでで削除メニュー\r\nダブルクリックで薬歴表示します\r\n");
-            
-        }
-
-        private void dataGridView1_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
-        {
-            toolTip1.Hide(dataGridView1); // ツールチップを非表示にする
         }
 
         private async void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
@@ -3362,25 +3485,40 @@ namespace OQSDrug
         public async Task DeleteClientAsync()
         {
             string localMachineName = Environment.MachineName;
-            try
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2))) // 2秒のタイムアウト
             {
-                using (var connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
+                try
                 {
-                    await connection.OpenAsync();
-                    string updateQuery = $@"
-                DELETE FROM connectedClient 
-                WHERE clientName = ?";
-                    using (var command = new OleDbCommand(updateQuery, connection))
+                    using (var connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
                     {
-                        command.Parameters.AddWithValue("clientName", localMachineName);
-                        await command.ExecuteNonQueryAsync();
+                        var openTask = connection.OpenAsync(cts.Token);
+                        if (await Task.WhenAny(openTask, Task.Delay(TimeSpan.FromSeconds(2))) != openTask)
+                        {
+                            throw new TimeoutException("データベース接続がタイムアウトしました。");
+                        }
 
+                        string updateQuery = @"DELETE FROM connectedClient WHERE clientName = ?";
+                        using (var command = new OleDbCommand(updateQuery, connection))
+                        {
+                            command.Parameters.AddWithValue("clientName", localMachineName);
+
+                            var executeTask = command.ExecuteNonQueryAsync(cts.Token);
+                            if (await Task.WhenAny(executeTask, Task.Delay(TimeSpan.FromSeconds(2))) != executeTask)
+                            {
+                                command.Cancel(); // タイムアウト時にキャンセル
+                                throw new TimeoutException("DELETE クエリがタイムアウトしました。");
+                            }
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"DeleteClientAsyncでエラー{ex.Message}");
+                catch (TimeoutException ex)
+                {
+                    MessageBox.Show($"処理がタイムアウトしました: {ex.Message}");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"DeleteClientAsync でエラー: {ex.Message}");
+                }
             }
         }
 
@@ -3425,6 +3563,65 @@ namespace OQSDrug
             toolStripSeparatorDebug1.Visible = !toolStripSeparatorDebug1.Visible;
             toolStripSeparatorDebug2.Visible = !toolStripSeparatorDebug2.Visible;
             toolStripTextBoxDebug.Visible = !toolStripTextBoxDebug.Visible;
+        }
+
+        private void dataGridView1_CellToolTipTextNeeded(object sender, DataGridViewCellToolTipTextNeededEventArgs e)
+        {
+            e.ToolTipText = "行選択⇢右クリックで再取得メニュー表示\r\nダブルクリックで薬歴/健診歴を表示します\r\n";
+        }
+
+        private async void buttonPtIDSearch_Click(object sender, EventArgs e)
+        {
+            string strPtIDmain = null;
+
+            textBoxPtIDmain.Invoke(new Action(() =>
+                strPtIDmain = textBoxPtIDmain.Text
+            ));
+
+            if (long.TryParse(strPtIDmain, out long idValue))
+            {
+                // 数値に変換できた場合
+                tempId = idValue;
+
+                await OpenDrugHistory(tempId, true);
+
+            }
+        }
+
+        private async void buttonTKKSearch_Click(object sender, EventArgs e)
+        {
+            string strPtIDmain = null;
+
+            textBoxPtIDmain.Invoke(new Action(() =>
+                strPtIDmain = textBoxPtIDmain.Text
+            ));
+
+            if (long.TryParse(strPtIDmain, out long idValue))
+            {
+                // 数値に変換できた場合
+                tempId = idValue;
+
+                await OpenTKKHistory(tempId, true);
+
+            }
+        }
+
+        private async void buttonSRSearch_Click(object sender, EventArgs e)
+        {
+            string strPtIDmain = null;
+
+            textBoxPtIDmain.Invoke(new Action(() =>
+                strPtIDmain = textBoxPtIDmain.Text
+            ));
+
+            if (long.TryParse(strPtIDmain, out long idValue))
+            {
+                // 数値に変換できた場合
+                tempId = idValue;
+
+                await OpenSinryoHistory(tempId, true);
+
+            }
         }
 
         public void toolStripButtonSinryo_Click(object sender, EventArgs e)

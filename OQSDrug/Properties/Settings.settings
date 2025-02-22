@@ -104,5 +104,14 @@
     <Setting Name="autoSR" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="RSBServerFolder" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="RSBXml" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="RSBXmlURL" Type="System.String" Scope="User">
+      <Value Profile="(Default)">http://localhost/~rsn/R_uketuke.cgi?xml_drug</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

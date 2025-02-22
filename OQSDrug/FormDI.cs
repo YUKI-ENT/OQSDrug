@@ -208,15 +208,23 @@ namespace OQSDrug
         private async Task ShowDrugData(long PtID)
         {
             if (await CommonFunctions.WaitForDbUnlock(2000))
-            {   
-                string query = @"
+            {
+                string pivot = (Properties.Settings.Default.Sum) ? "SubQuery.MeTrMonth" : "SubQuery.DiDate";
+
+                //long viewSpan = GetComboBoxSelectedValue(comboBoxSpan);
+                string startDate = DateTime.Now.AddMonths(0 - ShowSpan).ToString("yyyyMM");
+                string spanfilter = (ShowSpan == 0) ? "" : $" MeTrMonth >= '{startDate}' AND ";
+                string myorgfilter = (Properties.Settings.Default.OmitMyOrg) ? "drug_history.PrIsOrg <> 1 AND " : "";
+
+                string query = $@"
                             TRANSFORM Sum(SubQuery.Times) AS Times
                             SELECT 
                                 SubQuery.Hospital, 
                                 SubQuery.DrugN, 
                                 Dose,
                                 SubQuery.DrugC, 
-                                SubQuery.IngreN
+                                SubQuery.IngreN,
+                                Max({pivot}) AS LastDate
                             FROM 
                                 (
                                     SELECT 
@@ -231,7 +239,7 @@ namespace OQSDrug
                                     FROM 
                                         drug_history
                                     WHERE 
-                                        Revised = false AND %SPANFILTER% %MYORGFILTER%
+                                        Revised = false AND {spanfilter} {myorgfilter}
                                         drug_history.PtIDmain = ?
                                 ) AS SubQuery
                             GROUP BY 
@@ -241,21 +249,10 @@ namespace OQSDrug
                                 SubQuery.IngreN,
                                 Dose
                             ORDER BY 
-                                %FIELD% DESC
+                                {pivot} DESC
                             PIVOT
-                                %FIELD% ;
+                                {pivot} ;
                             ";
-
-                string pivot = (Properties.Settings.Default.Sum) ? "SubQuery.MeTrMonth" : "SubQuery.DiDate";
-
-                //long viewSpan = GetComboBoxSelectedValue(comboBoxSpan);
-                string startDate = DateTime.Now.AddMonths(0 - ShowSpan).ToString("yyyyMM");
-                string spanfilter = (ShowSpan == 0) ? "" : $" MeTrMonth >= '{startDate}' AND ";
-                string myorgfilter = (Properties.Settings.Default.OmitMyOrg) ? "drug_history.PrIsOrg <> 1 AND " : "";
-
-                query = query.Replace("%FIELD%", pivot);
-                query = query.Replace("%SPANFILTER%", spanfilter);
-                query = query.Replace("%MYORGFILTER%", myorgfilter);
 
                 // 固定列の定義
                 var fixedColumns = new List<string> { "Hospital", "DrugN", "Qua1", "Unit" };
@@ -278,12 +275,13 @@ namespace OQSDrug
                             CommonFunctions.DataDbLock = true;
 
                             using (var reader = await command.ExecuteReaderAsync())
-                            using (var dataTable = new DataTable())
+                            using (DataTable dataTable = new DataTable())
                             {
                                 dataTable.Load(reader);
 
                                 CommonFunctions.DataDbLock = false;
 
+                                
                                 // KOROdataからmedisCode
                                 if (!dataTable.Columns.Contains("medisCode"))
                                 {
@@ -296,10 +294,18 @@ namespace OQSDrug
                                     dataTable.Columns.Add("Color", typeof(Color));
                                 }
 
+                                //Sort
+                                DataTable sortedTable =dataTable;
+
+                                if (dataTable.Rows.Count > 0)
+                                {
+                                    sortedTable = SortDataTableByLastDate(dataTable);
+                                }
+
                                 // 手動で加工する
 
                                 string previousHospital = null; // 前回のHospital値
-                                foreach (DataRow row in dataTable.Rows)
+                                foreach (DataRow row in sortedTable.Rows)
                                 {
                                     // Hospital列を加工
                                     if (previousHospital == null || (row["Hospital"] != DBNull.Value && previousHospital !=  row["Hospital"].ToString()))
@@ -337,7 +343,7 @@ namespace OQSDrug
                                     i++;
                                 }
 
-                                DrugHistoryData = dataTable;
+                                DrugHistoryData = sortedTable;
                             }
                         }
                     }
@@ -375,6 +381,18 @@ namespace OQSDrug
             {
                 MessageBox.Show("データベースがロックされており、ShowDrugDataに失敗しました。もう一度やり直してみてください。");
             }
+        }
+
+        private DataTable SortDataTableByLastDate(DataTable dt)
+        {
+            var sortedRows = dt.AsEnumerable()
+                .GroupBy(row => row["Hospital"].ToString()) // Hospitalごとにグループ化
+                .OrderByDescending(g => g.Max(row => row.Field<String>("LastDate"))) // 各Hospitalの最大LastDateで降順ソート
+                .SelectMany(g => g.OrderByDescending(row => row.Field<String>("LastDate"))  // 各Hospital内でLastDate降順
+                              .ThenBy(row => row.Field<string>("MedisCode"))) // MedisCode 昇順
+                .CopyToDataTable(); // DataTable に変換
+
+            return sortedRows;
         }
 
         private Color getDrugClassColor(string yjCode)
@@ -473,7 +491,7 @@ namespace OQSDrug
 
                 for (int i = 0; i < dataGridView.Columns.Count; i++)
                 {
-                    if (i < 5)
+                    if (i < 6)
                     {
                         dataGridView.Columns[i].Visible = false;
                     }

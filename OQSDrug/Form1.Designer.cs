@@ -54,6 +54,7 @@
             this.checkBoxAutoStart = new System.Windows.Forms.CheckBox();
             this.checkBoxAutoTKK = new System.Windows.Forms.CheckBox();
             this.checkBoxAutoSR = new System.Windows.Forms.CheckBox();
+            this.buttonReload = new System.Windows.Forms.Button();
             this.buttonYZ = new System.Windows.Forms.Button();
             this.buttonSR = new System.Windows.Forms.Button();
             this.buttonYZPDF = new System.Windows.Forms.Button();
@@ -62,11 +63,16 @@
             this.buttonKSPDF = new System.Windows.Forms.Button();
             this.buttonKSXML = new System.Windows.Forms.Button();
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
-            this.buttonReload = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.textBoxPtIDmain = new System.Windows.Forms.TextBox();
+            this.buttonPtIDSearch = new System.Windows.Forms.Button();
+            this.buttonTKKSearch = new System.Windows.Forms.Button();
+            this.buttonSRSearch = new System.Windows.Forms.Button();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.toolStripVersion.SuspendLayout();
             this.groupBox1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // dataGridView1
@@ -83,12 +89,10 @@
             this.dataGridView1.RowTemplate.Height = 21;
             this.dataGridView1.Size = new System.Drawing.Size(950, 430);
             this.dataGridView1.TabIndex = 2;
-            this.toolTip1.SetToolTip(this.dataGridView1, "行選択、右クリックでで削除メニュー\r\nダブルクリックで薬歴表示します");
             this.dataGridView1.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellDoubleClick);
             this.dataGridView1.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dataGridView1_CellFormatting);
-            this.dataGridView1.CellMouseEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellMouseEnter);
-            this.dataGridView1.CellMouseLeave += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellMouseLeave);
             this.dataGridView1.CellMouseUp += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_CellMouseUp);
+            this.dataGridView1.CellToolTipTextNeeded += new System.Windows.Forms.DataGridViewCellToolTipTextNeededEventHandler(this.dataGridView1_CellToolTipTextNeeded);
             // 
             // toolStripVersion
             // 
@@ -111,7 +115,6 @@
             this.toolStripVersion.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.toolStripVersion.Location = new System.Drawing.Point(0, 0);
             this.toolStripVersion.Name = "toolStripVersion";
-            this.toolStripVersion.ShowItemToolTips = false;
             this.toolStripVersion.Size = new System.Drawing.Size(974, 27);
             this.toolStripVersion.Stretch = true;
             this.toolStripVersion.TabIndex = 3;
@@ -126,7 +129,7 @@
             this.toolStripButtonViewer.Name = "toolStripButtonViewer";
             this.toolStripButtonViewer.Size = new System.Drawing.Size(59, 24);
             this.toolStripButtonViewer.Text = "薬歴";
-            this.toolStripButtonViewer.ToolTipText = "xml薬歴を表示します";
+            this.toolStripButtonViewer.ToolTipText = "薬歴を表示します";
             this.toolStripButtonViewer.Click += new System.EventHandler(this.toolStripButtonDI_Click);
             // 
             // toolStripButtonExit
@@ -146,8 +149,8 @@
             this.toolStripButtonToTaskTray.Image = global::OQSDrug.Properties.Resources.Down;
             this.toolStripButtonToTaskTray.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonToTaskTray.Name = "toolStripButtonToTaskTray";
-            this.toolStripButtonToTaskTray.Size = new System.Drawing.Size(74, 24);
-            this.toolStripButtonToTaskTray.Text = "最小化";
+            this.toolStripButtonToTaskTray.Size = new System.Drawing.Size(23, 24);
+            this.toolStripButtonToTaskTray.ToolTipText = "タスクトレイに最小化します";
             this.toolStripButtonToTaskTray.Click += new System.EventHandler(this.toolStripButtonToTaskTray_Click);
             // 
             // toolStripSeparator1
@@ -191,6 +194,7 @@
             this.toolStripButtonTKK.Name = "toolStripButtonTKK";
             this.toolStripButtonTKK.Size = new System.Drawing.Size(59, 24);
             this.toolStripButtonTKK.Text = "健診";
+            this.toolStripButtonTKK.ToolTipText = "健診結果を表示します";
             this.toolStripButtonTKK.Click += new System.EventHandler(this.toolStripButtonTKK_Click);
             // 
             // toolStripButtonSinryo
@@ -200,6 +204,7 @@
             this.toolStripButtonSinryo.Name = "toolStripButtonSinryo";
             this.toolStripButtonSinryo.Size = new System.Drawing.Size(89, 24);
             this.toolStripButtonSinryo.Text = "診療手術";
+            this.toolStripButtonSinryo.ToolTipText = "診療手術情報を表示します";
             this.toolStripButtonSinryo.Click += new System.EventHandler(this.toolStripButtonSinryo_Click);
             // 
             // toolStripSeparatorDebug1
@@ -213,6 +218,7 @@
             this.toolStripComboBoxDBProviders.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.toolStripComboBoxDBProviders.Name = "toolStripComboBoxDBProviders";
             this.toolStripComboBoxDBProviders.Size = new System.Drawing.Size(180, 27);
+            this.toolStripComboBoxDBProviders.ToolTipText = "OleDbプロバイダを設定します";
             this.toolStripComboBoxDBProviders.Visible = false;
             this.toolStripComboBoxDBProviders.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxDBProviders_SelectedIndexChanged);
             // 
@@ -224,9 +230,10 @@
             // 
             // toolStripTextBoxDebug
             // 
+            this.toolStripTextBoxDebug.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
             this.toolStripTextBoxDebug.Name = "toolStripTextBoxDebug";
             this.toolStripTextBoxDebug.Size = new System.Drawing.Size(100, 27);
-            this.toolStripTextBoxDebug.ToolTipText = "PtIDwithBranch";
+            this.toolStripTextBoxDebug.ToolTipText = "デバッグ用xmlの患者ID(枝番付)";
             this.toolStripTextBoxDebug.Visible = false;
             // 
             // toolStripButtonDebug
@@ -237,6 +244,7 @@
             this.toolStripButtonDebug.Name = "toolStripButtonDebug";
             this.toolStripButtonDebug.Size = new System.Drawing.Size(58, 24);
             this.toolStripButtonDebug.Text = "Debug";
+            this.toolStripButtonDebug.ToolTipText = "xmlファイルを読み込みます";
             this.toolStripButtonDebug.Visible = false;
             this.toolStripButtonDebug.Click += new System.EventHandler(this.toolStripButtonDebug_Click);
             // 
@@ -246,10 +254,11 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listViewLog.FullRowSelect = true;
             this.listViewLog.HideSelection = false;
-            this.listViewLog.Location = new System.Drawing.Point(422, 87);
+            this.listViewLog.Location = new System.Drawing.Point(422, 91);
             this.listViewLog.Name = "listViewLog";
-            this.listViewLog.Size = new System.Drawing.Size(540, 180);
+            this.listViewLog.Size = new System.Drawing.Size(540, 176);
             this.listViewLog.TabIndex = 8;
+            this.toolTip1.SetToolTip(this.listViewLog, "ログを表示します");
             this.listViewLog.UseCompatibleStateImageBehavior = false;
             this.listViewLog.View = System.Windows.Forms.View.Details;
             this.listViewLog.SizeChanged += new System.EventHandler(this.listViewLog_SizeChanged);
@@ -259,8 +268,8 @@
             this.tableLayoutPanel.AutoSize = true;
             this.tableLayoutPanel.CellBorderStyle = System.Windows.Forms.TableLayoutPanelCellBorderStyle.Inset;
             this.tableLayoutPanel.ColumnCount = 2;
-            this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 70F));
-            this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
+            this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 56.28141F));
+            this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 43.71859F));
             this.tableLayoutPanel.Font = new System.Drawing.Font("Meiryo UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tableLayoutPanel.Location = new System.Drawing.Point(12, 137);
             this.tableLayoutPanel.Name = "tableLayoutPanel";
@@ -356,6 +365,19 @@
             this.checkBoxAutoSR.UseVisualStyleBackColor = true;
             this.checkBoxAutoSR.CheckedChanged += new System.EventHandler(this.checkBoxAutoview_CheckedChanged);
             // 
+            // buttonReload
+            // 
+            this.buttonReload.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonReload.Font = new System.Drawing.Font("Meiryo UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.buttonReload.Image = global::OQSDrug.Properties.Resources.Refresh;
+            this.buttonReload.Location = new System.Drawing.Point(922, 46);
+            this.buttonReload.Name = "buttonReload";
+            this.buttonReload.Size = new System.Drawing.Size(40, 33);
+            this.buttonReload.TabIndex = 28;
+            this.toolTip1.SetToolTip(this.buttonReload, "取得結果を更新します");
+            this.buttonReload.UseVisualStyleBackColor = true;
+            this.buttonReload.Click += new System.EventHandler(this.buttonReload_Click);
+            // 
             // buttonYZ
             // 
             this.buttonYZ.Enabled = false;
@@ -433,18 +455,6 @@
             this.notifyIcon1.Visible = true;
             this.notifyIcon1.DoubleClick += new System.EventHandler(this.notifyIcon1_DoubleClick);
             // 
-            // buttonReload
-            // 
-            this.buttonReload.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonReload.Font = new System.Drawing.Font("Meiryo UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.buttonReload.Location = new System.Drawing.Point(888, 38);
-            this.buttonReload.Name = "buttonReload";
-            this.buttonReload.Size = new System.Drawing.Size(74, 33);
-            this.buttonReload.TabIndex = 28;
-            this.buttonReload.Text = "表示更新";
-            this.buttonReload.UseVisualStyleBackColor = true;
-            this.buttonReload.Click += new System.EventHandler(this.buttonReload_Click);
-            // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.checkBoxAutoSR);
@@ -453,10 +463,70 @@
             this.groupBox1.Font = new System.Drawing.Font("Meiryo UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.groupBox1.Location = new System.Drawing.Point(422, 30);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(276, 51);
+            this.groupBox1.Size = new System.Drawing.Size(282, 55);
             this.groupBox1.TabIndex = 30;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "ID連携";
+            // 
+            // textBoxPtIDmain
+            // 
+            this.textBoxPtIDmain.Font = new System.Drawing.Font("Meiryo UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.textBoxPtIDmain.ImeMode = System.Windows.Forms.ImeMode.Off;
+            this.textBoxPtIDmain.Location = new System.Drawing.Point(6, 19);
+            this.textBoxPtIDmain.Name = "textBoxPtIDmain";
+            this.textBoxPtIDmain.Size = new System.Drawing.Size(101, 27);
+            this.textBoxPtIDmain.TabIndex = 31;
+            this.toolTip1.SetToolTip(this.textBoxPtIDmain, "患者ID（枝番なし）で検索");
+            // 
+            // buttonPtIDSearch
+            // 
+            this.buttonPtIDSearch.Image = global::OQSDrug.Properties.Resources.Text_preview;
+            this.buttonPtIDSearch.Location = new System.Drawing.Point(110, 20);
+            this.buttonPtIDSearch.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonPtIDSearch.Name = "buttonPtIDSearch";
+            this.buttonPtIDSearch.Size = new System.Drawing.Size(27, 27);
+            this.buttonPtIDSearch.TabIndex = 32;
+            this.toolTip1.SetToolTip(this.buttonPtIDSearch, "薬歴検索");
+            this.buttonPtIDSearch.UseVisualStyleBackColor = true;
+            this.buttonPtIDSearch.Click += new System.EventHandler(this.buttonPtIDSearch_Click);
+            // 
+            // buttonTKKSearch
+            // 
+            this.buttonTKKSearch.Image = global::OQSDrug.Properties.Resources.Heart;
+            this.buttonTKKSearch.Location = new System.Drawing.Point(137, 20);
+            this.buttonTKKSearch.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonTKKSearch.Name = "buttonTKKSearch";
+            this.buttonTKKSearch.Size = new System.Drawing.Size(27, 27);
+            this.buttonTKKSearch.TabIndex = 33;
+            this.toolTip1.SetToolTip(this.buttonTKKSearch, "健診検索");
+            this.buttonTKKSearch.UseVisualStyleBackColor = true;
+            this.buttonTKKSearch.Click += new System.EventHandler(this.buttonTKKSearch_Click);
+            // 
+            // buttonSRSearch
+            // 
+            this.buttonSRSearch.Image = global::OQSDrug.Properties.Resources.Equipment;
+            this.buttonSRSearch.Location = new System.Drawing.Point(164, 20);
+            this.buttonSRSearch.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonSRSearch.Name = "buttonSRSearch";
+            this.buttonSRSearch.Size = new System.Drawing.Size(27, 27);
+            this.buttonSRSearch.TabIndex = 34;
+            this.toolTip1.SetToolTip(this.buttonSRSearch, "診療検索");
+            this.buttonSRSearch.UseVisualStyleBackColor = true;
+            this.buttonSRSearch.Click += new System.EventHandler(this.buttonSRSearch_Click);
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.textBoxPtIDmain);
+            this.groupBox2.Controls.Add(this.buttonSRSearch);
+            this.groupBox2.Controls.Add(this.buttonPtIDSearch);
+            this.groupBox2.Controls.Add(this.buttonTKKSearch);
+            this.groupBox2.Font = new System.Drawing.Font("Meiryo UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.groupBox2.Location = new System.Drawing.Point(710, 30);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(200, 55);
+            this.groupBox2.TabIndex = 35;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "ID検索";
             // 
             // Form1
             // 
@@ -464,6 +534,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.ClientSize = new System.Drawing.Size(974, 717);
+            this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.checkBoxAutoStart);
             this.Controls.Add(this.buttonReload);
@@ -481,13 +552,15 @@
             this.Controls.Add(this.dataGridView1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
-            this.Text = "薬歴取得メイン";
+            this.Text = "OQSDrugメイン";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.toolStripVersion.ResumeLayout(false);
             this.toolStripVersion.PerformLayout();
             this.groupBox1.ResumeLayout(false);
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -528,6 +601,11 @@
         private System.Windows.Forms.ToolStripTextBox toolStripTextBoxDebug;
         private System.Windows.Forms.ToolStripButton toolStripButtonSinryo;
         private System.Windows.Forms.CheckBox checkBoxAutoSR;
+        private System.Windows.Forms.TextBox textBoxPtIDmain;
+        private System.Windows.Forms.Button buttonPtIDSearch;
+        private System.Windows.Forms.Button buttonTKKSearch;
+        private System.Windows.Forms.Button buttonSRSearch;
+        private System.Windows.Forms.GroupBox groupBox2;
     }
 }
 

@@ -430,5 +430,41 @@ namespace OQSDrug.Properties {
                 this["autoSR"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string RSBServerFolder {
+            get {
+                return ((string)(this["RSBServerFolder"]));
+            }
+            set {
+                this["RSBServerFolder"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool RSBXml {
+            get {
+                return ((bool)(this["RSBXml"]));
+            }
+            set {
+                this["RSBXml"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://localhost/~rsn/R_uketuke.cgi?xml_drug")]
+        public string RSBXmlURL {
+            get {
+                return ((string)(this["RSBXmlURL"]));
+            }
+            set {
+                this["RSBXmlURL"] = value;
+            }
+        }
     }
 }

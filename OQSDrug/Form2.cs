@@ -40,6 +40,9 @@ namespace OQSDrug
             textBoxRSBgazou.Text = Properties.Settings.Default.RSBgazouFolder;
             checkBoxRSBReload.Checked = Properties.Settings.Default.RSBReload;
             textBoxRSBaseURL.Text = Properties.Settings.Default.RSBUrl;
+
+            textBoxRSBServerFolder.Text = Properties.Settings.Default.RSBServerFolder;
+
             textBoxMCode.Text = Properties.Settings.Default.MCode;
 
             comboBoxTimerSecond.Items.AddRange(new object[] { 10, 30, 60 });
@@ -58,6 +61,7 @@ namespace OQSDrug
             checkBoxSinryou.Checked = false;
             radioButtonD0.Checked = false;
             radioButtonD1.Checked = false;
+            radioButtonD2.Checked = false;
 
             switch (Properties.Settings.Default.DrugFileCategory) //
             {
@@ -77,8 +81,16 @@ namespace OQSDrug
                     radioButtonD0.Checked = true;
                     checkBoxSinryou.Checked = true;
                     break;
+                case 11:
+                    radioButtonD2.Checked = true;
+                    checkBoxSinryou.Checked = false;
+                    break;
+                case 13:
+                    radioButtonD2.Checked = true;
+                    checkBoxSinryou.Checked = true;
+                    break;
                 default:
-                    // デフォルト動作（例: 何も選択しない）
+                    // デフォルト動作 xml
                     radioButtonD0.Checked = true;
                     checkBoxSinryou.Checked = false;
                     break;
@@ -112,6 +124,7 @@ namespace OQSDrug
             radioButtonK1.Checked = false;
             radioButtonK2.Checked = false;
             radioButtonK3.Checked = false;
+            radioButtonK4.Checked = false;
             switch (Properties.Settings.Default.KensinFileCategory)
             {
                 case 1:
@@ -123,22 +136,26 @@ namespace OQSDrug
                 case 3:
                     radioButtonK3.Checked = true;
                     break;
+                case 4:
+                    radioButtonK4.Checked = true;
+                    break;
                 default:
                     // デフォルト動作（例: 何も選択しない）
                     radioButtonK0.Checked = true;
                     break;
             }
 
-            comboBoxKSinterval.Items.AddRange(new object[] { 1, 3, 6, 12 });
-            int KSinterval = Properties.Settings.Default.KSinterval;
-            if (comboBoxKSinterval.Items.Contains(KSinterval))
-            {
-                comboBoxKSinterval.SelectedItem = KSinterval;
-            }
-            else
-            {
-                comboBoxKSinterval.SelectedIndex = 2;
-            }
+            //comboBoxKSinterval.Items.AddRange(new object[] { 1, 3, 6, 12 });
+            //int KSinterval = Properties.Settings.Default.KSinterval;
+            //if (comboBoxKSinterval.Items.Contains(KSinterval))
+            //{
+            //    comboBoxKSinterval.SelectedItem = KSinterval;
+            //}
+            //else
+            //{
+            //    comboBoxKSinterval.SelectedIndex = 2;
+            //}
+
             textBoxKensinName.Text = Properties.Settings.Default.KSname;
 
             textBoxTemprs.Text = Properties.Settings.Default.temprs;
@@ -158,6 +175,9 @@ namespace OQSDrug
             }
 
             checkBoxKeepXml.Checked = Properties.Settings.Default.KeepXml;
+
+            checkBoxRSBreloadXml.Checked = Properties.Settings.Default.RSBXml;
+            textBoxRSBxmlURL.Text = Properties.Settings.Default.RSBXmlURL;
 
             //comboBoxDynaTable.SelectedItem = Properties.Settings.Default.DynaTable;
 
@@ -187,13 +207,25 @@ namespace OQSDrug
             Properties.Settings.Default.RSBgazouFolder = textBoxRSBgazou.Text;
             Properties.Settings.Default.RSBReload = checkBoxRSBReload.Checked;
             Properties.Settings.Default.RSBUrl = textBoxRSBaseURL.Text;
+
+            Properties.Settings.Default.RSBServerFolder = textBoxRSBServerFolder.Text;
+
             Properties.Settings.Default.MCode = textBoxMCode.Text;
 
             Properties.Settings.Default.TimerInterval = Convert.ToUInt16(comboBoxTimerSecond.SelectedItem.ToString());
 
             //薬剤グループボックス
             // ラジオボタンの選択状況を確認
-            DrugFileCategory = (radioButtonD0.Checked) ? 2 : 1;
+            DrugFileCategory = 2;
+            if (radioButtonD1.Checked)
+            {
+                DrugFileCategory = 1;
+            }
+            else if (radioButtonD2.Checked)
+            {
+                DrugFileCategory = 11;
+            }
+
             if (checkBoxSinryou.Checked) DrugFileCategory += 2;
             
             Properties.Settings.Default.DrugFileCategory = DrugFileCategory;
@@ -214,12 +246,16 @@ namespace OQSDrug
             {
                 KensinFileCategory = 3;
             }
+            else if (radioButtonK4.Checked)
+            {
+                KensinFileCategory = 4;
+            }
             else
             {
                 KensinFileCategory = 0;
             }
             Properties.Settings.Default.KensinFileCategory = KensinFileCategory;
-            Properties.Settings.Default.KSinterval = Convert.ToUInt16(comboBoxKSinterval.SelectedItem.ToString());
+            //Properties.Settings.Default.KSinterval = Convert.ToUInt16(comboBoxKSinterval.SelectedItem.ToString());
             Properties.Settings.Default.KSname = textBoxKensinName.Text;
 
             Properties.Settings.Default.temprs = textBoxTemprs.Text;
@@ -231,6 +267,8 @@ namespace OQSDrug
             Properties.Settings.Default.RSBID = comboBoxRSBID.SelectedIndex;
 
             Properties.Settings.Default.KeepXml = checkBoxKeepXml.Checked;
+            Properties.Settings.Default.RSBXml = checkBoxRSBreloadXml.Checked;
+            Properties.Settings.Default.RSBXmlURL = textBoxRSBxmlURL.Text;
 
             //Properties.Settings.Default.DynaTable = comboBoxDynaTable.SelectedItem.ToString();
 
@@ -430,6 +468,37 @@ namespace OQSDrug
 
             op.Dispose();
 
+        }
+
+        private void buttonRSBServerFolder_Click(object sender, EventArgs e)
+        {
+            // フォルダ選択ダイアログを開く
+            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+            {
+                folderDialog.Description = "RSBaseサーバーフォルダを選択してください";
+                folderDialog.ShowNewFolderButton = true;
+
+                // ダイアログを表示して結果を確認
+                if (folderDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string selectedPath = folderDialog.SelectedPath;
+                    if (selectedPath.EndsWith("public_html"))
+                    {
+                        textBoxRSBServerFolder.Text = selectedPath;
+                    }
+                    else {
+                        MessageBox.Show("RSBaseサーバーフォルダは\\public_htmlで終わっている必要があります\n もう一度選択し直してください");
+                    }
+                }
+            }
+        }
+
+        private void checkBoxKeepXml_CheckedChanged(object sender, EventArgs e)
+        {
+            checkBoxRSBreloadXml.Enabled = checkBoxKeepXml.Checked;
+            textBoxRSBxmlURL.Enabled = checkBoxKeepXml.Checked;
+
+            if(!checkBoxKeepXml.Checked ) checkBoxRSBreloadXml.Checked = false;
         }
     }
 }
