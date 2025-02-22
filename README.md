@@ -88,7 +88,7 @@
    - ⑥ RSBase連動`薬歴`、`健診`は、設定でRSBaseの連携(ID.datまたはtemp_rs.txtまたはthept.txt)が設定されている場合、ここをチェックすると患者遷移に連動して薬歴がある場合自動で薬歴をポップアップ表示します。（thept.txtが最も安定しているように思います）
    - `自動開始`をチェックすると、下の4つの設定値がすべてOKになると自動で取得開始し、1つでもNGになると停止します。
 
-    ![oqsdrug61](https://github.com/user-attachments/assets/f55c9b7d-fb8b-4870-aa53-774c4ecc7aaf)
+    ![oqsdrug81](https://github.com/user-attachments/assets/d9cc1b0a-d3ae-4d3a-ad57-e7d4e8cee2db)
 
       
 - **設定**
@@ -96,21 +96,23 @@
   ① OQS_data.mdbの場所を指定します。ダイナサーバーに置くのをおすすめします。<br>
   ② ダイナミクスの場所は、上記`運用方法`に記載したとおり、別PCで実行するときは**ダイナサーバーのdatadyna.mdb**、クライアントで実行するときは**クライアントダイナ**を指定してください。<br>
   ③ オン資端末のreq,resフォルダを含むフォルダを指定<br>
-  ④ PDFを保存するときは、RSBaseかRSAutoの取込フォルダを指定。RSBaseを使用しない場合は、PDFを保存する適当なフォルダを指定してください<br>
-  ⑤  `RSBase reload`をチェックしてRSBaseのトップ画面のUrlを入力すると、PDF取得後Urlをリロードしてファイリングします。RSAuto等で自動ファイリングする場合は指定不要です。<br>
+  ④ PDFを**RSBaseの検査として**保存するときは、RSBaseかRSAutoの取込フォルダを指定。RSBaseを使用しない場合は、PDFを保存する適当なフォルダを指定してください<br>
+     `RSBase reload`をチェックしてRSBaseのトップ画面のUrlを入力すると、PDF取得後Urlをリロードしてファイリングします。RSAuto等で自動ファイリングする場合は指定不要です。<br>
+  ⑤ PDFを**RSBaseのサイドショー**に保存するときは、RSBaseのサーバーフォルダーを指定してください。
   ⑥  `医療機関コード`は10桁のものです<br>
   ⑦  動作間隔は既定で30秒です。<br>
   ⑧⑨  `薬剤情報``特定健診`のグループは **PDF** をRSBaseにファイリングするときに使用してください。RSBaseの検査として登録されます。ダイナミクス標準機能で自動取得し、**RSBaseのPDFから変換する設定を利用してる方は使用しないほうがいい**と思います。<br>
        xmlの薬歴、健診は標準で必ず取得します。<br>
+       **RSBaseでxmlを取り込むときは、`xmlを削除しない`をチェックし、xmlリロードもOQSDrugから行うときは、`RSBase xml reload`のチェックとURLの記入をお願いします**<br>
   ⑩ 指定するとタスクトレイに最小化した状態で起動します<br>
   ⑪ `RSBase連動`は、ID.dat, temp_rs.txt、thept.txt方式に対応しますが、**thept.txtが一番安定している**ようです。RSBaseの`(52)  c:\common\thept.txt (&& c:\ID_temp.txt)にIDを出力 `をyesにしてください。<br>
      また、ダイナミクスの他社連携を利用してのID連携も可能です。[参照](https://github.com/YUKI-ENT/OQSDrug/releases/tag/v1.25.2.10) <br>
   ⑫ `薬歴を最前面で表示`をチェックすると、薬歴ウインドウが最前面で表示されるようになります<br>
   ⑫ ビュワー表示時の初期期間を設定します<br>
   
-     ![oqsdrug42](https://github.com/user-attachments/assets/15b24a0f-2136-4dcd-864e-53c065981877)
+    ![oqsdrug82](https://github.com/user-attachments/assets/b60123b4-5bea-4df2-b0de-630cb1932e8f)
 
-
+ 
 - **タスクトレイアイコン**
 
     ![oqsdrug45](https://github.com/user-attachments/assets/02a39560-6d01-4a0a-a55e-3370e171398c)
