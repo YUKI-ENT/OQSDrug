@@ -989,5 +989,11 @@ namespace OQSDrug
                 }
             }
         }
+
+        private void toolStripButtonTKK_Click(object sender, EventArgs e)
+        {
+            _parentForm.forceIdLink = true;
+            _parentForm.toolStripButtonTKK_Click(sender, e);
+        }
     }
 }

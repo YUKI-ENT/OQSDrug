@@ -31,21 +31,6 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.toolStripVersion = new System.Windows.Forms.ToolStrip();
-            this.toolStripButtonViewer = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButtonExit = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButtonToTaskTray = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripButtonVersion = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripButtonSettings = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButtonTKK = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButtonSinryo = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparatorDebug1 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripComboBoxDBProviders = new System.Windows.Forms.ToolStripComboBox();
-            this.toolStripSeparatorDebug2 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripTextBoxDebug = new System.Windows.Forms.ToolStripTextBox();
-            this.toolStripButtonDebug = new System.Windows.Forms.ToolStripButton();
             this.listViewLog = new System.Windows.Forms.ListView();
             this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
@@ -64,15 +49,26 @@
             this.buttonKSXML = new System.Windows.Forms.Button();
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.textBoxPtIDmain = new System.Windows.Forms.TextBox();
-            this.buttonPtIDSearch = new System.Windows.Forms.Button();
-            this.buttonTKKSearch = new System.Windows.Forms.Button();
-            this.buttonSRSearch = new System.Windows.Forms.Button();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.toolStripVersion = new OQSDrug.ClickThroughToolStrip();
+            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripTextBoxPtIDmain = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripButtonViewer = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonExit = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonToTaskTray = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButtonVersion = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButtonSettings = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonTKK = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonSinryo = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparatorDebug1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripComboBoxDBProviders = new System.Windows.Forms.ToolStripComboBox();
+            this.toolStripSeparatorDebug2 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripTextBoxDebug = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripButtonDebug = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
-            this.toolStripVersion.SuspendLayout();
             this.groupBox1.SuspendLayout();
-            this.groupBox2.SuspendLayout();
+            this.toolStripVersion.SuspendLayout();
             this.SuspendLayout();
             // 
             // dataGridView1
@@ -94,160 +90,6 @@
             this.dataGridView1.CellMouseUp += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_CellMouseUp);
             this.dataGridView1.CellToolTipTextNeeded += new System.Windows.Forms.DataGridViewCellToolTipTextNeededEventHandler(this.dataGridView1_CellToolTipTextNeeded);
             // 
-            // toolStripVersion
-            // 
-            this.toolStripVersion.Font = new System.Drawing.Font("游ゴシック", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.toolStripVersion.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripButtonViewer,
-            this.toolStripButtonExit,
-            this.toolStripButtonToTaskTray,
-            this.toolStripSeparator1,
-            this.toolStripButtonVersion,
-            this.toolStripSeparator2,
-            this.toolStripButtonSettings,
-            this.toolStripButtonTKK,
-            this.toolStripButtonSinryo,
-            this.toolStripSeparatorDebug1,
-            this.toolStripComboBoxDBProviders,
-            this.toolStripSeparatorDebug2,
-            this.toolStripTextBoxDebug,
-            this.toolStripButtonDebug});
-            this.toolStripVersion.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
-            this.toolStripVersion.Location = new System.Drawing.Point(0, 0);
-            this.toolStripVersion.Name = "toolStripVersion";
-            this.toolStripVersion.Size = new System.Drawing.Size(974, 27);
-            this.toolStripVersion.Stretch = true;
-            this.toolStripVersion.TabIndex = 3;
-            this.toolStripVersion.Text = "toolStrip1";
-            this.toolStripVersion.DoubleClick += new System.EventHandler(this.toolStripVersion_DoubleClick);
-            // 
-            // toolStripButtonViewer
-            // 
-            this.toolStripButtonViewer.Font = new System.Drawing.Font("游ゴシック", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.toolStripButtonViewer.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonViewer.Image")));
-            this.toolStripButtonViewer.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonViewer.Name = "toolStripButtonViewer";
-            this.toolStripButtonViewer.Size = new System.Drawing.Size(59, 24);
-            this.toolStripButtonViewer.Text = "薬歴";
-            this.toolStripButtonViewer.ToolTipText = "薬歴を表示します";
-            this.toolStripButtonViewer.Click += new System.EventHandler(this.toolStripButtonDI_Click);
-            // 
-            // toolStripButtonExit
-            // 
-            this.toolStripButtonExit.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripButtonExit.Font = new System.Drawing.Font("游ゴシック", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.toolStripButtonExit.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonExit.Image")));
-            this.toolStripButtonExit.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonExit.Name = "toolStripButtonExit";
-            this.toolStripButtonExit.Size = new System.Drawing.Size(59, 24);
-            this.toolStripButtonExit.Text = "終了";
-            this.toolStripButtonExit.Click += new System.EventHandler(this.buttonExit_Click);
-            // 
-            // toolStripButtonToTaskTray
-            // 
-            this.toolStripButtonToTaskTray.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripButtonToTaskTray.Image = global::OQSDrug.Properties.Resources.Down;
-            this.toolStripButtonToTaskTray.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonToTaskTray.Name = "toolStripButtonToTaskTray";
-            this.toolStripButtonToTaskTray.Size = new System.Drawing.Size(23, 24);
-            this.toolStripButtonToTaskTray.ToolTipText = "タスクトレイに最小化します";
-            this.toolStripButtonToTaskTray.Click += new System.EventHandler(this.toolStripButtonToTaskTray_Click);
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 27);
-            // 
-            // toolStripButtonVersion
-            // 
-            this.toolStripButtonVersion.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripButtonVersion.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButtonVersion.Image = global::OQSDrug.Properties.Resources.Info;
-            this.toolStripButtonVersion.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonVersion.Name = "toolStripButtonVersion";
-            this.toolStripButtonVersion.Size = new System.Drawing.Size(23, 24);
-            this.toolStripButtonVersion.Text = "Version";
-            this.toolStripButtonVersion.Click += new System.EventHandler(this.toolStripButtonVersion_Click);
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 27);
-            // 
-            // toolStripButtonSettings
-            // 
-            this.toolStripButtonSettings.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripButtonSettings.Font = new System.Drawing.Font("游ゴシック", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.toolStripButtonSettings.Image = global::OQSDrug.Properties.Resources.Application;
-            this.toolStripButtonSettings.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonSettings.Name = "toolStripButtonSettings";
-            this.toolStripButtonSettings.Size = new System.Drawing.Size(59, 24);
-            this.toolStripButtonSettings.Text = "設定";
-            this.toolStripButtonSettings.Click += new System.EventHandler(this.toolStripButtonSettings_Click);
-            // 
-            // toolStripButtonTKK
-            // 
-            this.toolStripButtonTKK.Image = global::OQSDrug.Properties.Resources.Heart;
-            this.toolStripButtonTKK.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonTKK.Name = "toolStripButtonTKK";
-            this.toolStripButtonTKK.Size = new System.Drawing.Size(59, 24);
-            this.toolStripButtonTKK.Text = "健診";
-            this.toolStripButtonTKK.ToolTipText = "健診結果を表示します";
-            this.toolStripButtonTKK.Click += new System.EventHandler(this.toolStripButtonTKK_Click);
-            // 
-            // toolStripButtonSinryo
-            // 
-            this.toolStripButtonSinryo.Image = global::OQSDrug.Properties.Resources.Equipment;
-            this.toolStripButtonSinryo.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonSinryo.Name = "toolStripButtonSinryo";
-            this.toolStripButtonSinryo.Size = new System.Drawing.Size(89, 24);
-            this.toolStripButtonSinryo.Text = "診療手術";
-            this.toolStripButtonSinryo.ToolTipText = "診療手術情報を表示します";
-            this.toolStripButtonSinryo.Click += new System.EventHandler(this.toolStripButtonSinryo_Click);
-            // 
-            // toolStripSeparatorDebug1
-            // 
-            this.toolStripSeparatorDebug1.Name = "toolStripSeparatorDebug1";
-            this.toolStripSeparatorDebug1.Size = new System.Drawing.Size(6, 27);
-            this.toolStripSeparatorDebug1.Visible = false;
-            // 
-            // toolStripComboBoxDBProviders
-            // 
-            this.toolStripComboBoxDBProviders.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.toolStripComboBoxDBProviders.Name = "toolStripComboBoxDBProviders";
-            this.toolStripComboBoxDBProviders.Size = new System.Drawing.Size(180, 27);
-            this.toolStripComboBoxDBProviders.ToolTipText = "OleDbプロバイダを設定します";
-            this.toolStripComboBoxDBProviders.Visible = false;
-            this.toolStripComboBoxDBProviders.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxDBProviders_SelectedIndexChanged);
-            // 
-            // toolStripSeparatorDebug2
-            // 
-            this.toolStripSeparatorDebug2.Name = "toolStripSeparatorDebug2";
-            this.toolStripSeparatorDebug2.Size = new System.Drawing.Size(6, 27);
-            this.toolStripSeparatorDebug2.Visible = false;
-            // 
-            // toolStripTextBoxDebug
-            // 
-            this.toolStripTextBoxDebug.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
-            this.toolStripTextBoxDebug.Name = "toolStripTextBoxDebug";
-            this.toolStripTextBoxDebug.Size = new System.Drawing.Size(100, 27);
-            this.toolStripTextBoxDebug.ToolTipText = "デバッグ用xmlの患者ID(枝番付)";
-            this.toolStripTextBoxDebug.Visible = false;
-            // 
-            // toolStripButtonDebug
-            // 
-            this.toolStripButtonDebug.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripButtonDebug.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonDebug.Image")));
-            this.toolStripButtonDebug.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonDebug.Name = "toolStripButtonDebug";
-            this.toolStripButtonDebug.Size = new System.Drawing.Size(58, 24);
-            this.toolStripButtonDebug.Text = "Debug";
-            this.toolStripButtonDebug.ToolTipText = "xmlファイルを読み込みます";
-            this.toolStripButtonDebug.Visible = false;
-            this.toolStripButtonDebug.Click += new System.EventHandler(this.toolStripButtonDebug_Click);
-            // 
             // listViewLog
             // 
             this.listViewLog.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -265,11 +107,10 @@
             // 
             // tableLayoutPanel
             // 
-            this.tableLayoutPanel.AutoSize = true;
             this.tableLayoutPanel.CellBorderStyle = System.Windows.Forms.TableLayoutPanelCellBorderStyle.Inset;
             this.tableLayoutPanel.ColumnCount = 2;
-            this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 56.28141F));
-            this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 43.71859F));
+            this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 38.19096F));
+            this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 61.80904F));
             this.tableLayoutPanel.Font = new System.Drawing.Font("Meiryo UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tableLayoutPanel.Location = new System.Drawing.Point(12, 137);
             this.tableLayoutPanel.Name = "tableLayoutPanel";
@@ -468,65 +309,173 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "ID連携";
             // 
-            // textBoxPtIDmain
+            // toolStripVersion
             // 
-            this.textBoxPtIDmain.Font = new System.Drawing.Font("Meiryo UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.textBoxPtIDmain.ImeMode = System.Windows.Forms.ImeMode.Off;
-            this.textBoxPtIDmain.Location = new System.Drawing.Point(6, 19);
-            this.textBoxPtIDmain.Name = "textBoxPtIDmain";
-            this.textBoxPtIDmain.Size = new System.Drawing.Size(101, 27);
-            this.textBoxPtIDmain.TabIndex = 31;
-            this.toolTip1.SetToolTip(this.textBoxPtIDmain, "患者ID（枝番なし）で検索");
+            this.toolStripVersion.Font = new System.Drawing.Font("游ゴシック", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.toolStripVersion.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripLabel1,
+            this.toolStripTextBoxPtIDmain,
+            this.toolStripButtonViewer,
+            this.toolStripButtonExit,
+            this.toolStripButtonToTaskTray,
+            this.toolStripSeparator1,
+            this.toolStripButtonVersion,
+            this.toolStripSeparator2,
+            this.toolStripButtonSettings,
+            this.toolStripButtonTKK,
+            this.toolStripButtonSinryo,
+            this.toolStripSeparatorDebug1,
+            this.toolStripComboBoxDBProviders,
+            this.toolStripSeparatorDebug2,
+            this.toolStripTextBoxDebug,
+            this.toolStripButtonDebug});
+            this.toolStripVersion.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
+            this.toolStripVersion.Location = new System.Drawing.Point(0, 0);
+            this.toolStripVersion.Name = "toolStripVersion";
+            this.toolStripVersion.Size = new System.Drawing.Size(974, 27);
+            this.toolStripVersion.Stretch = true;
+            this.toolStripVersion.TabIndex = 3;
+            this.toolStripVersion.Text = "toolStrip1";
+            this.toolStripVersion.DoubleClick += new System.EventHandler(this.toolStripVersion_DoubleClick);
             // 
-            // buttonPtIDSearch
+            // toolStripLabel1
             // 
-            this.buttonPtIDSearch.Image = global::OQSDrug.Properties.Resources.Text_preview;
-            this.buttonPtIDSearch.Location = new System.Drawing.Point(110, 20);
-            this.buttonPtIDSearch.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonPtIDSearch.Name = "buttonPtIDSearch";
-            this.buttonPtIDSearch.Size = new System.Drawing.Size(27, 27);
-            this.buttonPtIDSearch.TabIndex = 32;
-            this.toolTip1.SetToolTip(this.buttonPtIDSearch, "薬歴検索");
-            this.buttonPtIDSearch.UseVisualStyleBackColor = true;
-            this.buttonPtIDSearch.Click += new System.EventHandler(this.buttonPtIDSearch_Click);
+            this.toolStripLabel1.Name = "toolStripLabel1";
+            this.toolStripLabel1.Size = new System.Drawing.Size(24, 24);
+            this.toolStripLabel1.Text = "ID";
+            this.toolStripLabel1.ToolTipText = "枝番なしIDを入力し右のいずれかのボタンを押すと\r\n薬歴、健診歴等のウインドウが開きます\r\n空欄だと患者選択無しでウインドウが開きます\r\n";
             // 
-            // buttonTKKSearch
+            // toolStripTextBoxPtIDmain
             // 
-            this.buttonTKKSearch.Image = global::OQSDrug.Properties.Resources.Heart;
-            this.buttonTKKSearch.Location = new System.Drawing.Point(137, 20);
-            this.buttonTKKSearch.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonTKKSearch.Name = "buttonTKKSearch";
-            this.buttonTKKSearch.Size = new System.Drawing.Size(27, 27);
-            this.buttonTKKSearch.TabIndex = 33;
-            this.toolTip1.SetToolTip(this.buttonTKKSearch, "健診検索");
-            this.buttonTKKSearch.UseVisualStyleBackColor = true;
-            this.buttonTKKSearch.Click += new System.EventHandler(this.buttonTKKSearch_Click);
+            this.toolStripTextBoxPtIDmain.Name = "toolStripTextBoxPtIDmain";
+            this.toolStripTextBoxPtIDmain.Size = new System.Drawing.Size(70, 27);
+            this.toolStripTextBoxPtIDmain.ToolTipText = "枝番なしIDを入力し右のいずれかのボタンを押すと\r\n薬歴、健診歴等のウインドウが開きます\r\n空欄だと患者選択無しでウインドウが開きます";
             // 
-            // buttonSRSearch
+            // toolStripButtonViewer
             // 
-            this.buttonSRSearch.Image = global::OQSDrug.Properties.Resources.Equipment;
-            this.buttonSRSearch.Location = new System.Drawing.Point(164, 20);
-            this.buttonSRSearch.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonSRSearch.Name = "buttonSRSearch";
-            this.buttonSRSearch.Size = new System.Drawing.Size(27, 27);
-            this.buttonSRSearch.TabIndex = 34;
-            this.toolTip1.SetToolTip(this.buttonSRSearch, "診療検索");
-            this.buttonSRSearch.UseVisualStyleBackColor = true;
-            this.buttonSRSearch.Click += new System.EventHandler(this.buttonSRSearch_Click);
+            this.toolStripButtonViewer.Font = new System.Drawing.Font("游ゴシック", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.toolStripButtonViewer.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonViewer.Image")));
+            this.toolStripButtonViewer.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonViewer.Name = "toolStripButtonViewer";
+            this.toolStripButtonViewer.Size = new System.Drawing.Size(59, 24);
+            this.toolStripButtonViewer.Text = "薬歴";
+            this.toolStripButtonViewer.ToolTipText = "薬歴を表示します";
+            this.toolStripButtonViewer.Click += new System.EventHandler(this.toolStripButtonDI_Click);
             // 
-            // groupBox2
+            // toolStripButtonExit
             // 
-            this.groupBox2.Controls.Add(this.textBoxPtIDmain);
-            this.groupBox2.Controls.Add(this.buttonSRSearch);
-            this.groupBox2.Controls.Add(this.buttonPtIDSearch);
-            this.groupBox2.Controls.Add(this.buttonTKKSearch);
-            this.groupBox2.Font = new System.Drawing.Font("Meiryo UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.groupBox2.Location = new System.Drawing.Point(710, 30);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(200, 55);
-            this.groupBox2.TabIndex = 35;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "ID検索";
+            this.toolStripButtonExit.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonExit.Font = new System.Drawing.Font("游ゴシック", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.toolStripButtonExit.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonExit.Image")));
+            this.toolStripButtonExit.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonExit.Name = "toolStripButtonExit";
+            this.toolStripButtonExit.Size = new System.Drawing.Size(59, 24);
+            this.toolStripButtonExit.Text = "終了";
+            this.toolStripButtonExit.Click += new System.EventHandler(this.buttonExit_Click);
+            // 
+            // toolStripButtonToTaskTray
+            // 
+            this.toolStripButtonToTaskTray.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonToTaskTray.Image = global::OQSDrug.Properties.Resources.Down;
+            this.toolStripButtonToTaskTray.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonToTaskTray.Name = "toolStripButtonToTaskTray";
+            this.toolStripButtonToTaskTray.Size = new System.Drawing.Size(23, 24);
+            this.toolStripButtonToTaskTray.ToolTipText = "タスクトレイに最小化します";
+            this.toolStripButtonToTaskTray.Click += new System.EventHandler(this.toolStripButtonToTaskTray_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 27);
+            // 
+            // toolStripButtonVersion
+            // 
+            this.toolStripButtonVersion.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonVersion.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonVersion.Image = global::OQSDrug.Properties.Resources.Info;
+            this.toolStripButtonVersion.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonVersion.Name = "toolStripButtonVersion";
+            this.toolStripButtonVersion.Size = new System.Drawing.Size(23, 24);
+            this.toolStripButtonVersion.Text = "Version";
+            this.toolStripButtonVersion.Click += new System.EventHandler(this.toolStripButtonVersion_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 27);
+            // 
+            // toolStripButtonSettings
+            // 
+            this.toolStripButtonSettings.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonSettings.Font = new System.Drawing.Font("游ゴシック", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.toolStripButtonSettings.Image = global::OQSDrug.Properties.Resources.Application;
+            this.toolStripButtonSettings.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonSettings.Name = "toolStripButtonSettings";
+            this.toolStripButtonSettings.Size = new System.Drawing.Size(59, 24);
+            this.toolStripButtonSettings.Text = "設定";
+            this.toolStripButtonSettings.Click += new System.EventHandler(this.toolStripButtonSettings_Click);
+            // 
+            // toolStripButtonTKK
+            // 
+            this.toolStripButtonTKK.Image = global::OQSDrug.Properties.Resources.Heart;
+            this.toolStripButtonTKK.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonTKK.Name = "toolStripButtonTKK";
+            this.toolStripButtonTKK.Size = new System.Drawing.Size(59, 24);
+            this.toolStripButtonTKK.Text = "健診";
+            this.toolStripButtonTKK.ToolTipText = "健診結果を表示します";
+            this.toolStripButtonTKK.Click += new System.EventHandler(this.toolStripButtonTKK_Click);
+            // 
+            // toolStripButtonSinryo
+            // 
+            this.toolStripButtonSinryo.Image = global::OQSDrug.Properties.Resources.Equipment;
+            this.toolStripButtonSinryo.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonSinryo.Name = "toolStripButtonSinryo";
+            this.toolStripButtonSinryo.Size = new System.Drawing.Size(89, 24);
+            this.toolStripButtonSinryo.Text = "診療手術";
+            this.toolStripButtonSinryo.ToolTipText = "診療手術情報を表示します";
+            this.toolStripButtonSinryo.Click += new System.EventHandler(this.toolStripButtonSinryo_Click);
+            // 
+            // toolStripSeparatorDebug1
+            // 
+            this.toolStripSeparatorDebug1.Name = "toolStripSeparatorDebug1";
+            this.toolStripSeparatorDebug1.Size = new System.Drawing.Size(6, 27);
+            this.toolStripSeparatorDebug1.Visible = false;
+            // 
+            // toolStripComboBoxDBProviders
+            // 
+            this.toolStripComboBoxDBProviders.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.toolStripComboBoxDBProviders.Name = "toolStripComboBoxDBProviders";
+            this.toolStripComboBoxDBProviders.Size = new System.Drawing.Size(180, 27);
+            this.toolStripComboBoxDBProviders.ToolTipText = "OleDbプロバイダを設定します";
+            this.toolStripComboBoxDBProviders.Visible = false;
+            this.toolStripComboBoxDBProviders.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxDBProviders_SelectedIndexChanged);
+            // 
+            // toolStripSeparatorDebug2
+            // 
+            this.toolStripSeparatorDebug2.Name = "toolStripSeparatorDebug2";
+            this.toolStripSeparatorDebug2.Size = new System.Drawing.Size(6, 27);
+            this.toolStripSeparatorDebug2.Visible = false;
+            // 
+            // toolStripTextBoxDebug
+            // 
+            this.toolStripTextBoxDebug.Name = "toolStripTextBoxDebug";
+            this.toolStripTextBoxDebug.Size = new System.Drawing.Size(100, 27);
+            this.toolStripTextBoxDebug.ToolTipText = "デバッグ用xmlの患者ID(枝番付)";
+            this.toolStripTextBoxDebug.Visible = false;
+            // 
+            // toolStripButtonDebug
+            // 
+            this.toolStripButtonDebug.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripButtonDebug.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonDebug.Image")));
+            this.toolStripButtonDebug.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonDebug.Name = "toolStripButtonDebug";
+            this.toolStripButtonDebug.Size = new System.Drawing.Size(58, 24);
+            this.toolStripButtonDebug.Text = "Debug";
+            this.toolStripButtonDebug.ToolTipText = "xmlファイルを読み込みます";
+            this.toolStripButtonDebug.Visible = false;
+            this.toolStripButtonDebug.Click += new System.EventHandler(this.toolStripButtonDebug_Click);
             // 
             // Form1
             // 
@@ -534,7 +483,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.ClientSize = new System.Drawing.Size(974, 717);
-            this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.checkBoxAutoStart);
             this.Controls.Add(this.buttonReload);
@@ -556,11 +504,9 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            this.groupBox1.ResumeLayout(false);
             this.toolStripVersion.ResumeLayout(false);
             this.toolStripVersion.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -568,7 +514,7 @@
 
         #endregion
         private System.Windows.Forms.DataGridView dataGridView1;
-        private System.Windows.Forms.ToolStrip toolStripVersion;
+        private ClickThroughToolStrip toolStripVersion;
         private System.Windows.Forms.ToolStripButton toolStripButtonSettings;
         private System.Windows.Forms.CheckBox StartStop;
         private System.Windows.Forms.ListView listViewLog;
@@ -601,11 +547,8 @@
         private System.Windows.Forms.ToolStripTextBox toolStripTextBoxDebug;
         private System.Windows.Forms.ToolStripButton toolStripButtonSinryo;
         private System.Windows.Forms.CheckBox checkBoxAutoSR;
-        private System.Windows.Forms.TextBox textBoxPtIDmain;
-        private System.Windows.Forms.Button buttonPtIDSearch;
-        private System.Windows.Forms.Button buttonTKKSearch;
-        private System.Windows.Forms.Button buttonSRSearch;
-        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel1;
+        private System.Windows.Forms.ToolStripTextBox toolStripTextBoxPtIDmain;
     }
 }
 

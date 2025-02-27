@@ -32,7 +32,9 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormSR));
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            //this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.toolStrip1 = new ClickThroughToolStrip();
+
             this.toolStripComboBoxPtID = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripButtonClose = new System.Windows.Forms.ToolStripButton();
             this.dataGridViewSinryo = new System.Windows.Forms.DataGridView();
@@ -136,7 +138,8 @@
 
         #endregion
 
-        private System.Windows.Forms.ToolStrip toolStrip1;
+        //private System.Windows.Forms.ToolStrip toolStrip1;
+        private ClickThroughToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripComboBox toolStripComboBoxPtID;
         private System.Windows.Forms.ToolStripButton toolStripButtonClose;
         private System.Windows.Forms.DataGridView dataGridViewSinryo;

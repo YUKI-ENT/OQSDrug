@@ -35,7 +35,7 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             this.webBrowser1 = new System.Windows.Forms.WebBrowser();
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.toolStrip1 = new OQSDrug.ClickThroughToolStrip();
             this.toolStripComboBoxPt = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
@@ -54,6 +54,7 @@
             this.toolStripButtonSinryo = new System.Windows.Forms.ToolStripButton();
             this.dataGridViewFixed = new System.Windows.Forms.DataGridView();
             this.dataGridViewDH = new System.Windows.Forms.DataGridView();
+            this.toolStripButtonTKK = new System.Windows.Forms.ToolStripButton();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewFixed)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewDH)).BeginInit();
@@ -87,7 +88,8 @@
             this.toolStripButtonClose,
             this.toolStripButtonClass,
             this.toolStripSeparator6,
-            this.toolStripButtonSinryo});
+            this.toolStripButtonSinryo,
+            this.toolStripButtonTKK});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(1223, 27);
@@ -321,6 +323,16 @@
             this.dataGridViewDH.Scroll += new System.Windows.Forms.ScrollEventHandler(this.dataGridViewDH_Scroll);
             this.dataGridViewDH.Resize += new System.EventHandler(this.dataGridViewDH_Resize);
             // 
+            // toolStripButtonTKK
+            // 
+            this.toolStripButtonTKK.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonTKK.Image = global::OQSDrug.Properties.Resources.Heart;
+            this.toolStripButtonTKK.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonTKK.Name = "toolStripButtonTKK";
+            this.toolStripButtonTKK.Size = new System.Drawing.Size(23, 24);
+            this.toolStripButtonTKK.Text = "特定健診情報";
+            this.toolStripButtonTKK.Click += new System.EventHandler(this.toolStripButtonTKK_Click);
+            // 
             // FormDI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -347,7 +359,8 @@
 
         #endregion
         private System.Windows.Forms.WebBrowser webBrowser1;
-        private System.Windows.Forms.ToolStrip toolStrip1;
+        //private System.Windows.Forms.ToolStrip toolStrip1;
+        private ClickThroughToolStrip toolStrip1;
         private System.Windows.Forms.DataGridView dataGridViewFixed;
         private System.Windows.Forms.DataGridView dataGridViewDH;
         private System.Windows.Forms.ToolStripComboBox toolStripComboBoxPt;
@@ -366,5 +379,6 @@
         private System.Windows.Forms.ToolStripButton toolStripButtonClass;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
         private System.Windows.Forms.ToolStripButton toolStripButtonSinryo;
+        private System.Windows.Forms.ToolStripButton toolStripButtonTKK;
     }
 }

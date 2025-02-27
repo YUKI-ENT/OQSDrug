@@ -279,7 +279,7 @@ namespace OQSDrug
         private void toolStripButtonSettings_Click(object sender, EventArgs e)
         {
             //動作中の場合は停止する
-            if (isTimerRunning)
+            if (isOQSRunnnig)
             {
                 Invoke(new Action(() => MessageBox.Show("一旦タイマー動作を停止します")));
                 
@@ -590,8 +590,8 @@ namespace OQSDrug
 
         private async Task<DataTable> LoadDataFromDatabaseAsync(string dynaPath)
         {
-            string connectionString = $"Provider={CommonFunctions.DBProvider};Data Source={dynaPath};Mode=Read;Persist Security Info=False;";
-            string query = "SELECT * FROM " + Properties.Settings.Default.DynaTable + ";";
+            string connectionString = $"Provider={CommonFunctions.DBProvider};Data Source={dynaPath};Mode=Share Deny None;Persist Security Info=False;";
+            string query = $"SELECT * FROM [{DynaTable}]"; // テーブル名をエスケープ
 
             DataTable dataTable = new DataTable();
 
@@ -603,18 +603,18 @@ namespace OQSDrug
 
                     using (OleDbCommand command = new OleDbCommand(query, connection))
                     {
-                        using (OleDbDataReader reader = (OleDbDataReader)await command.ExecuteReaderAsync()) // 非同期でデータを読み込む
+                        using (OleDbDataReader reader = (OleDbDataReader)await command.ExecuteReaderAsync()) // 非同期でデータを取得
                         {
                             dataTable.Load(reader); // DataReader のデータを DataTable にロード
                         }
                     }
                 }
 
-                AddLog("ダイナミクスの" + Properties.Settings.Default.DynaTable + "の取り込みが完了しました");
+                AddLog($"ダイナミクスの {DynaTable} の取り込みが完了しました");
             }
             catch (Exception ex)
             {
-                AddLog($"ダイナミクスの読み込みエラー:{ex.Message}");
+                AddLog($"ダイナミクスの読み込みエラー: {ex.Message}\n{ex.StackTrace}");
                 return null;
             }
 
@@ -623,50 +623,42 @@ namespace OQSDrug
 
         public async Task<string> CheckDatabaseAsync(string dbPath, string tableName)
         {
-            return await Task.Run(() =>
+            if (string.IsNullOrEmpty(dbPath))
             {
-                // 引数の妥当性チェック
-                if (string.IsNullOrEmpty(dbPath))
-                {
-                    return "エラー: データベースパスが指定されていません。";
-                }
-                if (string.IsNullOrEmpty(tableName))
-                {
-                    return "エラー: テーブル名が指定されていません。";
-                }
+                return "エラー: データベースパスが指定されていません。";
+            }
+            if (string.IsNullOrEmpty(tableName))
+            {
+                return "エラー: テーブル名が指定されていません。";
+            }
 
-                // 接続文字列を作成
-                string connectionString = $"Provider={CommonFunctions.DBProvider};Data Source={dbPath};";
+            string connectionString = $"Provider={CommonFunctions.DBProvider};Data Source={dbPath};";
 
-                try
+            try
+            {
+                using (var connection = new OleDbConnection(connectionString))
                 {
-                    // データベース接続
-                    using (var connection = new OleDbConnection(connectionString))
+                    await connection.OpenAsync(); // 非同期で接続を開く
+
+                    // GetSchema を使ってテーブルが存在するか確認
+                    DataTable schemaTable = connection.GetSchema("Tables", new string[] { null, null, tableName, null });
+
+                    if (schemaTable.Rows.Count > 0)
                     {
-                        connection.Open();
-
-                        // テーブルが存在するかを直接確認する
-                        string query = $"SELECT TOP 1 * FROM [{tableName}]";
-                        try
-                        {
-                            using (var command = new OleDbCommand(query, connection))
-                            {
-                                command.ExecuteScalar();
-                                return "OK"; // テーブルが存在
-                            }
-                        }
-                        catch (OleDbException)
-                        {
-                            return $"エラー: テーブル '{tableName}' が存在しません。";
-                        }
+                        return "OK"; // テーブルが存在
+                    }
+                    else
+                    {
+                        return $"エラー: テーブル '{tableName}' が存在しません。";
                     }
                 }
-                catch (Exception ex)
-                {
-                    return $"エラー: {ex.Message}"; // 例外発生時のエラーメッセージ
-                }
-            });
+            }
+            catch (Exception ex)
+            {
+                return $"エラー: {ex.Message}\n{ex.StackTrace}"; // 例外の詳細情報を含める
+            }
         }
+
 
         // ディレクトリチェックの非同期メソッド
         private async Task<string> CheckDirectoryExistsAsync(string directoryPath)
@@ -1265,7 +1257,9 @@ namespace OQSDrug
                 statusLabels[i] = new Label
                 {
                     Text = items[i],
-                    AutoSize = true,
+                    AutoSize = false, // サイズを固定する
+                    Width = 150,      // 幅を指定
+                    Height = 30,      // 高さを固定
                     Font = new Font("Segoe UI", 12, FontStyle.Regular),
                     TextAlign = ContentAlignment.MiddleLeft,
                     Padding = new Padding(5)
@@ -1275,10 +1269,13 @@ namespace OQSDrug
                 statusTexts[i] = new Label
                 {
                     Text = "Checking...", // 初期値
-                    AutoSize = true,
+                    AutoSize = false,     // サイズを固定する
+                    Width = 250,          // 幅を指定
+                    Height = 30,          // 高さを固定
+                    AutoEllipsis = true,  // 長いテキストを「...」で省略
                     Font = new Font("Segoe UI", 12, FontStyle.Bold),
                     ForeColor = Color.Gray,
-                    TextAlign = ContentAlignment.MiddleCenter,
+                    TextAlign = ContentAlignment.MiddleLeft, // 左揃え
                     Padding = new Padding(5)
                 };
 
@@ -2656,16 +2653,51 @@ namespace OQSDrug
             }
         }
 
-        private async Task OpenDrugHistory(long ptId, bool messagePopup = false)
+        private async Task OpenDrugHistory(long ptId, bool messagePopup = false, bool alwaysShow = false)
         {
-            if (await existHistory(ptId, "drug_history"))
+            if (alwaysShow || await existHistory(ptId, "drug_history"))
             {
                 tempId = ptId;
                 // UIスレッドで操作
                 Invoke((Action)(() =>
                 {
-                    //buttonViewer_Click(toolStripButtonViewer, EventArgs.Empty);
-                    toolStripButtonDI_Click(toolStripButtonViewer, EventArgs.Empty);
+                    if (formDIInstance == null || formDIInstance.IsDisposed)
+                    {
+                        formDIInstance = new FormDI(this);
+
+                        // 前回の位置とサイズを復元
+                        if (Properties.Settings.Default.ViewerBounds != Rectangle.Empty)
+                        {
+                            formDIInstance.StartPosition = FormStartPosition.Manual;
+                            formDIInstance.Bounds = Properties.Settings.Default.ViewerBounds;
+
+                            // マージンと境界線を設定
+                            formDIInstance.Padding = new Padding(0);
+                            formDIInstance.Margin = new Padding(0);
+                            //form3Instance.FormBorderStyle = FormBorderStyle.None;
+                        }
+
+                        // TopMost状態を設定
+                        formDIInstance.TopMost = Properties.Settings.Default.ViewerTopmost;
+
+                        // Form3が閉じるときに位置、サイズ、TopMost状態を保存
+                        formDIInstance.FormClosing += (s, args) =>
+                        {
+                            SaveViewerSettings(formDIInstance, "ViewerBounds");
+                        };
+
+                        formDIInstance.Show(this);
+                    }
+                    else
+                    {
+                        // Form3が開いている場合、LoadDataIntoComboBoxes()を実行
+                        Task.Run(async () =>
+                            await formDIInstance.LoadDataIntoComboBoxes()
+                        );
+                        // すでに開いている場合はアクティブにする
+                        formDIInstance.Activate();
+
+                    }
                 }));
                 AddLog($"{ptId}の薬歴を開きます");
             }
@@ -2689,15 +2721,52 @@ namespace OQSDrug
             }
         }
 
-        private async Task OpenTKKHistory(long ptId, bool messagePopup = false)
+        private async Task OpenTKKHistory(long ptId, bool messagePopup = false, bool alwaysShow = false)
         {
-            if (await existHistory(ptId, "TKK_history"))
+            if (alwaysShow || await existHistory(ptId, "TKK_history"))
             {
                 tempId = ptId;
                 // UIスレッドで操作
                 Invoke((Action)(() =>
                 {
-                    toolStripButtonTKK_Click(toolStripButtonViewer, EventArgs.Empty);
+                    // FormTKKがすでに開いているか確認
+                    if (formTKKInstance == null || formTKKInstance.IsDisposed)
+                    {
+                        formTKKInstance = new FormTKK(this);
+
+                        // 前回の位置とサイズを復元
+                        if (Properties.Settings.Default.TKKBounds != Rectangle.Empty)
+                        {
+                            formTKKInstance.StartPosition = FormStartPosition.Manual;
+                            formTKKInstance.Bounds = Properties.Settings.Default.TKKBounds;
+
+                            // マージンと境界線を設定
+                            formTKKInstance.Padding = new Padding(0);
+                            formTKKInstance.Margin = new Padding(0);
+                            //form3Instance.FormBorderStyle = FormBorderStyle.None;
+                        }
+
+                        // TopMost状態を設定
+                        formTKKInstance.TopMost = Properties.Settings.Default.ViewerTopmost;
+
+                        // Form3が閉じるときに位置、サイズ、TopMost状態を保存
+                        formTKKInstance.FormClosing += (s, args) =>
+                        {
+                            SaveViewerSettings(formTKKInstance, "TKKBounds");
+                        };
+
+                        formTKKInstance.Show(this);
+                    }
+                    else
+                    {
+                        // FormTKKが開いている場合、LoadDataIntoComboBoxes()を実行
+                        Task.Run(async () =>
+                            await formTKKInstance.LoadToolStripComboBox()
+                        );
+                        // すでに開いている場合はアクティブにする
+                        formTKKInstance.Activate();
+
+                    }
                 }));
                 AddLog($"{ptId}の健診結果を開きます");
             }
@@ -2721,15 +2790,52 @@ namespace OQSDrug
             }
         }
 
-        private async Task OpenSinryoHistory(long ptId, bool messagePopup = false)
+        private async Task OpenSinryoHistory(long ptId, bool messagePopup = false, bool alwaysShow = false)
         {
-            if (await existHistory(ptId, "sinryo_history"))
+            if (alwaysShow || await existHistory(ptId, "sinryo_history"))
             {
                 tempId = ptId;
                 // UIスレッドで操作
                 Invoke((Action)(() =>
                 {
-                    toolStripButtonSinryo_Click(toolStripButtonSinryo, EventArgs.Empty);
+                    // FormSRがすでに開いているか確認
+                    if (formSRInstance == null || formSRInstance.IsDisposed)
+                    {
+                        formSRInstance = new FormSR(this);
+
+                        // 前回の位置とサイズを復元
+                        if (Properties.Settings.Default.SRBounds != Rectangle.Empty)
+                        {
+                            formSRInstance.StartPosition = FormStartPosition.Manual;
+                            formSRInstance.Bounds = Properties.Settings.Default.SRBounds;
+
+                            // マージンと境界線を設定
+                            formSRInstance.Padding = new Padding(0);
+                            formSRInstance.Margin = new Padding(0);
+                            //form3Instance.FormBorderStyle = FormBorderStyle.None;
+                        }
+
+                        // TopMost状態を設定
+                        formSRInstance.TopMost = Properties.Settings.Default.ViewerTopmost;
+
+                        // Form3が閉じるときに位置、サイズ、TopMost状態を保存
+                        formSRInstance.FormClosing += (s, args) =>
+                        {
+                            SaveViewerSettings(formSRInstance, "SRBounds");
+                        };
+
+                        formSRInstance.Show(this);
+                    }
+                    else
+                    {
+                        // FormTKKが開いている場合、LoadDataIntoComboBoxes()を実行
+                        Task.Run(async () =>
+                            await formSRInstance.LoadDataIntoComboBoxes()
+                        );
+                        // すでに開いている場合はアクティブにする
+                        formSRInstance.Activate();
+
+                    }
                 }));
                 AddLog($"{ptId}の診療情報を開きます");
             }
@@ -3109,6 +3215,8 @@ namespace OQSDrug
             animationTimer?.Dispose();
 
             BackupSettings();
+
+            BackupGenerations(Properties.Settings.Default.OQSDrugData, OQSFolder, 7);
             //base.OnFormClosing(e);
         }
 
@@ -3256,46 +3364,22 @@ namespace OQSDrug
             }
         }
 
-        private void toolStripButtonTKK_Click(object sender, EventArgs e)
+        public async void toolStripButtonTKK_Click(object sender, EventArgs e)
         {
-            // FormTKKがすでに開いているか確認
-            if (formTKKInstance == null || formTKKInstance.IsDisposed)
+            string strPtIDmain = null;
+
+            toolStripVersion.Invoke(new Action(() =>
+                strPtIDmain = toolStripTextBoxPtIDmain.Text
+            ));
+
+            if (long.TryParse(strPtIDmain, out long idValue))
             {
-                formTKKInstance = new FormTKK(this);
-
-                // 前回の位置とサイズを復元
-                if (Properties.Settings.Default.TKKBounds != Rectangle.Empty)
-                {
-                    formTKKInstance.StartPosition = FormStartPosition.Manual;
-                    formTKKInstance.Bounds = Properties.Settings.Default.TKKBounds;
-
-                    // マージンと境界線を設定
-                    formTKKInstance.Padding = new Padding(0);
-                    formTKKInstance.Margin = new Padding(0);
-                    //form3Instance.FormBorderStyle = FormBorderStyle.None;
-                }
-
-                // TopMost状態を設定
-                formTKKInstance.TopMost = Properties.Settings.Default.ViewerTopmost;
-
-                // Form3が閉じるときに位置、サイズ、TopMost状態を保存
-                formTKKInstance.FormClosing += (s, args) =>
-                {
-                    SaveViewerSettings(formTKKInstance, "TKKBounds");
-                };
-
-                formTKKInstance.Show(this);
+                // 数値に変換できた場合
+                tempId = idValue;
+                forceIdLink = true;
             }
-            else
-            {
-                // FormTKKが開いている場合、LoadDataIntoComboBoxes()を実行
-                Task.Run(async () =>
-                    await formTKKInstance.LoadToolStripComboBox()
-                );
-                // すでに開いている場合はアクティブにする
-                formTKKInstance.Activate();
-
-            }
+            
+            await OpenTKKHistory(tempId, true, true);
         }
 
         private void BackupSettings()
@@ -3304,52 +3388,11 @@ namespace OQSDrug
             {
                 // 完全なファイルパスを生成
                 string defaultPath = Path.Combine(OQSFolder, "OQSDrug.config");
-                string backupPath1 = Path.Combine(OQSFolder, "OQSDrug1.config");
-                string backupPath2 = Path.Combine(OQSFolder, "OQSDrug2.config");
 
-                // フォルダが存在しない場合は作成
-                if (!Directory.Exists(OQSFolder))
-                {
-                    Directory.CreateDirectory(OQSFolder);
-                }
-
-                //旧バージョンがあれば移動
-                string[] targetFiles = { "OQSDrug1.config", "OQSDrug2.config" };
-                foreach (string fileName in targetFiles)
-                {
-                    // personalFolder 内のファイルパスを生成
-                    string sourceFilePath = Path.Combine(PersonalFolder, fileName);
-
-                    // ファイルが存在する場合は移動
-                    if (File.Exists(sourceFilePath))
-                    {
-                        string destinationFilePath = Path.Combine(OQSFolder, fileName);
-                        if (File.Exists(destinationFilePath))
-                        {
-                            File.Delete(sourceFilePath);
-                        }
-                        else
-                        {
-                            File.Move(sourceFilePath, destinationFilePath);
-                        }
-                    }
-                }
-
-                // 世代バックアップのロジック
-                if (File.Exists(backupPath1))
-                {
-                    // 既存の OQSDrug1.config を OQSDrug2.config にリネーム
-                    if (File.Exists(backupPath2))
-                    {
-                        File.Delete(backupPath2); // OQSDrug2.config を削除
-                    }
-                    File.Move(backupPath1, backupPath2);
-                }
-
+                //Daily backup
                 if (File.Exists(defaultPath))
                 {
-                    // 現在の OQSDrug.config を OQSDrug1.config にリネーム
-                    File.Move(defaultPath, backupPath1);
+                    BackupGenerations(defaultPath, OQSFolder, 7);
                 }
 
                 // 設定を保存
@@ -3359,6 +3402,70 @@ namespace OQSDrug
             catch (Exception ex)
             {
                 MessageBox.Show($"設定値のエクスポート時にエラーが発生しました：{ex.Message}");
+            }
+        }
+
+        private void BackupGenerations(string sourceFile, string backupFolder, int generationNumber)
+        {
+            if (!File.Exists(sourceFile))
+            {
+                AddLog($"バックアップ元のファイルが見つかりません: {sourceFile}");
+                return;
+            }
+
+            // バックアップフォルダの作成
+            if (!Directory.Exists(backupFolder))
+            {
+                Directory.CreateDirectory(backupFolder);
+            }
+
+            // バックアップファイル名（"元のファイル名_YYYYMMDD.拡張子"）
+            string fileName = Path.GetFileNameWithoutExtension(sourceFile);
+            string extension = Path.GetExtension(sourceFile);
+            string today = DateTime.Now.ToString("yyyyMMdd");
+            string backupFilePath = Path.Combine(backupFolder, $"{fileName}_{today}{extension}");
+
+            // 既に今日のバックアップが存在する場合はスキップ
+            if (File.Exists(backupFilePath))
+            {
+                AddLog($"本日のバックアップは既に存在するのでバックアップ処理をスキップします: {backupFilePath}");
+            }
+            else
+            {
+                try
+                {
+                    // **同期的にファイルをコピー**
+                    File.Copy(sourceFile, backupFilePath, true);
+
+                    AddLog($"バックアップ完了: {backupFilePath}");
+                }
+                catch (Exception ex)
+                {
+                    AddLog($"バックアップエラー: {ex.Message}");
+                    return;
+                }
+            }
+
+            try
+            {
+                // バックアップファイルの一覧を取得し、日付降順にソート
+                var backupFiles = Directory.GetFiles(backupFolder, $"{fileName}_*{extension}")
+                                           .OrderByDescending(f => f)
+                                           .ToList();
+
+                // 指定世代数を超えたファイルを削除
+                if (backupFiles.Count > generationNumber)
+                {
+                    foreach (var oldFile in backupFiles.Skip(generationNumber))
+                    {
+                        File.Delete(oldFile);
+                        AddLog($"古いバックアップを削除: {oldFile}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog($"古いバックアップ削除エラー: {ex.Message}");
             }
         }
 
@@ -3440,45 +3547,22 @@ namespace OQSDrug
             }
         }
 
-        private void toolStripButtonDI_Click(object sender, EventArgs e)
+        private async void toolStripButtonDI_Click(object sender, EventArgs e)
         {
-            if (formDIInstance == null || formDIInstance.IsDisposed)
+            string strPtIDmain = null;
+
+            toolStripVersion.Invoke(new Action(() =>
+                strPtIDmain = toolStripTextBoxPtIDmain.Text
+            ));
+
+            if (long.TryParse(strPtIDmain, out long idValue))
             {
-                formDIInstance = new FormDI(this);
-
-                // 前回の位置とサイズを復元
-                if (Properties.Settings.Default.ViewerBounds != Rectangle.Empty)
-                {
-                    formDIInstance.StartPosition = FormStartPosition.Manual;
-                    formDIInstance.Bounds = Properties.Settings.Default.ViewerBounds;
-
-                    // マージンと境界線を設定
-                    formDIInstance.Padding = new Padding(0);
-                    formDIInstance.Margin = new Padding(0);
-                    //form3Instance.FormBorderStyle = FormBorderStyle.None;
-                }
-
-                // TopMost状態を設定
-                formDIInstance.TopMost = Properties.Settings.Default.ViewerTopmost;
-
-                // Form3が閉じるときに位置、サイズ、TopMost状態を保存
-                formDIInstance.FormClosing += (s, args) =>
-                {
-                    SaveViewerSettings(formDIInstance, "ViewerBounds");
-                };
-
-                formDIInstance.Show(this);
+                // 数値に変換できた場合
+                tempId = idValue;
+                forceIdLink = true;
             }
-            else
-            {
-                // Form3が開いている場合、LoadDataIntoComboBoxes()を実行
-                Task.Run(async () =>
-                    await formDIInstance.LoadDataIntoComboBoxes()
-                );
-                // すでに開いている場合はアクティブにする
-                formDIInstance.Activate();
-
-            }
+            
+            await OpenDrugHistory(tempId, true, true);
         }
 
         // 自分のPC名とタイムスタンプを削除
@@ -3570,151 +3654,140 @@ namespace OQSDrug
             e.ToolTipText = "行選択⇢右クリックで再取得メニュー表示\r\nダブルクリックで薬歴/健診歴を表示します\r\n";
         }
 
-        private async void buttonPtIDSearch_Click(object sender, EventArgs e)
+        //private void textBoxPtIDmain_KeyDown(object sender, KeyEventArgs e)
+        //{
+        //    if (e.KeyCode == Keys.Enter)
+        //    {
+        //        buttonPtIDSearch_Click(sender, EventArgs.Empty);
+        //    }
+        //}
+
+        public async void toolStripButtonSinryo_Click(object sender, EventArgs e)
         {
             string strPtIDmain = null;
 
-            textBoxPtIDmain.Invoke(new Action(() =>
-                strPtIDmain = textBoxPtIDmain.Text
+            toolStripVersion.Invoke(new Action(() =>
+                strPtIDmain = toolStripTextBoxPtIDmain.Text
             ));
 
             if (long.TryParse(strPtIDmain, out long idValue))
             {
                 // 数値に変換できた場合
                 tempId = idValue;
-
-                await OpenDrugHistory(tempId, true);
-
+                forceIdLink = true;
             }
-        }
-
-        private async void buttonTKKSearch_Click(object sender, EventArgs e)
-        {
-            string strPtIDmain = null;
-
-            textBoxPtIDmain.Invoke(new Action(() =>
-                strPtIDmain = textBoxPtIDmain.Text
-            ));
-
-            if (long.TryParse(strPtIDmain, out long idValue))
-            {
-                // 数値に変換できた場合
-                tempId = idValue;
-
-                await OpenTKKHistory(tempId, true);
-
-            }
-        }
-
-        private async void buttonSRSearch_Click(object sender, EventArgs e)
-        {
-            string strPtIDmain = null;
-
-            textBoxPtIDmain.Invoke(new Action(() =>
-                strPtIDmain = textBoxPtIDmain.Text
-            ));
-
-            if (long.TryParse(strPtIDmain, out long idValue))
-            {
-                // 数値に変換できた場合
-                tempId = idValue;
-
-                await OpenSinryoHistory(tempId, true);
-
-            }
-        }
-
-        public void toolStripButtonSinryo_Click(object sender, EventArgs e)
-        {
-            // FormSRがすでに開いているか確認
-            if (formSRInstance == null || formSRInstance.IsDisposed)
-            {
-                formSRInstance = new FormSR(this);
-
-                // 前回の位置とサイズを復元
-                if (Properties.Settings.Default.SRBounds != Rectangle.Empty)
-                {
-                    formSRInstance.StartPosition = FormStartPosition.Manual;
-                    formSRInstance.Bounds = Properties.Settings.Default.SRBounds;
-
-                    // マージンと境界線を設定
-                    formSRInstance.Padding = new Padding(0);
-                    formSRInstance.Margin = new Padding(0);
-                    //form3Instance.FormBorderStyle = FormBorderStyle.None;
-                }
-
-                // TopMost状態を設定
-                formSRInstance.TopMost = Properties.Settings.Default.ViewerTopmost;
-
-                // Form3が閉じるときに位置、サイズ、TopMost状態を保存
-                formSRInstance.FormClosing += (s, args) =>
-                {
-                    SaveViewerSettings(formSRInstance, "SRBounds");
-                };
-
-                formSRInstance.Show(this);
-            }
-            else
-            {
-                // FormTKKが開いている場合、LoadDataIntoComboBoxes()を実行
-                Task.Run(async () =>
-                    await formSRInstance.LoadDataIntoComboBoxes()
-                );
-                // すでに開いている場合はアクティブにする
-                formSRInstance.Activate();
-
-            }
+            
+            await OpenSinryoHistory(tempId, true, true);
         }
 
         public async Task LoadKoroDataAsync()
         {
             try
             {
-                string KOROpath = Path.Combine(Path.GetDirectoryName(Properties.Settings.Default.OQSDrugData), "KOROdata.mdb");
+                string koroPath = Path.Combine(Path.GetDirectoryName(Properties.Settings.Default.OQSDrugData), "KOROdata.mdb");
 
-                if (File.Exists(KOROpath))
+                if (!File.Exists(koroPath))
                 {
-                    AddLog("KOROdataが見つかりましたので薬品名コードを読み込みます");
+                    AddLog("エラー: KOROdata.mdb が見つかりません。");
+                    return;
+                }
 
-                    string connectionKOROdata = $"Provider={CommonFunctions.DBProvider};Data Source={KOROpath};";
-                    string sql = "SELECT 医薬品コード AS ReceptCode,  薬価基準コード AS MedisCode " +
-                                 " FROM TG医薬品マスター " +
-                                 " WHERE (((薬価基準コード) Is Not Null));";
-                    int count = 0;
+                AddLog("KOROdataが見つかりましたので薬品名コードを読み込みます");
 
-                    using (OleDbConnection connection = new OleDbConnection(connectionKOROdata))
+                string connectionKoroData = $"Provider={CommonFunctions.DBProvider};Data Source={koroPath};";
+                string sql = "SELECT 医薬品コード AS ReceptCode, 薬価基準コード AS MedisCode " +
+                             " FROM TG医薬品マスター " +
+                             " WHERE (((薬価基準コード) IS NOT NULL));";
+                int count = 0;
+                var tempDictionary = new Dictionary<string, string>();
+
+                using (OleDbConnection connection = new OleDbConnection(connectionKoroData))
+                {
+                    await connection.OpenAsync();
+
+                    using (OleDbCommand command = new OleDbCommand(sql, connection))
+                    using (OleDbDataReader reader = (OleDbDataReader)await command.ExecuteReaderAsync())
                     {
-                        await connection.OpenAsync();
-
-                        using (OleDbCommand command = new OleDbCommand(sql, connection))
-                        using (OleDbDataReader reader = (OleDbDataReader)await command.ExecuteReaderAsync())
+                        // データを一時Dictionaryに格納（エラー時にデータを消さないようにする）
+                        while (await reader.ReadAsync())
                         {
-                            // 既存データをクリア
-                            CommonFunctions.ReceptToMedisCodeMap.Clear();
+                            string receptCode = reader["ReceptCode"].ToString();
+                            string medisCode = reader["MedisCode"].ToString();
 
-                            // データを読み込んでDictionaryに設定
-                            while (await reader.ReadAsync())
+                            if (!tempDictionary.ContainsKey(receptCode))
                             {
-                                string receptCode = reader["ReceptCode"].ToString();
-                                string medisCode = reader["MedisCode"].ToString();
-
-                                if (!CommonFunctions.ReceptToMedisCodeMap.ContainsKey(receptCode))
-                                {
-                                    CommonFunctions.ReceptToMedisCodeMap.Add(receptCode, medisCode);
-                                    count++;
-                                }
+                                tempDictionary.Add(receptCode, medisCode);
+                                count++;
                             }
                         }
                     }
-
-                    AddLog($"KOROdataから{count}件のコードを読み込みました");
                 }
+
+                // 読み込み成功したらクリア＆更新
+                CommonFunctions.ReceptToMedisCodeMap.Clear();
+                foreach (var pair in tempDictionary)
+                {
+                    CommonFunctions.ReceptToMedisCodeMap.Add(pair.Key, pair.Value);
+                }
+
+                AddLog($"KOROdataから{count}件のコードを読み込みました");
             }
             catch (Exception ex)
             {
-                AddLog($"Error loading data: {ex.Message}");
+                AddLog($"エラー: {ex.Message}\n{ex.StackTrace}");
             }
         }
+
+
+        //public async Task LoadKoroDataAsync()
+        //{
+        //    try
+        //    {
+        //        string KOROpath = Path.Combine(Path.GetDirectoryName(Properties.Settings.Default.OQSDrugData), "KOROdata.mdb");
+
+        //        if (File.Exists(KOROpath))
+        //        {
+        //            AddLog("KOROdataが見つかりましたので薬品名コードを読み込みます");
+
+        //            string connectionKOROdata = $"Provider={CommonFunctions.DBProvider};Data Source={KOROpath};";
+        //            string sql = "SELECT 医薬品コード AS ReceptCode,  薬価基準コード AS MedisCode " +
+        //                         " FROM TG医薬品マスター " +
+        //                         " WHERE (((薬価基準コード) Is Not Null));";
+        //            int count = 0;
+
+        //            using (OleDbConnection connection = new OleDbConnection(connectionKOROdata))
+        //            {
+        //                await connection.OpenAsync();
+
+        //                using (OleDbCommand command = new OleDbCommand(sql, connection))
+        //                using (OleDbDataReader reader = (OleDbDataReader)await command.ExecuteReaderAsync())
+        //                {
+        //                    // 既存データをクリア
+        //                    CommonFunctions.ReceptToMedisCodeMap.Clear();
+
+        //                    // データを読み込んでDictionaryに設定
+        //                    while (await reader.ReadAsync())
+        //                    {
+        //                        string receptCode = reader["ReceptCode"].ToString();
+        //                        string medisCode = reader["MedisCode"].ToString();
+
+        //                        if (!CommonFunctions.ReceptToMedisCodeMap.ContainsKey(receptCode))
+        //                        {
+        //                            CommonFunctions.ReceptToMedisCodeMap.Add(receptCode, medisCode);
+        //                            count++;
+        //                        }
+        //                    }
+        //                }
+        //            }
+
+        //            AddLog($"KOROdataから{count}件のコードを読み込みました");
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        AddLog($"Error loading data: {ex.Message}");
+        //    }
+        //}
 
         private void loadConnectionString()
         {
