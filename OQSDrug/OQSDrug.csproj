@@ -214,6 +214,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="drugicon.ico" />
+    <None Include="Resources\List.png" />
     <None Include="Resources\Refresh.png" />
     <None Include="Resources\Equipment.png" />
     <None Include="Resources\Copy.png" />

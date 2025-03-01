@@ -23,6 +23,7 @@ using System.Configuration;
 using Microsoft.VisualBasic;
 using System.Data.Odbc;
 using System.Threading;
+using System.Diagnostics;
 
 
 namespace OQSDrug
@@ -48,6 +49,8 @@ namespace OQSDrug
         private bool isTimerRunning = false; // タイマーの状態フラグ
         private bool isOQSRunnnig = false;   //取得開始しているか
         private bool isFormVisible = true;  //最小化
+
+        private bool skipReload = false; //reqResult更新をスキップする
 
         private System.Threading.Timer backgroundTimer; //非同期タイマー
 
@@ -215,7 +218,12 @@ namespace OQSDrug
         // データベースの内容を読み込み、DataGridViewに表示
         private async Task reloadDataAsync(bool skipSql = false)
         {
-            if (!await CommonFunctions.WaitForDbUnlock(1000))
+            if (skipReload)
+            {
+                skipReload = false;
+                return;
+            }
+            else if (!await CommonFunctions.WaitForDbUnlock(1000))
             {
                 AddLog("データベースがロックされていたためreloadDataAsyncをスキップししました");
             }
@@ -1139,30 +1147,37 @@ namespace OQSDrug
             return result;
         }
 
-        private async void AddLog(string message)
+        private async void AddLog(string message, bool fileOnly = false)
         {
-            if (listViewLog.InvokeRequired)
+            string timestamp = DateTime.Now.ToString("yy-MM-dd HH:mm:ss");
+
+            if (!fileOnly && listViewLog.InvokeRequired)
             {
                 // UIスレッドに処理を委譲
                 listViewLog.Invoke(new Action(() => AddLog(message)));
             }
             else
             {
-                // メインスレッド上でUI操作
-                string timestamp = DateTime.Now.ToString("yy-MM-dd HH:mm:ss");
-                var item = new ListViewItem(timestamp);
-                item.SubItems.Add(message);
-                listViewLog.Items.Add(item);
-
-                // 最大行数を超えたら古い行を削除
-                if (listViewLog.Items.Count > 1000)
+                if (!fileOnly)
                 {
-                    listViewLog.Items.RemoveAt(0); // 最初の行を削除
+                    listViewLog.Invoke(new Action(() =>
+                    {
+                        // メインスレッド上でUI操作
+
+                        var item = new ListViewItem(timestamp);
+                        item.SubItems.Add(message);
+                        listViewLog.Items.Add(item);
+
+                        // 最大行数を超えたら古い行を削除
+                        if (listViewLog.Items.Count > 1000)
+                        {
+                            listViewLog.Items.RemoveAt(0); // 最初の行を削除
+                        }
+
+                        // 最新のログを表示
+                        listViewLog.EnsureVisible(listViewLog.Items.Count - 1);
+                    }));
                 }
-
-                // 最新のログを表示
-                listViewLog.EnsureVisible(listViewLog.Items.Count - 1);
-
                 // ファイルにログを保存
                 await SaveLogToFileAsync(timestamp, message);
             }
@@ -2051,12 +2066,12 @@ namespace OQSDrug
                                                     updateCmd.Parameters.AddWithValue("?", resultId);
                                                     updateCmd.ExecuteNonQuery();
                                                 }
-                                                AddLog($"{ptName}:由来{resultSource}の既存の薬歴レコードが見つかったため、Revisedフラグをセットしました");
+                                                AddLog($"{ptName}:由来{resultSource}の既存の薬歴レコードが見つかったため、Revisedフラグをセットしました", true);
                                                 doReadDH = true;
                                             }
                                             else //同一Sourceかレセプトから登録済み
                                             {
-                                                AddLog($"{ptName}:{diDate}{meTrDiHNm}からの{resultSource}由来の既存の薬歴レコードが見つかったため、読み込みをスキップします");
+                                                AddLog($"{ptName}:{diDate}{meTrDiHNm}からの{resultSource}由来の既存の薬歴レコードが見つかったため、読み込みをスキップします", true);
                                                 doReadDH = false;
                                             }
                                         }
@@ -2653,7 +2668,7 @@ namespace OQSDrug
             }
         }
 
-        private async Task OpenDrugHistory(long ptId, bool messagePopup = false, bool alwaysShow = false)
+        public async Task OpenDrugHistory(long ptId, bool messagePopup = false, bool alwaysShow = false)
         {
             if (alwaysShow || await existHistory(ptId, "drug_history"))
             {
@@ -2721,7 +2736,7 @@ namespace OQSDrug
             }
         }
 
-        private async Task OpenTKKHistory(long ptId, bool messagePopup = false, bool alwaysShow = false)
+        public async Task OpenTKKHistory(long ptId, bool messagePopup = false, bool alwaysShow = false)
         {
             if (alwaysShow || await existHistory(ptId, "TKK_history"))
             {
@@ -2790,7 +2805,7 @@ namespace OQSDrug
             }
         }
 
-        private async Task OpenSinryoHistory(long ptId, bool messagePopup = false, bool alwaysShow = false)
+        public async Task OpenSinryoHistory(long ptId, bool messagePopup = false, bool alwaysShow = false)
         {
             if (alwaysShow || await existHistory(ptId, "sinryo_history"))
             {
@@ -3231,6 +3246,7 @@ namespace OQSDrug
                
         private async void buttonReload_Click(object sender, EventArgs e)
         {
+            skipReload = false;
             await Task.Run(async ()=>  await reloadDataAsync());
         }
 
@@ -3652,6 +3668,16 @@ namespace OQSDrug
         private void dataGridView1_CellToolTipTextNeeded(object sender, DataGridViewCellToolTipTextNeededEventArgs e)
         {
             e.ToolTipText = "行選択⇢右クリックで再取得メニュー表示\r\nダブルクリックで薬歴/健診歴を表示します\r\n";
+        }
+
+        private void dataGridView1_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            skipReload = true;
+        }
+
+        private void toolStripButtonLog_Click(object sender, EventArgs e)
+        {
+            Process.Start(new ProcessStartInfo(LogFile) { UseShellExecute = true });
         }
 
         //private void textBoxPtIDmain_KeyDown(object sender, KeyEventArgs e)

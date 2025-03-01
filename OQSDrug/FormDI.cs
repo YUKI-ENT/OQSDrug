@@ -537,18 +537,30 @@ namespace OQSDrug
         {
             ToolStripButton button = sender as ToolStripButton;
 
-            if (button != null && button.Checked)
+            if (button != null)
             {
-                if (int.TryParse(button.Tag.ToString(), out int tagValue))
+                if (button.Checked)
                 {
-                    ShowSpan = tagValue; // Tag から値を取得
+                    if (int.TryParse(button.Tag.ToString(), out int tagValue))
+                    {
+                        ShowSpan = tagValue; // Tag から値を取得
 
-                    //他のボタンをOffにする
-                    SetSpanButtonState(ShowSpan);
+                        //他のボタンをOffにする
+                        SetSpanButtonState(ShowSpan);
+
+                        toolStripComboBoxPt_SelectedIndexChanged(sender, e); //再描画
+                    }
+                }
+                else
+                {
+                    //オンのボタンをもう一度押してオフにしてしまった場合、もう一度オンにする
+                    RemovetoolStripButtonSpanEvent();
+
+                    SetSpanButtonState(ShowSpan); //ShowSpanは変えない
+
+                    SettoolStripButtonSpanEvent();
                 }
             }
-
-            toolStripComboBoxPt_SelectedIndexChanged(sender, e);
         }
 
         private void SettoolStripButtonSpanEvent()
@@ -939,10 +951,10 @@ namespace OQSDrug
             AdjustFixedHeight();
         }
 
-        private void toolStripButtonSinryo_Click(object sender, EventArgs e)
+        private async void toolStripButtonSinryo_Click(object sender, EventArgs e)
         {
             _parentForm.forceIdLink = true;
-            _parentForm.toolStripButtonSinryo_Click(sender, e);
+            await _parentForm.OpenSinryoHistory(_parentForm.tempId, true, false);
         }
 
         private void dataGridViewFixed_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
@@ -990,10 +1002,10 @@ namespace OQSDrug
             }
         }
 
-        private void toolStripButtonTKK_Click(object sender, EventArgs e)
+        private async void toolStripButtonTKK_Click(object sender, EventArgs e)
         {
             _parentForm.forceIdLink = true;
-            _parentForm.toolStripButtonTKK_Click(sender, e);
+            await _parentForm.OpenTKKHistory(_parentForm.tempId, true, false);
         }
     }
 }

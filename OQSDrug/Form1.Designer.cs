@@ -49,6 +49,7 @@
             this.buttonKSXML = new System.Windows.Forms.Button();
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.toolStripVersion = new OQSDrug.ClickThroughToolStrip();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripTextBoxPtIDmain = new System.Windows.Forms.ToolStripTextBox();
@@ -57,6 +58,7 @@
             this.toolStripButtonToTaskTray = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonVersion = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonLog = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonSettings = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonTKK = new System.Windows.Forms.ToolStripButton();
@@ -79,14 +81,15 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Location = new System.Drawing.Point(12, 275);
+            this.dataGridView1.Location = new System.Drawing.Point(12, 306);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
             this.dataGridView1.RowTemplate.Height = 21;
-            this.dataGridView1.Size = new System.Drawing.Size(950, 430);
+            this.dataGridView1.Size = new System.Drawing.Size(950, 399);
             this.dataGridView1.TabIndex = 2;
             this.dataGridView1.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellDoubleClick);
             this.dataGridView1.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dataGridView1_CellFormatting);
+            this.dataGridView1.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_CellMouseDown);
             this.dataGridView1.CellMouseUp += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_CellMouseUp);
             this.dataGridView1.CellToolTipTextNeeded += new System.Windows.Forms.DataGridViewCellToolTipTextNeededEventHandler(this.dataGridView1_CellToolTipTextNeeded);
             // 
@@ -211,9 +214,9 @@
             this.buttonReload.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonReload.Font = new System.Drawing.Font("Meiryo UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.buttonReload.Image = global::OQSDrug.Properties.Resources.Refresh;
-            this.buttonReload.Location = new System.Drawing.Point(922, 46);
+            this.buttonReload.Location = new System.Drawing.Point(91, 273);
             this.buttonReload.Name = "buttonReload";
-            this.buttonReload.Size = new System.Drawing.Size(40, 33);
+            this.buttonReload.Size = new System.Drawing.Size(32, 27);
             this.buttonReload.TabIndex = 28;
             this.toolTip1.SetToolTip(this.buttonReload, "取得結果を更新します");
             this.buttonReload.UseVisualStyleBackColor = true;
@@ -309,6 +312,16 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "ID連携";
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Meiryo UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.label1.Location = new System.Drawing.Point(12, 276);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(73, 20);
+            this.label1.TabIndex = 31;
+            this.label1.Text = "取込結果";
+            // 
             // toolStripVersion
             // 
             this.toolStripVersion.Font = new System.Drawing.Font("游ゴシック", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
@@ -320,6 +333,7 @@
             this.toolStripButtonToTaskTray,
             this.toolStripSeparator1,
             this.toolStripButtonVersion,
+            this.toolStripButtonLog,
             this.toolStripSeparator2,
             this.toolStripButtonSettings,
             this.toolStripButtonTKK,
@@ -347,6 +361,7 @@
             // 
             // toolStripTextBoxPtIDmain
             // 
+            this.toolStripTextBoxPtIDmain.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
             this.toolStripTextBoxPtIDmain.Name = "toolStripTextBoxPtIDmain";
             this.toolStripTextBoxPtIDmain.Size = new System.Drawing.Size(70, 27);
             this.toolStripTextBoxPtIDmain.ToolTipText = "枝番なしIDを入力し右のいずれかのボタンを押すと\r\n薬歴、健診歴等のウインドウが開きます\r\n空欄だと患者選択無しでウインドウが開きます";
@@ -399,6 +414,18 @@
             this.toolStripButtonVersion.Size = new System.Drawing.Size(23, 24);
             this.toolStripButtonVersion.Text = "Version";
             this.toolStripButtonVersion.Click += new System.EventHandler(this.toolStripButtonVersion_Click);
+            // 
+            // toolStripButtonLog
+            // 
+            this.toolStripButtonLog.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonLog.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonLog.Image = global::OQSDrug.Properties.Resources.List;
+            this.toolStripButtonLog.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonLog.Name = "toolStripButtonLog";
+            this.toolStripButtonLog.Size = new System.Drawing.Size(23, 24);
+            this.toolStripButtonLog.Text = "Log";
+            this.toolStripButtonLog.ToolTipText = "ログを開きます";
+            this.toolStripButtonLog.Click += new System.EventHandler(this.toolStripButtonLog_Click);
             // 
             // toolStripSeparator2
             // 
@@ -460,6 +487,7 @@
             // 
             // toolStripTextBoxDebug
             // 
+            this.toolStripTextBoxDebug.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
             this.toolStripTextBoxDebug.Name = "toolStripTextBoxDebug";
             this.toolStripTextBoxDebug.Size = new System.Drawing.Size(100, 27);
             this.toolStripTextBoxDebug.ToolTipText = "デバッグ用xmlの患者ID(枝番付)";
@@ -483,6 +511,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.ClientSize = new System.Drawing.Size(974, 717);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.checkBoxAutoStart);
             this.Controls.Add(this.buttonReload);
@@ -549,6 +578,8 @@
         private System.Windows.Forms.CheckBox checkBoxAutoSR;
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
         private System.Windows.Forms.ToolStripTextBox toolStripTextBoxPtIDmain;
+        private System.Windows.Forms.ToolStripButton toolStripButtonLog;
+        private System.Windows.Forms.Label label1;
     }
 }
 
