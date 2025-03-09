@@ -66,14 +66,18 @@
   - ダイナミクスネットワーク内で、ダイナミクスクライアントが動作していないPCで、OQSDrugを実行
   - OQSDrugの設定で、「ダイナミクスの場所」は **ダイナミクスサーバーのdatadyna.mdb** を指定
   - 「開始」で取込開始
-  ![oqsdrug6](https://github.com/user-attachments/assets/6f9ce95a-3443-41a4-a061-073da87e3264)
+  - 診察室PC等ダイナクライアントを実行しているPCでは、取込は行わずOQSDrugを実行し、設定⑪の連携設定を行った上メイン画面のID連携設定ボタンをオンにしておくとカルテ遷移に連動して薬歴等がポップアップで開きます
+  ![oqsdrug131](https://github.com/user-attachments/assets/5ac777e0-2100-4c0d-b218-74940e1b3793)
+
 
     
 ### 2. ダイナミクスクライアントの動作しているPCで、OQSDrugの取込動作とViewerを同時に使う
   - 別PCを用意できない場合、ダイナクライアントで稼働させます
   - 設定では、「ダイナミクスの場所」は **ダイナクライアントの稼働しているDyna_cnt.mdb**を指定します。**Datadynaを指定するとdatadynaが破損する可能性があります**
   - ダイナクライアントをバージョンアップしたときは、新しいクライアントを指定する必要があります。
-    ![oqsdrug7](https://github.com/user-attachments/assets/ad630590-c28f-4206-bddc-3b139cb91e45)
+  - 設定⑪の連携設定を行った上メイン画面のID連携設定ボタンをオンにしておくとカルテ遷移に連動して薬歴等がポップアップで開きます
+    ![oqsdrug132](https://github.com/user-attachments/assets/3ab09f00-70f3-4863-af46-58a25707096a)
+
 
 ## 設定と動作の説明
 
