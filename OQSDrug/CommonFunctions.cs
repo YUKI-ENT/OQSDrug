@@ -15,6 +15,7 @@ namespace OQSDrug
         // グローバル変数の定義
         public static string DBProvider = "";
         public static string connectionOQSdata = "";
+        public static string connectionReadOQSdata = "";
         public static bool DataDbLock = false;
 
         public static List<string[]> RSBDI = new List<string[]>();
@@ -139,7 +140,7 @@ namespace OQSDrug
 
             try
             {
-                using (OleDbConnection connection = new OleDbConnection(connectionOQSdata))
+                using (OleDbConnection connection = new OleDbConnection(connectionReadOQSdata))
                 {
                     await connection.OpenAsync();
                     string query = "SELECT ItemCode, ItemName, CompairType, Limit1, Limit2, Sex FROM TKK_reference";

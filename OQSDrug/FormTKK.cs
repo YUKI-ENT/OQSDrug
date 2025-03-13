@@ -59,7 +59,7 @@ namespace OQSDrug
                             GROUP BY PtIDmain, PtName
                             ORDER BY Max(id) DESC;";
 
-                using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
+                using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionReadOQSdata))
                 {
                     try
                     {
@@ -187,7 +187,7 @@ namespace OQSDrug
                             ";
                 try
                 {
-                    using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
+                    using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionReadOQSdata))
                     {
                         // 接続を開く
                         await connection.OpenAsync();

@@ -30,6 +30,8 @@ namespace OQSDrug
 {
     public partial class Form1 : Form
     {
+        // Global
+        public string DataReadMode = "Read", DynaReadMode = "Read";  //Share Deny None 
         public long tempId = 0;
         public bool autoRSB = false, forceIdLink = false, autoTKK = false, autoSR = false;
         
@@ -39,6 +41,7 @@ namespace OQSDrug
         DataTable dynaTable = new DataTable();
 
         DataTable reqResultsTable = new DataTable();
+        //
 
         // 最新の特定健診結果を保存しておく
         private static Dictionary<long, string> TKKdate = new Dictionary<long, string>();
@@ -100,6 +103,8 @@ namespace OQSDrug
             {
                 Invoke(new Action(() => StartStop.Checked = (okSettings == 0b1111)));
             }
+
+            checkAccessProcess();
 
             //取得作業
             if (isOQSRunnnig)
@@ -238,7 +243,7 @@ namespace OQSDrug
 
                         if (!skipSql) // 最小化からの復帰時のみskipする
                         {
-                            using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
+                            using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionReadOQSdata))
                             {
                                 // 接続を開く
                                 await connection.OpenAsync();
@@ -598,7 +603,7 @@ namespace OQSDrug
 
         private async Task<DataTable> LoadDataFromDatabaseAsync(string dynaPath)
         {
-            string connectionString = $"Provider={CommonFunctions.DBProvider};Data Source={dynaPath};Mode=Share Deny None;Persist Security Info=False;";
+            string connectionString = $"Provider={CommonFunctions.DBProvider};Data Source={dynaPath};Mode={DynaReadMode};Persist Security Info=False;";
             string query = $"SELECT * FROM [{DynaTable}]"; // テーブル名をエスケープ
 
             DataTable dataTable = new DataTable();
@@ -640,7 +645,7 @@ namespace OQSDrug
                 return "エラー: テーブル名が指定されていません。";
             }
 
-            string connectionString = $"Provider={CommonFunctions.DBProvider};Data Source={dbPath};";
+            string connectionString = $"Provider={CommonFunctions.DBProvider};Data Source={dbPath};Mode={DataReadMode};";
 
             try
             {
@@ -912,7 +917,31 @@ namespace OQSDrug
             {
                 await LoadRSBDIAsync(RSBdrive + @"\Users\rsn\public_html\drug_RSB.dat");
             }
+        }
 
+        private void checkAccessProcess()
+        {
+            // "msaccess" という名前のプロセスがあるかをチェック
+            Process[] processes = Process.GetProcessesByName("msaccess");
+
+            if (processes.Length > 0 && DynaTable == "T_資格確認結果表示")
+            {
+                this.Invoke(new Action(() =>
+                {
+                    if (StartStop.Checked)
+                    {
+                        if (checkBoxAutoStart.Checked)
+                        {
+                            checkBoxAutoStart.Checked = false;
+                        }
+
+                        StartStop.Checked = false;
+                        AddLog("MSaccess.exeを検知しましたので、動作を停止します");
+
+                        MessageBox.Show("このPCでMSAccessが実行されており、ダイナミクスのリンク先がdatadyna.mdbになっていまので動作を停止しました。\nこの設定はダイナミクスのデータ障害が起こる可能性が高いので、別PCで実行するかクライアントダイナと連携するように設定を変更してください");
+                    }
+                }));
+            }
         }
 
         private async Task setStatus()
@@ -1937,6 +1966,7 @@ namespace OQSDrug
                 { "DrugC", new List<string> { "DrugC", "CzDrugC", "ShDrugC" } },
                 { "Qua1", new List<string> { "Qua1", "CzQua1", "ShQua1" } },
                 { "UsageN", new List<string> { "UsageN", "CzUsageN", "ShUsageN" } },
+                { "SpInst", new List<string> { "SpInst", "ShSpInst", "CzSpInst" } },
                 { "Times", new List<string> { "Times", "CzTimes", "ShTimes" } },
                 { "IngreN", new List<string> { "IngreN", "CzIngreN", "ShIngreN" } },
                 { "UsageCl", new List<string> { "MeTrIdCl", "CzUsageCl", "ShUsageCl" } },
@@ -2087,12 +2117,20 @@ namespace OQSDrug
                                                     string drugCode = GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "DrugC"));
                                                     float quantity = NzConvert(GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "Qua1")));
                                                     string usage = GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "UsageN"));
+                                                    string spinst = GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "SpInst"));
                                                     int times = (int)NzConvert(GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "Times")));
                                                     string ingredient = GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "IngreN"));
                                                     int meTrIdCl = (int)NzConvert(GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "UsageCl")));
                                                     string unit = GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "Unit"));
                                                     string drugName = GetNodeValue(drugInfNode, GetMatchingNodeName(drugInfNode, elementMappings, "DrugN"));
 
+                                                    if (usage.Length > 0 && spinst.Length > 0)
+                                                    {
+                                                        usage += "/" + spinst;
+                                                    } else
+                                                    {
+                                                        usage += spinst;
+                                                    }
 
                                                     using (OleDbCommand insertCommand = new OleDbCommand(insertSql, dbConnection))
                                                     {
@@ -2880,7 +2918,7 @@ namespace OQSDrug
             {
                 if (await CommonFunctions.WaitForDbUnlock(2000))
                 {
-                    using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
+                    using (OleDbConnection connection = new OleDbConnection(CommonFunctions.connectionReadOQSdata))
                     {
                         await connection.OpenAsync();
 
@@ -3491,7 +3529,7 @@ namespace OQSDrug
             string localMachineName = Environment.MachineName;
             try
             {
-                using (var connection = new OleDbConnection(CommonFunctions.connectionOQSdata))
+                using (var connection = new OleDbConnection(CommonFunctions.connectionReadOQSdata))
                 {
                     await connection.OpenAsync();
                     string query = @"
@@ -3663,7 +3701,11 @@ namespace OQSDrug
             toolStripSeparatorDebug1.Visible = !toolStripSeparatorDebug1.Visible;
             toolStripSeparatorDebug2.Visible = !toolStripSeparatorDebug2.Visible;
             toolStripTextBoxDebug.Visible = !toolStripTextBoxDebug.Visible;
+            toolStripComboBoxConnectionMode.Visible = !toolStripComboBoxConnectionMode.Visible;
+
         }
+
+        
 
         private void dataGridView1_CellToolTipTextNeeded(object sender, DataGridViewCellToolTipTextNeededEventArgs e)
         {
@@ -3678,6 +3720,14 @@ namespace OQSDrug
         private void toolStripButtonLog_Click(object sender, EventArgs e)
         {
             Process.Start(new ProcessStartInfo(LogFile) { UseShellExecute = true });
+        }
+
+        private void toolStripTextBoxPtIDmain_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                toolStripButtonDI_Click(sender, e);
+            }
         }
 
         //private void textBoxPtIDmain_KeyDown(object sender, KeyEventArgs e)
@@ -3720,7 +3770,7 @@ namespace OQSDrug
 
                 AddLog("KOROdataが見つかりましたので薬品名コードを読み込みます");
 
-                string connectionKoroData = $"Provider={CommonFunctions.DBProvider};Data Source={koroPath};";
+                string connectionKoroData = $"Provider={CommonFunctions.DBProvider};Data Source={koroPath};Mode={DynaReadMode};";
                 string sql = "SELECT 医薬品コード AS ReceptCode, 薬価基準コード AS MedisCode " +
                              " FROM TG医薬品マスター " +
                              " WHERE (((薬価基準コード) IS NOT NULL));";
@@ -3817,7 +3867,8 @@ namespace OQSDrug
 
         private void loadConnectionString()
         {
-            CommonFunctions.connectionOQSdata = $"Provider={CommonFunctions.DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
+            CommonFunctions.connectionOQSdata     = $"Provider={CommonFunctions.DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};";
+            CommonFunctions.connectionReadOQSdata = $"Provider={CommonFunctions.DBProvider};Data Source={Properties.Settings.Default.OQSDrugData};Mode={DataReadMode};";
         }
     }
 }
